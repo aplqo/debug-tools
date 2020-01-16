@@ -117,6 +117,11 @@ namespace apdebug
             cerr << "Divide by zero on type " << type;
         }
 
+        STDExcept::STDExcept(const char* typ, const char* des)
+        {
+            type = typ;
+            what = des;
+        }
         void STDExcept::verbose()
         {
             color();

@@ -27,27 +27,9 @@ namespace apdebug
             cmd += args;
             ret = system(cmd.c_str());
         }
-        class tpoint
-        {
-        public:
-            void run();
-            void parse();
-            void test();
-            ~tpoint();
 
-            string in, out, ans, log;
-            result rres, tres;
-            /*--run result---*/
-            exception::state* s = nullptr;
-            string des, what;
-            timType tim;
-
-            /*---static config---*/
-            static timType lim, hardlim;
-
-        private:
-            void concat(string& s);
-        };
+        timType tpoint::lim=1000*1000;
+        timType tpoint::hardlim = 1000 * 1000 * 1000;
         void tpoint::run()
         {
             concat(in);

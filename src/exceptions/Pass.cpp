@@ -53,5 +53,9 @@ namespace apdebug
         {
             cerr << col::RED << "[WA] Test program return " << ret << endl;
         }
+        void WrongAnswer::color()
+        {
+            cerr << col::RED;
+        }
     }
 }

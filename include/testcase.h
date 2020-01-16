@@ -12,8 +12,8 @@ namespace apdebug
         struct result
         {
             void exec();
-            int ret;
-            string cmd, args;
+            int ret = 0;
+            std::string cmd, args;
         };
 
         class tpoint
@@ -28,14 +28,14 @@ namespace apdebug
             result rres, tres;
             /*--run result---*/
             exception::state* s = nullptr;
-            string des, what;
+            std::string des, what;
             timer::timType tim;
 
             /*---static config---*/
             static timer::timType lim, hardlim;
 
         private:
-            void concat(string& s);
+            void concat(std::string& s);
         };
     }
 }

@@ -1,3 +1,4 @@
+#include "include/define.h"
 #include "include/exception.h"
 #include "include/output.h"
 #include "include/testcase.h"
@@ -8,13 +9,14 @@ using namespace std;
 using namespace std::chrono;
 using namespace apdebug::out;
 using namespace apdebug::testcase;
+using apdebug::timer::timType;
 
 tpoint tp;
 void info(const char* str, const char* val)
 {
     cout << col::CYAN << "[Info] " << str << ": " << val << endl;
 }
-void printT(int n, const char* in)
+void printT(timType n, const char* in)
 {
     cout << col::CYAN << "[Info] " << in << ": ";
     cout << n << "ms ( " << noshowpoint << (n / 1000.0) << "s )" << endl;
@@ -39,11 +41,11 @@ int main(int argc, char* argv[])
             tp.tres.cmd = argv[++i];
         else if (!strcmp(argv[i], "-time"))
         {
-            tpoint::lim = atoi(argv[++i]) * 1000;
+            tpoint::lim = atoi(argv[++i]) * timType(1000);
             tpoint::hardlim = tpoint::lim * 10;
         }
         else if (!strcmp(argv[i], "-hlimit"))
-            tpoint::hardlim = atoi(argv[++i]) * 1000;
+            tpoint::hardlim = atoi(argv[++i]) * timType(1000) * 1000;
         else if (!strcmp(argv[i], "-args"))
         {
             int ccmd = atoi(argv[++i]);

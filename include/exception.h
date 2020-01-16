@@ -14,7 +14,6 @@ namespace apdebug
             virtual void verbose() = 0;
             virtual void details(){};
             virtual void color() = 0;
-            ~state();
         };
 
         class Pass : public state
