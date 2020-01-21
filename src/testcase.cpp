@@ -28,8 +28,8 @@ namespace apdebug
             ret = system(cmd.c_str());
         }
 
-        timType tpoint::lim=1000*1000;
-        timType tpoint::hardlim = 1000 * 1000 * 1000;
+        timType tpoint::lim = 1000 * 1000;
+        timType tpoint::hardlim = 1000 * 10 * 1000;
         void tpoint::run()
         {
             concat(in);
@@ -50,7 +50,9 @@ namespace apdebug
                 {
                     lo >> tim;
                     if (tim >= lim)
-                        s = new exception::TimeLimit(lim);
+                        s = new exception::TimeLimit(tim);
+                    else
+                        s = new exception::Pass(tim);
                     return;
                 }
                 if (str == "Hlim")
@@ -63,8 +65,8 @@ namespace apdebug
                 if (str == "Warn")
                 {
                     string op, typ;
-                    lo >> op >> typ;
-                    s = new exception::Warn(typ.c_str(), op.c_str());
+                    lo >> op >> op >> typ;
+                    s = new exception::Warn(typ, op);
                     return;
                 }
                 if (str == "RE")
@@ -82,7 +84,7 @@ namespace apdebug
                             getline(lo, t);
                             what += t + '\n';
                         }
-                        s = new exception::STDExcept(typ.c_str(), what.c_str());
+                        s = new exception::STDExcept(typ, what);
                         return;
                     }
                     if (typ == "UnknownException")
@@ -115,7 +117,7 @@ namespace apdebug
                     {
                         string typ;
                         lo >> typ;
-                        s = new exception::DivByZero(typ.c_str());
+                        s = new exception::DivByZero(typ);
                         return;
                     }
                     {
@@ -127,6 +129,7 @@ namespace apdebug
                             s = new exception::NormalRE(SIGILL);
                         else if (typ == "SIGSEGV")
                             s = new exception::NormalRE(SIGSEGV);
+                        return;
                     }
                 }
             }
@@ -134,7 +137,7 @@ namespace apdebug
         }
         void tpoint::test()
         {
-            if (rres.ret)
+            if (rres.ret != 0)
                 return;
             tres.exec();
             delete s;

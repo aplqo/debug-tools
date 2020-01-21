@@ -4,12 +4,14 @@
 #include "include/testcase.h"
 #include <chrono>
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 using namespace std;
 using namespace std::chrono;
 using namespace apdebug::out;
 using namespace apdebug::testcase;
 using apdebug::timer::timType;
+using std::filesystem::path;
 
 tpoint tp;
 void info(const char* str, const char* val)
@@ -19,7 +21,13 @@ void info(const char* str, const char* val)
 void printT(timType n, const char* in)
 {
     cout << col::CYAN << "[Info] " << in << ": ";
-    cout << n << "ms ( " << noshowpoint << (n / 1000.0) << "s )" << endl;
+    cout << n / 1000 << "ms ( " << (double)n / 1000000 << "s )" << endl;
+}
+void getLog()
+{
+    path p(tp.rres.cmd);
+    p.replace_extension(".log");
+    tp.log = p.string();
 }
 int main(int argc, char* argv[])
 {
@@ -41,7 +49,7 @@ int main(int argc, char* argv[])
             tp.tres.cmd = argv[++i];
         else if (!strcmp(argv[i], "-time"))
         {
-            tpoint::lim = atoi(argv[++i]) * timType(1000);
+            tpoint::lim = atoi(argv[++i]) * timType(1000) * 1000;
             tpoint::hardlim = tpoint::lim * 10;
         }
         else if (!strcmp(argv[i], "-hlimit"))
@@ -67,20 +75,22 @@ int main(int argc, char* argv[])
                 tp.tres.args = tp.tres.args + " " + argv[i];
             cout << tp.tres.cmd << " " << tp.tres.args << endl;
         }
-        printT(tpoint::lim, "Time limit");
-        printT(tpoint::hardlim, "Hard time limit");
-        cout << col::BLUE << "[Info] Start program" << col::NONE << endl;
-        cout.flush();
-        tp.run();
-        tp.parse();
-        tp.s->verbose();
-        if (!tp.tres.cmd.empty())
-        {
-            cout << col::BLUE << "[Info] Start testing" << col::NONE << endl;
-            cout.flush();
-            tp.test();
-            tp.s->verbose();
-        }
-        return 0;
     }
+    printT(tpoint::lim, "Time limit");
+    printT(tpoint::hardlim, "Hard time limit");
+    cout << col::BLUE << "[Info] Start program" << col::NONE << endl;
+    cout.flush();
+    getLog();
+    tp.run();
+    tp.parse();
+    remove(path(tp.log));
+    tp.s->verbose();
+    if (!tp.tres.cmd.empty() && tp.rres.ret == 0)
+    {
+        cout << col::BLUE << "[Info] Start testing" << col::NONE << endl;
+        cout.flush();
+        tp.test();
+        tp.s->verbose();
+    }
+    return 0;
 }
