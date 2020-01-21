@@ -10,12 +10,14 @@ else()
 	add_compile_options("-lstdc++fs")
 endif()
 
-option(COLOR ON)
+option(color on)
+
+if(color)
+	message("Color mode enabled")
+	add_compile_definitions(COLOR)
+endif()
 
 include_directories(".")
 
-if(COLOR)
-	add_definitions(COLOR)
-endif()
 
 add_subdirectory(src)
