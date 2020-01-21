@@ -2,6 +2,7 @@
 #include "include/exception.h"
 #include "include/output.h"
 #include <iostream>
+#include <string>
 
 namespace apdebug
 {
@@ -10,9 +11,10 @@ namespace apdebug
         using apdebug::timer::timType;
         using std::cerr;
         using std::endl;
+        using std::string;
         using namespace apdebug::out;
 
-        Warn::Warn(const char* typ, const char* op)
+        Warn::Warn(const string typ, const string op)
         {
             type = typ;
             oper = op;
@@ -23,7 +25,7 @@ namespace apdebug
         }
         void Warn::verbose()
         {
-            cerr << col::YELLOW << "[Warn] Integer overflow ( Operation " << oper << " Type: " << type << endl;
+            cerr << col::YELLOW << "[Warn] Integer overflow ( Operation " << oper << " Type: " << type << ")" << endl;
         }
         void Warn::details()
         {

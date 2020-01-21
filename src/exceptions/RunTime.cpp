@@ -4,6 +4,7 @@
 #include <csignal>
 #include <exception>
 #include <iostream>
+#include <string>
 
 namespace apdebug
 {
@@ -12,6 +13,7 @@ namespace apdebug
         using apdebug::timer::timType;
         using std::cerr;
         using std::endl;
+        using std::string;
         using namespace apdebug::out;
 
         void RuntimeError::name()
@@ -103,7 +105,7 @@ namespace apdebug
                 cerr << "FE_UNDERFLOW ";
         }
 
-        DivByZero::DivByZero(const char* typ)
+        DivByZero::DivByZero(const string typ)
         {
             type = typ;
         }
@@ -117,7 +119,7 @@ namespace apdebug
             cerr << "Divide by zero on type " << type;
         }
 
-        STDExcept::STDExcept(const char* typ, const char* des)
+        STDExcept::STDExcept(const string typ, const string des)
         {
             type = typ;
             what = des;

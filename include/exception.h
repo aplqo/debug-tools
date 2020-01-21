@@ -2,6 +2,7 @@
 #define EXCEPTIONS_H
 
 #include "include/define.h"
+#include<string>
 
 namespace apdebug
 {
@@ -74,14 +75,14 @@ namespace apdebug
         class Warn : public state
         {
         public:
-            Warn(const char* typ, const char* op);
+            Warn(const std::string typ, const std::string op);
             void name();
             void verbose();
             void details();
             void color();
 
         private:
-            const char *type, *oper;
+            std::string type, oper;
         };
 
         class RuntimeError : public state
@@ -120,22 +121,22 @@ namespace apdebug
         class DivByZero : public RuntimeError
         {
         public:
-            DivByZero(const char* typ);
+            DivByZero(const std::string typ);
             void verbose();
             void details();
 
         private:
-            const char* type;
+            std::string type;
         };
         class STDExcept : public RuntimeError
         {
         public:
-            STDExcept(const char* typ, const char* des);
+            STDExcept(const std::string typ, const std::string des);
             void verbose();
             void details();
 
         private:
-            const char *type, *what;
+            std::string type, what;
         };
         class UnknownExcept : public RuntimeError
         {
