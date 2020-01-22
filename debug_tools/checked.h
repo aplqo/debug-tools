@@ -131,17 +131,10 @@ namespace apdebug
             {
                 return ~dat;
             }
-            /*Stream extraction and insertion*/
-            inline ostream operator<<(ostream& os)
-            {
-                os << dat;
-                return os;
-            }
-            inline istream operator>>(istream& is)
-            {
-                is >> dat;
-                return is;
-            }
+            template <class U>
+            friend inline ostream operator<<(ostream&, CheckedInteger<U>);
+            template <class U>
+            friend inline istream operator>>(istream&, CheckedInteger<U>);
 
         private:
             static void err(char* op)
@@ -151,6 +144,19 @@ namespace apdebug
             }
             T dat;
         };
+        /*Stream extraction and insertion*/
+        template <class T>
+        inline ostream operator<<(ostream& os, CheckedInteger<T> d)
+        {
+            os << d.dat;
+            return os;
+        }
+        template <class T>
+        inline istream operator>>(istream& is, CheckedInteger<T> d)
+        {
+            is >> d.dat;
+            return is;
+        }
     }
 }
 #endif

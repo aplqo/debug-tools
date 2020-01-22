@@ -25,6 +25,8 @@ namespace apdebug
         using std::thread;
         using std::unique_lock;
         using std::chrono::duration;
+        using std::chrono::duration_cast;
+        using std::chrono::microseconds;
         using std::chrono::steady_clock;
         using std::chrono::time_point;
 
@@ -32,7 +34,7 @@ namespace apdebug
         class timer
         {
         public:
-            timer(timType l, timType hlim)
+            timer(timType& l, timType& hlim)
                 : lim(l)
                 , hardlim(hlim)
             {
@@ -66,7 +68,7 @@ namespace apdebug
         private:
             bool pr = false;
             typename tim::time_point beg, aft;
-            unsigned int lim, hardlim;
+            timType &lim, &hardlim;
 
             /*-thread support-*/
             condition_variable cv;
@@ -82,7 +84,7 @@ namespace apdebug
                 quick_exit(5);
             }
         };
-    }
-}
+    } // namespace timer
+} // namespace apdebug
 
 #endif
