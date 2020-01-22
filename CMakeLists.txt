@@ -1,7 +1,6 @@
 project(aplqo-debug-tools)
 cmake_minimum_required(VERSION 3.7)
 
-set(SUF "")
 if(CMAKE_CXX_COMPLIER MATCHES "clang" )
 	add_compile_options(-stdlib=libc++)
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld-8 -stdlib=libc++ -lc++fs")
@@ -9,9 +8,6 @@ elseif(CMAKE_CXX_COMPILER MATCHES "cl" )
 	add_compile_options("/Zc:__cplusplus")
 else()
 	add_compile_options("-lstdc++fs")
-endif()
-if(CMAKE_HOST_SYSTEM MATCHES "Windows")
-	set(SUF ".exe")
 endif()
 
 set(branch "")
@@ -53,6 +49,9 @@ add_subdirectory(src)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_tools/ DESTINATION debug_tools/)
 install(FILES ${CMAKE_BINARY_DIR}/include/define.h DESTINATION debug_tools/)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_config/ DESTINATION config/)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_scripts/ DESTINATION scripts/ PATTERN "init.*" EXCLUDE)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_scripts/ DESTINATION /  FILES_MATCHING PATTERN "init.*")
 
 set(CPACK_GENERATOR "ZIP")
 set(CPACK_PACKAGE_VENDOR "aplqo")
