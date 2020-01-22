@@ -10,3 +10,5 @@ add_executable(single singletest.cpp)
 target_compile_features(single PUBLIC "cxx_std_17")
 target_link_libraries(single debug-lib)
 target_link_libraries(single exceptions)
+
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/single${SUF} DESTINATION bin/)

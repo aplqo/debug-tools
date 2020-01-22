@@ -32,7 +32,13 @@ void getLog()
 int main(int argc, char* argv[])
 {
     tp.rres.cmd = argv[1];
-    cout << "----------Aplqo debug tool----------" << endl;
+    cout << endl;
+    cout << "Aplqo debug tools: single test runner" << endl;
+    cout << "Version git@" << apdebug::info::hash << endl;
+    cout << "Build branch:" << apdebug::info::branch << endl;
+    cout << "Build date " << __DATE__ << " " << __TIME__ << endl;
+    cout << endl;
+
     for (int i = 2; i < argc; ++i)
     {
         if (!strcmp(argv[i], "-in"))
