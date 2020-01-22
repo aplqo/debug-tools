@@ -34,9 +34,9 @@ int main(int argc, char* argv[])
     tp.rres.cmd = argv[1];
     cout << endl;
     cout << "Aplqo debug tools: single test runner" << endl;
-    cout << "Version git@" << apdebug::info::hash << endl;
-    cout << "Build branch:" << apdebug::info::branch << endl;
-    cout << "Build date " << __DATE__ << " " << __TIME__ << endl;
+    cout << "Version " << apdebug::info::version << " git@" << apdebug::info::hash << endl;
+    cout << "Build branch: " << apdebug::info::branch << endl;
+    cout << "Build on " << __DATE__ << " " << __TIME__ << " by " << apdebug::info::builder << endl;
     cout << endl;
 
     for (int i = 2; i < argc; ++i)

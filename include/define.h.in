@@ -19,6 +19,8 @@ namespace apdebug
     {
         static const char* branch = "@branch@";
         static const char* hash = "@hash@";
+        static const char* version = "@ver@";
+        static const char* builder = "@build@";
     }
 }
 #endif
