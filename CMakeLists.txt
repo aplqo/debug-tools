@@ -10,14 +10,54 @@ else()
 	add_compile_options("-lstdc++fs")
 endif()
 
-option(color on)
+set(branch "")
+set(hash "")
+# get git information
+find_package(Git QUIET)
+if(GIT_FOUND)
+	execute_process(COMMAND ${GIT_EXECUTABLE} log -1 --pretty=format:%H  
+		OUTPUT_VARIABLE hash
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		ERROR_QUIET
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	)
+	execute_process(COMMAND ${GIT_EXECUTABLE} symbolic-ref --short -q HEAD
+		OUTPUT_VARIABLE branch
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		ERROR_QUIET
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	)
+endif()
 
+configure_file(
+	${CMAKE_CURRENT_SOURCE_DIR}/include/define.h.in
+	${CMAKE_BINARY_DIR}/include/define.h
+	@ONLY
+)
+
+option(color on)
 if(color)
 	message("Color mode enabled")
 	add_compile_definitions(COLOR)
 endif()
 
 include_directories(".")
+include_directories(${CMAKE_BINARY_DIR})
 
 
 add_subdirectory(src)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_tools/ DESTINATION debug_tools/)
+install(FILES ${CMAKE_BINARY_DIR}/include/define.h DESTINATION debug_tools/)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_config/ DESTINATION config/)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_scripts/ DESTINATION scripts/ PATTERN "init.*" EXCLUDE)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_scripts/ DESTINATION /  FILES_MATCHING PATTERN "init.*")
+
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_PACKAGE_VENDOR "aplqo")
+if(color)
+	set(CPACK_PACKAGE_FILE_NAME aplqo-debug-tools-${CMAKE_HOST_SYSTEM_NAME}-${ver}-color)
+else()
+	set(CPACK_PACKAGE_FILE_NAME aplqo-debug-tools-${CMAKE_HOST_SYSTEM_NAME}-${ver}-nocolor)
+endif()
+include(CPack)

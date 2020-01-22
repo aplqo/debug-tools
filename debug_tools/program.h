@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 
 namespace ns_run
@@ -19,6 +20,7 @@ namespace program
     using namespace std::chrono;
     apdebug::timer::timType li, hli;
     timer::timer<steady_clock, microseconds::rep, microseconds::period> t(li, hli);
+    std::ofstream log;
 
     void atex() noexcept
     {
@@ -35,7 +37,10 @@ int main(int argc, char* argv[])
     if (strcmp(argv[2], "*") != 0)
         std::freopen(argv[2], "w", stdout);
     if (strcmp(argv[3], "*") != 0)
-        std::freopen(argv[3], "w", stderr);
+    {
+        program::log.open(argv[3]);
+        std::cerr.rdbuf(program::log.rdbuf());
+    }
     li = atoi(argv[4]);
     hli = atoi(argv[5]);
     dector::regsig();

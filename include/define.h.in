@@ -1,0 +1,26 @@
+#ifndef DEFINE_H
+#define DEFINE_H
+
+#include <chrono>
+namespace apdebug
+{
+    namespace timer
+    {
+        typedef std::chrono::microseconds::rep timType;
+    }
+}
+
+#ifndef INFO
+#define INFO
+
+namespace apdebug
+{
+    namespace info
+    {
+        static const char* branch = "@branch@";
+        static const char* hash = "@hash@";
+    }
+}
+#endif
+
+#endif
