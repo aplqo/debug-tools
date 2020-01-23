@@ -22,19 +22,21 @@ namespace apdebug
             void run();
             void parse();
             void test();
+            void release();
+            bool success();
             ~tpoint();
 
             std::string in, out, ans, log;
             result rres, tres;
             /*--run result---*/
             exception::state* s = nullptr;
-            std::string des, what;
             timer::timType tim;
 
             /*---static config---*/
             static timer::timType lim, hardlim;
 
         private:
+            void getLog();
             void concat(std::string& s);
         };
     }

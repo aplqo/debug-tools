@@ -5,6 +5,7 @@
 #error ISO c++11 is required to use test output!
 #endif
 
+#include "include/define.h"
 #include <chrono>
 #include <iostream>
 namespace apdebug
@@ -24,6 +25,7 @@ namespace apdebug
         };
         std::ostream& operator<<(std::ostream&, col);
         void PrintTime(std::chrono::microseconds::rep, std::ostream&);
+        void printT(apdebug::timer::timType, const char*, std::ostream&);
     }
 }
 #endif
