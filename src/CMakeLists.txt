@@ -10,4 +10,11 @@ target_compile_features(single PUBLIC "cxx_std_17")
 target_link_libraries(single debug-lib)
 target_link_libraries(single exceptions)
 
+add_executable(group grouptest.cpp)
+target_compile_features(group PUBLIC "cxx_std_17")
+target_link_libraries(group debug-lib)
+target_link_libraries(group exceptions)
+
+
 install(TARGETS single DESTINATION bin/)
+install(TARGETS group DESTINATION bin/)
