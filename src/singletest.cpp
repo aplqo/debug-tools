@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
         cout << col::BLUE << "[Info] Start testing" << col::NONE << endl;
         cout.flush();
         tp.test();
-        tp.s->verbose();
+        tp.ts->verbose();
     }
     tp.release();
     return 0;

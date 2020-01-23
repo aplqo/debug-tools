@@ -29,7 +29,8 @@ namespace apdebug
             std::string in, out, ans, log;
             result rres, tres;
             /*--run result---*/
-            exception::state* s = nullptr;
+            exception::state* s = nullptr; //run state
+            exception::state* ts = nullptr;
             timer::timType tim;
 
             /*---static config---*/

@@ -62,6 +62,7 @@ namespace apdebug
                 if (str == "Hlim")
                 {
                     s = new exception::HardLimit(hardlim);
+                    tim = hardlim;
                     return;
                 }
                 if (str == "Ret")
@@ -71,10 +72,12 @@ namespace apdebug
                     string op, typ;
                     lo >> op >> op >> typ;
                     s = new exception::Warn(typ, op);
+                    tim = 0;
                     return;
                 }
                 if (str == "RE")
                 {
+                    tim = 0;
                     string typ;
                     lo >> typ;
                     if (typ == "STDException")
@@ -142,11 +145,10 @@ namespace apdebug
         void tpoint::test()
         {
             tres.exec();
-            delete s;
             if (tres.ret)
-                s = new exception::WrongAnswer(tres.ret);
+                ts = new exception::WrongAnswer(tres.ret);
             else
-                s = new exception::Accepted;
+                ts = new exception::Accepted;
         }
         bool tpoint::success()
         {
