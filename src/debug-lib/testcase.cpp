@@ -3,6 +3,7 @@
 #include "include/exception.h"
 #include <csignal>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <limits>
 #include <string>
@@ -18,6 +19,8 @@ namespace apdebug
         using std::string;
         using std::system;
         using std::to_string;
+        using std::filesystem::path;
+        using std::filesystem::remove;
 
         void result::exec()
         {
@@ -32,6 +35,7 @@ namespace apdebug
         timType tpoint::hardlim = 1000 * 10 * 1000;
         void tpoint::run()
         {
+            getLog();
             concat(in);
             concat(out);
             concat(log);
@@ -58,6 +62,7 @@ namespace apdebug
                 if (str == "Hlim")
                 {
                     s = new exception::HardLimit(hardlim);
+                    tim = hardlim;
                     return;
                 }
                 if (str == "Ret")
@@ -67,10 +72,12 @@ namespace apdebug
                     string op, typ;
                     lo >> op >> op >> typ;
                     s = new exception::Warn(typ, op);
+                    tim = 0;
                     return;
                 }
                 if (str == "RE")
                 {
+                    tim = 0;
                     string typ;
                     lo >> typ;
                     if (typ == "STDException")
@@ -137,14 +144,27 @@ namespace apdebug
         }
         void tpoint::test()
         {
-            if (rres.ret != 0)
-                return;
             tres.exec();
-            delete s;
             if (tres.ret)
-                s = new exception::WrongAnswer(tres.ret);
+                ts = new exception::WrongAnswer(tres.ret);
             else
-                s = new exception::Accepted;
+                ts = new exception::Accepted;
+        }
+        bool tpoint::success()
+        {
+            return !(rres.ret || tres.ret);
+        }
+        void tpoint::release()
+        {
+            remove(log);
+            if (success() && !out.empty())
+                remove(out);
+        }
+        void tpoint::getLog()
+        {
+            path p(rres.cmd);
+            p.replace_extension(".log");
+            log = p.string();
         }
         void tpoint::concat(string& s)
         {
@@ -152,7 +172,7 @@ namespace apdebug
             if (s.empty())
                 rres.cmd += "\"\"";
             else
-                rres.cmd += s;
+                rres.cmd += "\"" + s + "\"";
         }
         tpoint::~tpoint()
         {

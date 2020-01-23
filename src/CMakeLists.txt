@@ -1,9 +1,8 @@
-aux_source_directory(. src)
-aux_source_directory(./exceptions ex)
-list(FILTER src EXCLUDE REGEX "singletest.cpp")
+aux_source_directory(./debug-lib libsrc)
+aux_source_directory(./exceptions libex)
 
-add_library(debug-lib STATIC ${src})
-add_library(exceptions STATIC ${ex})
+add_library(debug-lib STATIC ${libsrc})
+add_library(exceptions STATIC ${libex})
 target_compile_features(debug-lib PUBLIC "cxx_std_17")
 
 add_executable(single singletest.cpp)

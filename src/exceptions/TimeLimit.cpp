@@ -38,6 +38,7 @@ namespace apdebug
         {
             cerr << col::RED << "[MLE/TLE] Hard time limit exceed. ";
             PrintTime(hardlim, cerr);
+            cerr << endl;
         }
         void HardLimit::name()
         {

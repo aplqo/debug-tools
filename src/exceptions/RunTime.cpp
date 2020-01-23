@@ -67,7 +67,6 @@ namespace apdebug
                 cerr << "TERM";
                 break;
             }
-            cerr << endl;
         }
 
         void FloatPoint::verbose()
@@ -92,7 +91,7 @@ namespace apdebug
             cerr << "Received SIGFPE";
             if (!stat)
                 return;
-            cerr << " (Float point exception: ";
+            cerr << " ( Float point exception: ";
             if (stat & FE_DIVBYZREO)
                 cerr << "FE_DIVBYZREO ";
             if (stat & FE_INEXACT)
@@ -103,6 +102,7 @@ namespace apdebug
                 cerr << "FE_OVERFLOW ";
             if (stat & FE_UNDERFLOW)
                 cerr << "FE_UNDERFLOW ";
+            cerr << ")";
         }
 
         DivByZero::DivByZero(const string typ)
@@ -142,7 +142,7 @@ namespace apdebug
         }
         void UnknownExcept::details()
         {
-            cerr << "Throw an unknown error";
+            cerr << "Throw an unknown exception";
         }
     }
 }

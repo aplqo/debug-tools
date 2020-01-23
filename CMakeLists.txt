@@ -29,6 +29,14 @@ if(GIT_FOUND)
 	)
 endif()
 
+set(build "unknown")
+#get host information
+execute_process(COMMAND hostname
+	OUTPUT_VARIABLE build
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+	ERROR_QUIET
+)
+
 configure_file(
 	${CMAKE_CURRENT_SOURCE_DIR}/include/define.h.in
 	${CMAKE_BINARY_DIR}/include/define.h

@@ -1,3 +1,4 @@
+#include "include/define.h"
 #include <chrono>
 #include <iostream>
 
@@ -6,6 +7,7 @@ namespace apdebug
     namespace out
     {
         using std::ostream;
+        using apdebug::timer::timType;
         using std::chrono::duration_cast;
         using std::chrono::microseconds;
         using std::chrono::milliseconds;
@@ -42,6 +44,11 @@ namespace apdebug
         {
             milliseconds ms = duration_cast<milliseconds>(microseconds(ti));
             os << ms.count() << "ms ( " << ti << "us )";
+        }
+        void printT(timType n, const char* in,ostream &os)
+        {
+            os << "[Info] " << in << ": ";
+            os << n / 1000 << "ms ( " << (double)n / 1000000 << "s )";
         }
     }
 }

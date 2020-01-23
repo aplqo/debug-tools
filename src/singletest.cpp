@@ -18,25 +18,14 @@ void info(const char* str, const char* val)
 {
     cout << col::CYAN << "[Info] " << str << ": " << val << endl;
 }
-void printT(timType n, const char* in)
-{
-    cout << col::CYAN << "[Info] " << in << ": ";
-    cout << n / 1000 << "ms ( " << (double)n / 1000000 << "s )" << endl;
-}
-void getLog()
-{
-    path p(tp.rres.cmd);
-    p.replace_extension(".log");
-    tp.log = p.string();
-}
 int main(int argc, char* argv[])
 {
     tp.rres.cmd = argv[1];
     cout << endl;
     cout << "Aplqo debug tools: single test runner" << endl;
-    cout << "Version git@" << apdebug::info::hash << endl;
-    cout << "Build branch:" << apdebug::info::branch << endl;
-    cout << "Build date " << __DATE__ << " " << __TIME__ << endl;
+    cout << "Version git@" << apdebug::info::hash << " " << apdebug::info::version << endl;
+    cout << "Build branch: " << apdebug::info::branch << endl;
+    cout << "Build on " << __DATE__ << " " << __TIME__ << " by " << apdebug::info::builder << endl;
     cout << endl;
 
     for (int i = 2; i < argc; ++i)
@@ -82,21 +71,22 @@ int main(int argc, char* argv[])
             cout << tp.tres.cmd << " " << tp.tres.args << endl;
         }
     }
-    printT(tpoint::lim, "Time limit");
-    printT(tpoint::hardlim, "Hard time limit");
+    printT(tpoint::lim, "Time limit", cout);
+    cout << endl;
+    printT(tpoint::hardlim, "Hard time limit", cout);
+    cout << endl;
     cout << col::BLUE << "[Info] Start program" << col::NONE << endl;
     cout.flush();
-    getLog();
     tp.run();
     tp.parse();
-    remove(path(tp.log));
     tp.s->verbose();
-    if (!tp.tres.cmd.empty() && tp.rres.ret == 0)
+    if (tp.success() && !tp.tres.cmd.empty())
     {
         cout << col::BLUE << "[Info] Start testing" << col::NONE << endl;
         cout.flush();
         tp.test();
-        tp.s->verbose();
+        tp.ts->verbose();
     }
+    tp.release();
     return 0;
 }
