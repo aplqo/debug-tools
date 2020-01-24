@@ -72,40 +72,41 @@ void point::exec()
     cout << "[Info] Run args: " << rres.args << col::NONE << endl;
     this->run();
     this->parse();
-    s->verbose();
+    cout << s->verbose();
     if (success() && !tres.cmd.empty() && !ans.empty())
     {
         cout << col::BLUE << "[Info] Start testing for test #" << id << col::CYAN << endl;
         cout << "[Info] Answer file: " << ans << endl;
         cout << "[Info] Test command: " << tres.cmd << " " << tres.args << col::NONE << endl;
         this->test();
-        ts->verbose();
+        cout << ts->verbose();
     }
     cout << col::BLUE << "[Info] Test #" << id << " finished." << endl;
 }
 void point::print()
 {
     if (rres.ret || fail)
-        s->color();
+        cout << s->color();
     else if (ts != nullptr)
-        ts->color();
+        cout << ts->color();
     cout << endl;
     tab.print(Id, id, cout);
     tab.setw(RState, cerr);
-    s->name();
-    cerr << "  ";
-    tab.setw(TState, cerr);
+    tab.print(RState, s->name(), cout);
     if (ts != nullptr)
-        ts->name();
+        tab.print(TState, ts->name(), cout);
     else
-        cerr << "skip";
-    cerr << "  ";
+    {
+        tab.setw(TState, cout);
+        cout << "skip"
+             << "  ";
+    }
     tab.print(In, in, cout);
     tab.print(Out, out, cout);
     tab.print(Ans, ans, cout);
     tab.print(MsTim, tim / 1000, cout);
     tab.print(UsTim, tim, cout);
-    s->details();
+    tab.print(Det, s->details(), cout);
 }
 void point::getArgs(result& r)
 {
@@ -259,14 +260,14 @@ int main(int argc, char* argv[])
         i.init();
         i.exec();
         i.release();
-        tab.update(In, i.in.length() + 1);
-        tab.update(Out, i.out.length() + 1);
-        tab.update(Ans, i.ans.length() + 1);
+        tab.update(In, i.in.length() + 2);
+        tab.update(Out, i.out.length() + 2);
+        tab.update(Ans, i.ans.length() + 2);
+        tab.update(Det, i.s->details().length() + 2);
     }
     //print table
     {
-        tab.update(RState, 11);
-        tab.update(TState, 11);
+        tab.update(Id, log10(tests.size()) + 2);
         tab.update(MsTim, log10(point::hardlim / 1000) + 2);
         tab.update(UsTim, log10(point::hardlim) + 2);
         cout << col::NONE << endl

@@ -58,7 +58,7 @@ namespace apdebug
             int j = 0;
             for (auto i = cols.begin(); i != cols.end(); ++i, ++j)
             {
-                width[j] = strlen(*i);
+                width[j] = strlen(*i) + 2;
                 head[j] = *i;
             }
         }

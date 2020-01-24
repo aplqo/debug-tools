@@ -1,7 +1,7 @@
 #include "include/define.h"
 #include "include/exception.h"
 #include "include/output.h"
-#include <iostream>
+#include <sstream>
 #include <string>
 
 namespace apdebug
@@ -9,7 +9,7 @@ namespace apdebug
     namespace exception
     {
         using apdebug::timer::timType;
-        using std::cerr;
+        using std::ostringstream;
         using std::endl;
         using std::string;
         using namespace apdebug::out;
@@ -19,21 +19,27 @@ namespace apdebug
             type = typ;
             oper = op;
         }
-        void Warn::name()
+        string Warn::name()
         {
-            cerr << "Warn";
+            return "Warn";
         }
-        void Warn::verbose()
+        string Warn::verbose()
         {
-            cerr << col::YELLOW << "[Warn] Integer overflow ( Operation " << oper << " Type: " << type << ")" << endl;
+            ostringstream os;
+            os << col::YELLOW << "[Warn] Integer overflow ( Operation " << oper << " Type: " << type << ")" << endl;
+            return os.str();
         }
-        void Warn::details()
+        string Warn::details()
         {
-            cerr << "Integer overflow on " << oper << " of " << type;
+            ostringstream os;
+            os << "Integer overflow on " << oper << " of " << type;
+            return os.str();
         }
-        void Warn::color()
+        string Warn::color()
         {
-            cerr << col::YELLOW;
+            ostringstream os;
+            os << col::YELLOW;
+            return os.str();
         }
     }
 }

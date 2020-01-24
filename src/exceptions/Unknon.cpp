@@ -1,26 +1,32 @@
 #include "include/exception.h"
 #include "include/output.h"
-#include <iostream>
+#include <sstream>
+#include <string>
 
 namespace apdebug
 {
     namespace exception
     {
-        using std::cerr;
         using std::endl;
+        using std::ostringstream;
+        using std::string;
         using namespace apdebug::out;
 
-        void Unknown::name()
+        string Unknown::name()
         {
-            cerr << "UKE";
+            return "UKE";
         }
-        void Unknown::color()
+        string Unknown::color()
         {
-            cerr << col::NONE;
+            ostringstream os;
+            os << col::NONE;
+            return os.str();
         }
-        void Unknown::verbose()
+        string Unknown::verbose()
         {
-            cerr << "[UKE] Unknown error" << endl;
+            ostringstream os;
+            os << "[UKE] Unknown error ( return " << ret << " ) " << endl;
+            return os.str();
         }
     }
 }

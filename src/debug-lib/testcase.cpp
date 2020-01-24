@@ -143,7 +143,7 @@ namespace apdebug
                     }
                 }
             }
-            s = new exception::Unknown;
+            s = new exception::Unknown(rres.ret);
         }
         void tpoint::test()
         {
@@ -166,7 +166,7 @@ namespace apdebug
                 out = "(Released)";
             }
         }
-        void tpoint::getLog() 
+        void tpoint::getLog()
         {
             path p(rres.cmd);
             p.replace_extension(".log");

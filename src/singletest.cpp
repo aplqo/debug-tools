@@ -79,13 +79,13 @@ int main(int argc, char* argv[])
     cout.flush();
     tp.run();
     tp.parse();
-    tp.s->verbose();
+    cout << tp.s->verbose();
     if (tp.success() && !tp.tres.cmd.empty())
     {
         cout << col::BLUE << "[Info] Start testing" << col::NONE << endl;
         cout.flush();
         tp.test();
-        tp.ts->verbose();
+        cout << tp.ts->verbose();
     }
     tp.release();
     return 0;

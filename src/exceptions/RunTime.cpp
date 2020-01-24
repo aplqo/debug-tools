@@ -3,7 +3,7 @@
 #include "include/output.h"
 #include <csignal>
 #include <exception>
-#include <iostream>
+#include <sstream>
 #include <string>
 
 namespace apdebug
@@ -11,112 +11,124 @@ namespace apdebug
     namespace exception
     {
         using apdebug::timer::timType;
-        using std::cerr;
         using std::endl;
+        using std::ostringstream;
         using std::string;
         using namespace apdebug::out;
 
-        void RuntimeError::name()
+        std::string RuntimeError::name()
         {
-            cerr << "RE";
+            return "RE";
         }
-        void RuntimeError::color()
+        std::string RuntimeError::color()
         {
-            cerr << col::PURPLE;
+            ostringstream os;
+            os << col::PURPLE;
+            return os.str();
         }
 
         NormalRE::NormalRE(int t)
         {
             typ = t;
         }
-        void NormalRE::verbose()
+        std::string NormalRE::verbose()
         {
-            color();
-            cerr << "[RE] Received SIG";
+            ostringstream os;
+            os << color();
+            os << "[RE] Received SIG";
             switch (typ)
             {
             case SIGSEGV:
-                cerr << "SEGV  invalid memory access (segmentation fault)" << endl;
+                os << "SEGV  invalid memory access (segmentation fault)" << endl;
                 break;
             case SIGINT:
-                cerr << "INT  external interrupt, usually initiated by the user" << endl;
+                os << "INT  external interrupt, usually initiated by the user" << endl;
                 break;
             case SIGILL:
-                cerr << "IGN  invalid program image, such as invalid instruction" << endl;
+                os << "IGN  invalid program image, such as invalid instruction" << endl;
                 break;
             case SIGTERM:
-                cerr << "TERM  termination request, sent to the program" << endl;
+                os << "TERM  termination request, sent to the program" << endl;
                 break;
             }
+            return os.str();
         }
-        void NormalRE::details()
+        std::string NormalRE::details()
         {
-            cerr << "Received SIG";
+            ostringstream os;
+            os << "Received SIG";
             switch (typ)
             {
             case SIGSEGV:
-                cerr << "SEGV";
+                os << "SEGV";
                 break;
             case SIGINT:
-                cerr << "INT";
+                os << "INT";
                 break;
             case SIGILL:
-                cerr << "ILL";
+                os << "ILL";
                 break;
             case SIGTERM:
-                cerr << "TERM";
+                os << "TERM";
                 break;
             }
+            return os.str();
         }
 
-        void FloatPoint::verbose()
+        std::string FloatPoint::verbose()
         {
-            color();
-            cerr << "[RE] Received SIGFPE  erroneous arithmetic operation such as divide by zero " << endl;
+            ostringstream os;
+            os << color();
+            os << "[RE] Received SIGFPE  erroneous arithmetic operation such as divide by zero " << endl;
             if (!stat)
-                return;
+                return os.str();
             if (stat & FE_DIVBYZREO)
-                cerr << "\tFE_DIVBYZREO: pole error occurred in an earlier floating-point operation." << endl;
+                os << "\tFE_DIVBYZREO: pole error occurred in an earlier floating-point operation." << endl;
             if (stat & FE_INEXACT)
-                cerr << "\tFE_INEXACT: inexact result: rounding was necessary to store the result of an earlier floating-point operation." << endl;
+                os << "\tFE_INEXACT: inexact result: rounding was necessary to store the result of an earlier floating-point operation." << endl;
             if (stat & FE_INVALID)
-                cerr << "\tFE_INVALID: domain error occurred in an earlier floating-point operation" << endl;
+                os << "\tFE_INVALID: domain error occurred in an earlier floating-point operation" << endl;
             if (stat & FE_OVERFLOW)
-                cerr << "\tFE_OVERFLOW: the result of the earlier floating-point operation was too large to be representable" << endl;
+                os << "\tFE_OVERFLOW: the result of the earlier floating-point operation was too large to be representable" << endl;
             if (stat & FE_UNDERFLOW)
-                cerr << "\tFE_UNDERFLOW: the result of the earlier floating-point operation was subnormal with a loss of precision" << endl;
+                os << "\tFE_UNDERFLOW: the result of the earlier floating-point operation was subnormal with a loss of precision" << endl;
+            return os.str();
         }
-        void FloatPoint::details()
+        std::string FloatPoint::details()
         {
-            cerr << "Received SIGFPE";
+            ostringstream os;
+            os << "Received SIGFPE";
             if (!stat)
-                return;
-            cerr << " ( Float point exception: ";
+                return os.str();
+            os << " ( Float point exception: ";
             if (stat & FE_DIVBYZREO)
-                cerr << "FE_DIVBYZREO ";
+                os << "FE_DIVBYZREO ";
             if (stat & FE_INEXACT)
-                cerr << "FE_INEXACT ";
+                os << "FE_INEXACT ";
             if (stat & FE_INVALID)
-                cerr << "FE_INVALID ";
+                os << "FE_INVALID ";
             if (stat & FE_OVERFLOW)
-                cerr << "FE_OVERFLOW ";
+                os << "FE_OVERFLOW ";
             if (stat & FE_UNDERFLOW)
-                cerr << "FE_UNDERFLOW ";
-            cerr << ")";
+                os << "FE_UNDERFLOW ";
+            os << ")";
+            return os.str();
         }
 
         DivByZero::DivByZero(const string typ)
         {
             type = typ;
         }
-        void DivByZero::verbose()
+        std::string DivByZero::verbose()
         {
-            color();
-            cerr << "[RE] Divide by zero. type: " << type << endl;
+            ostringstream os;
+            os << color();
+            os << "[RE] Divide by zero. type: " << type << endl;
+            return os.str();
         }
-        void DivByZero::details()
+        std::string DivByZero::details()
         {
-            cerr << "Divide by zero on type " << type;
+            return "Divide by zero on type " + type;
         }
 
         STDExcept::STDExcept(const string typ, const string des)
@@ -124,25 +136,29 @@ namespace apdebug
             type = typ;
             what = des;
         }
-        void STDExcept::verbose()
+        std::string STDExcept::verbose()
         {
-            color();
-            cerr << "[RE] Throw an exception of type " << type << endl;
-            cerr << "\t what() " << what << endl;
+            ostringstream os;
+            os << color();
+            os << "[RE] Throw an exception of type " << type << endl;
+            os << "\t what() " << what << endl;
+            return os.str();
         }
-        void STDExcept::details()
+        std::string STDExcept::details()
         {
-            cerr << "Throw an exception " << type;
+            return "Throw an exception " + type;
         }
 
-        void UnknownExcept::verbose()
+        std::string UnknownExcept::verbose()
         {
-            color();
-            cerr << "[RE] Throw an unknown exception" << endl;
+            ostringstream os;
+            os << color();
+            os << "[RE] Throw an unknown exception" << endl;
+            return os.str();
         }
-        void UnknownExcept::details()
+        std::string UnknownExcept::details()
         {
-            cerr << "Throw an unknown exception";
+            return "Throw an unknown exception";
         }
     }
 }

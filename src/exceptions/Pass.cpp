@@ -1,61 +1,73 @@
 #include "include/define.h"
 #include "include/exception.h"
 #include "include/output.h"
-#include <iostream>
+#include <sstream>
 
 namespace apdebug
 {
     namespace exception
     {
         using apdebug::timer::timType;
-        using std::cerr;
+        using std::ostringstream;
         using std::endl;
         using namespace apdebug::out;
 
-        void Pass::name()
+        std::string Pass::name()
         {
-            cerr << "Pass";
+            return "Pass";
         }
-        void Pass::verbose()
+        std::string Pass::verbose()
         {
-            cerr << col::GREEN << "[Pass] Program finished after ";
-            PrintTime(tim, cerr);
-            cerr << endl;
+            ostringstream os;
+            os << col::GREEN << "[Pass] Program finished after ";
+            PrintTime(tim, os);
+            os << endl;
+            return os.str();
         }
-        void Pass::color()
+        std::string Pass::color()
         {
-            cerr << col::GREEN;
+            ostringstream os;
+            os << col::GREEN;
+            return os.str();
         }
 
-        void Accepted::name()
+        std::string Accepted::name()
         {
-            cerr << "AC";
+           return "AC";
         }
-        void Accepted::verbose()
+        std::string Accepted::verbose()
         {
-            cerr << col::GREEN << "[AC] Test program return code 0";
-            cerr << endl;
+            ostringstream os;
+            os << col::GREEN << "[AC] Test program return code 0";
+            os << endl;
+            return os.str();
         }
-        void Accepted::color()
+        std::string Accepted::color()
         {
-            cerr << col::GREEN;
+            ostringstream os;
+            os << col::GREEN;
+            return os.str();
         }
 
         WrongAnswer::WrongAnswer(int r)
         {
             ret = r;
         }
-        void WrongAnswer::name()
+        std::string WrongAnswer::name()
         {
-            cerr << "WA";
+            return "WA";
         }
-        void WrongAnswer::verbose()
+        std::string WrongAnswer::verbose()
         {
-            cerr << col::RED << "[WA] Test program return " << ret << endl;
+            ostringstream os;
+            os << col::RED << "[WA] Test program return " << ret << endl;
+            return os.str();
         }
-        void WrongAnswer::color()
+        std::string WrongAnswer::color()
         {
-            cerr << col::RED;
+            ostringstream os;
+            os << col::RED;
+            return os.str();
         }
     }
 }
