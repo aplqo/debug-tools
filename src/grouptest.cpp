@@ -110,9 +110,9 @@ void point::print()
 }
 void point::getArgs(result& r)
 {
-    r.args = regex_replace(r.args, regex(R"(\[input\])"), "\"" + in + "\"");
-    r.args = regex_replace(r.args, regex(R"(\[output\])"), "\"" + out + "\"");
-    r.args = regex_replace(r.args, regex(R"(\[answer\])"), "\"" + ans + "\"");
+    r.args = regex_replace(r.args, regex(R"("\[input\]")"), "\"" + in + "\"");
+    r.args = regex_replace(r.args, regex(R"("\[output\]")"), "\"" + out + "\"");
+    r.args = regex_replace(r.args, regex(R"("\[answer\]")"), "\"" + ans + "\"");
 }
 void point::getOut()
 {
@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
             cout << col::CYAN << "[Info] Arguments: ";
             for (int j = 1; j <= ccmd; ++j, ++i)
             {
-                point::exe.args += argv[i];
+                point::exe.args += string(" \"") + argv[i] + "\"";
                 cout << argv[i] << " ";
             }
             cout << endl;
@@ -244,7 +244,7 @@ int main(int argc, char* argv[])
             ++i;
             cout << col::CYAN << "[Info] Test command: ";
             for (int j = 0; j < num; ++j, ++i)
-                point::tes.args = point::tes.args + " " + argv[i];
+                point::tes.args = point::tes.args + " \"" + argv[i] + "\"";
             cout << point::tes.cmd << " " << point::tes.args << endl;
         }
     }

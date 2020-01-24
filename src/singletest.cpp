@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
             ++i;
             cerr << col::CYAN << "[Info] Test command: ";
             for (int j = 0; j < num; ++j, ++i)
-                tp.tres.args = tp.tres.args + " " + argv[i];
+                tp.tres.args = tp.tres.args + " \"" + argv[i] + "\"";
             cout << tp.tres.cmd << " " << tp.tres.args << endl;
         }
     }
