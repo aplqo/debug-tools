@@ -15,6 +15,11 @@ target_compile_features(group PUBLIC "cxx_std_17")
 target_link_libraries(group debug-lib)
 target_link_libraries(group exceptions)
 
+add_executable(diff autodiff.cpp)
+target_link_libraries(diff debug-lib)
+target_compile_features(diff PUBLIC "cxx_std_17")
+
 
 install(TARGETS single DESTINATION bin/)
 install(TARGETS group DESTINATION bin/)
+install(TARGETS diff DESTINATION bin/)
