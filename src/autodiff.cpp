@@ -70,7 +70,8 @@ int main(int argc, char* argv[])
         if (!strcmp(argv[i], "-test"))
         {
             unsigned long n = stoul(argv[++i]);
-            for (unsigned int j = 0; j < n; ++j)
+            cmd = argv[++i];
+            for (unsigned int j = 1; j < n; ++j)
                 cmd = cmd + " \"" + argv[++i] + "\"";
             cerr << col::BLUE << "Autodiff: Test command " << cmd << endl;
         }
