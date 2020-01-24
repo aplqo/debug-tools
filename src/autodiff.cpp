@@ -14,7 +14,7 @@ using namespace std::filesystem;
 uintmax_t lim = 200;
 bool red = false, silent = false;
 ostringstream nul;
-string cmd;
+string cmd, fil;
 
 int main(int argc, char* argv[])
 {
@@ -60,10 +60,11 @@ int main(int argc, char* argv[])
         if (!strcmp(argv[i], "-diff"))
         {
             ++i;
-            if (red || silent)
+            if (red)
             {
                 cerr << "Autodiff: Redirect stdout to " << argv[i] << endl;
                 freopen(argv[i], "w", stdout);
+                fil = argv[i];
             }
         }
         if (!strcmp(argv[i], "-test"))
@@ -79,10 +80,19 @@ int main(int argc, char* argv[])
     int ret = system(cmd.c_str());
     if (!red)
         cerr << endl;
+    else
+        fclose(stdout);
     if (ret)
         cerr << col::YELLOW;
     else
+    {
         cerr << col::GREEN;
+        if (red && exists(fil))
+        {
+            remove(fil);
+            cerr << "Autodiff: Test passed removed output file" << endl;
+        }
+    }
     cerr << "Autodiff: Test program return " << ret << col::NONE << endl;
     return ret;
 }

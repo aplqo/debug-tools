@@ -110,9 +110,9 @@ void point::print()
 }
 void point::getArgs(result& r)
 {
-    r.args = regex_replace(r.args, regex(R"(\[input\])"), "\"" + in + "\"");
-    r.args = regex_replace(r.args, regex(R"(\[output\])"), "\"" + out + "\"");
-    r.args = regex_replace(r.args, regex(R"(\[answer\])"), "\"" + ans + "\"");
+    r.args = regex_replace(r.args, regex(R"(\[input\])"), in);
+    r.args = regex_replace(r.args, regex(R"(\[output\])"), out);
+    r.args = regex_replace(r.args, regex(R"(\[answer\])"), ans);
 }
 void point::getOut()
 {
