@@ -161,9 +161,12 @@ namespace apdebug
         {
             remove(log);
             if (success() && !out.empty())
+            {
                 remove(out);
+                out = "(Released)";
+            }
         }
-        void tpoint::getLog()
+        void tpoint::getLog() 
         {
             path p(rres.cmd);
             p.replace_extension(".log");

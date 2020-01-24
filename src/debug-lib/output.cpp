@@ -1,28 +1,26 @@
+#include "include/output.h"
 #include "include/define.h"
+#include <algorithm>
 #include <chrono>
+#include <cstring>
+#include <initializer_list>
 #include <iostream>
 
 namespace apdebug
 {
     namespace out
     {
-        using std::ostream;
         using apdebug::timer::timType;
+        using std::endl;
+        using std::initializer_list;
+        using std::max;
+        using std::ostream;
+        using std::strlen;
         using std::chrono::duration_cast;
         using std::chrono::microseconds;
         using std::chrono::milliseconds;
 
         /*-----Color-----*/
-        enum class col
-        {
-            NONE = 0,
-            RED = 1,
-            GREEN = 2,
-            YELLOW = 3,
-            BLUE = 4,
-            PURPLE = 5,
-            CYAN = 6
-        };
         const char* colors[] = { "\033[0m", "\033[31m", "\033[32m", "\033[33m",
             "\033[34m", "\033[35m", "\033[36m" };
 
@@ -45,10 +43,52 @@ namespace apdebug
             milliseconds ms = duration_cast<milliseconds>(microseconds(ti));
             os << ms.count() << "ms ( " << ti << "us )";
         }
-        void printT(timType n, const char* in,ostream &os)
+        void printT(timType n, const char* in, ostream& os)
         {
             os << "[Info] " << in << ": ";
             os << n / 1000 << "ms ( " << (double)n / 1000000 << "s )";
+        }
+
+        /*----- Print table-----*/
+        table::table(initializer_list<const char*> cols)
+            : num(cols.size())
+        {
+            width = new int[num];
+            head = new const char*[num];
+            int j = 0;
+            for (auto i = cols.begin(); i != cols.end(); ++i, ++j)
+            {
+                width[j] = strlen(*i);
+                head[j] = *i;
+            }
+        }
+        void table::update(int col, int val)
+        {
+            width[col] = max(width[col], val);
+        }
+        void table::header(ostream& os)
+        {
+            for (int i = 0; i < num; ++i)
+            {
+                setw(i, os);
+                os << head[i] << "  ";
+            }
+            os << endl;
+            for (int i = 0; i < num; ++i)
+            {
+                for (int j = 0; j < width[i]; ++j)
+                    os << "-";
+                os << "  ";
+            }
+        }
+        void table::setw(int col, ostream& os)
+        {
+            os.width(width[col]);
+        }
+        table::~table()
+        {
+            delete[] head;
+            delete[] width;
         }
     }
 }

@@ -2,6 +2,7 @@
 #include "include/output.h"
 #include "include/testcase.h"
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <filesystem>
 #include <functional>
@@ -17,6 +18,23 @@ using namespace std;
 using namespace std::filesystem;
 using namespace apdebug::out;
 
+table tab {
+    "Id", "State(Run)", "State(Test)", "Input",
+    "Output", "Answer", "Time(ms)", "Time(us)",
+    "Details"
+};
+enum cols
+{
+    Id = 0,
+    RState = 1,
+    TState = 2,
+    In = 3,
+    Out = 4,
+    Ans = 5,
+    MsTim = 6,
+    UsTim = 7,
+    Det = 8
+};
 class point : public tpoint
 {
 public:
@@ -29,16 +47,12 @@ public:
     void print();
     int id;
 
-    static string::size_type inlen, outlen, anslen;
     static result exe, tes;
 
 private:
     void getArgs(result& r);
     void getOut();
 };
-string::size_type point::inlen = 5;
-string::size_type point::outlen = 6;
-string::size_type point::anslen = 6;
 result point::exe;
 result point::tes;
 void point::init()
@@ -76,18 +90,21 @@ void point::print()
     else if (ts != nullptr)
         ts->color();
     cout << endl;
-    cout << setw(5) << id << "  ";
-    cerr.width(11);
+    tab.print(Id, id, cout);
+    tab.setw(RState, cerr);
     s->name();
-    cout << "  ";
-    cerr.width(12);
+    cerr << "  ";
+    tab.setw(TState, cerr);
     if (ts != nullptr)
         ts->name();
     else
         cerr << "skip";
-    cout << "  ";
-    cout << setw(inlen + 1) << in << "  " << setw(outlen + 1) << out << "  " << setw(anslen + 1) << ans << "  ";
-    cout << setw(9) << tim / 1000 << "  " << setw(12) << tim << "  ";
+    cerr << "  ";
+    tab.print(In, in, cout);
+    tab.print(Out, out, cout);
+    tab.print(Ans, ans, cout);
+    tab.print(MsTim, tim / 1000, cout);
+    tab.print(UsTim, tim, cout);
     s->details();
 }
 void point::getArgs(result& r)
@@ -103,7 +120,6 @@ void point::getOut()
     p.replace_filename(p.filename().string() + "-" + path(in).stem().string());
     p.replace_extension(".out");
     this->out = p.string();
-    outlen = max(outlen, this->out.size());
 }
 
 vector<point> tests;
@@ -242,40 +258,20 @@ int main(int argc, char* argv[])
     {
         i.init();
         i.exec();
-        point::inlen = max(point::inlen, i.in.size());
-        point::anslen = max(point::anslen, i.ans.size());
-        point::outlen = max(point::outlen, i.out.size());
         i.release();
+        tab.update(In, i.in.length() + 1);
+        tab.update(Out, i.out.length() + 1);
+        tab.update(Ans, i.ans.length() + 1);
     }
     //print table
     {
+        tab.update(RState, 11);
+        tab.update(TState, 11);
+        tab.update(MsTim, log10(point::hardlim / 1000) + 2);
+        tab.update(UsTim, log10(point::hardlim) + 2);
         cout << col::NONE << endl
              << "Test results:" << endl;
-        cout << setw(5) << "Id"
-             << "  " << setw(11) << "State(Run)"
-             << "  " << setw(12) << "State(Test)"
-             << "  ";
-        cout << setw(point::inlen + 1) << "Input"
-             << "  " << setw(point::outlen + 1) << "Output"
-             << "  " << setw(point::anslen + 1) << "Answer"
-             << "  ";
-        cout << setw(9) << "Time(ms)"
-             << "  " << setw(12) << "Time(us)"
-             << "  " << setw(30) << "Details" << endl;
-        const static auto fil = [](int num) -> void {
-            for (int i = 0; i < num; ++i)
-                cout << "-";
-            cout << "  ";
-        };
-        fil(5);
-        fil(11);
-        fil(12);
-        fil(point::inlen + 1);
-        fil(point::outlen + 1);
-        fil(point::anslen + 1);
-        fil(9);
-        fil(12);
-        fil(30);
+        tab.header(cout);
     }
     for (auto& i : tests)
         i.print();
