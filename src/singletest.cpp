@@ -44,11 +44,11 @@ int main(int argc, char* argv[])
             tp.tres.cmd = argv[++i];
         else if (!strcmp(argv[i], "-time"))
         {
-            tpoint::lim = atoi(argv[++i]) * timType(1000) * 1000;
+            tpoint::lim = atoi(argv[++i]) * timType(1000);
             tpoint::hardlim = tpoint::lim * 10;
         }
         else if (!strcmp(argv[i], "-hlimit"))
-            tpoint::hardlim = atoi(argv[++i]) * timType(1000) * 1000;
+            tpoint::hardlim = atoi(argv[++i]) * timType(1000);
         else if (!strcmp(argv[i], "-args"))
         {
             int ccmd = atoi(argv[++i]);

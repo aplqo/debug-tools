@@ -71,12 +71,10 @@ void point::exec()
 }
 void point::print()
 {
-    if (rres.ret)
+    if (rres.ret || fail)
         s->color();
     else if (ts != nullptr)
         ts->color();
-    else
-        s->color();
     cout << endl;
     cout << setw(5) << id << "  ";
     cerr.width(11);
@@ -123,7 +121,7 @@ void getfiles(path indir, path ansdir, regex inreg, regex ansreg)
         {
             if (!i.is_regular_file())
                 continue;
-            string s = i.path().string();
+            string s = i.path().filename().string();
             smatch m, m2;
             if (!(regex_search(s, m, regex(testreg), regex_constants::match_any) && regex_search(s, m2, regex(inreg), regex_constants::match_any)))
                 continue;
@@ -143,7 +141,7 @@ void getfiles(path indir, path ansdir, regex inreg, regex ansreg)
         {
             if (!i.is_regular_file())
                 continue;
-            string s = i.path().string();
+            string s = i.path().filename().string();
             smatch m, m2;
             if (!(regex_search(s, m, regex(testreg), regex_constants::match_any) && regex_search(s, m2, regex(ansreg), regex_constants::match_any)))
                 continue;
@@ -170,36 +168,35 @@ int main(int argc, char* argv[])
     regex inreg, ansreg;
 
     point::exe.cmd = argv[1];
-    cout << col::CYAN;
     for (int i = 2; i < argc; ++i)
     {
         if (!strcmp(argv[i], "-test-regex"))
         {
-            cout << "[Info] Test file regex: \'" << argv[++i] << "\'" << endl;
+            cout << col::CYAN << "[Info] Test file regex: \'" << argv[++i] << "\'" << endl;
             testreg = regex(argv[i]);
             continue;
         }
         if (!strcmp(argv[i], "-indir"))
         {
-            cout << "[Info] Input directory: " << argv[++i] << endl;
+            cout << col::CYAN << "[Info] Input directory: " << argv[++i] << endl;
             indir = argv[i];
             continue;
         }
         if (!strcmp(argv[i], "-in-regex"))
         {
-            cout << "[Info] Input regex: \'" << argv[++i] << "\'" << endl;
+            cout << col::CYAN << "[Info] Input regex: \'" << argv[++i] << "\'" << endl;
             inreg = regex(argv[i]);
             continue;
         }
         if (!strcmp(argv[i], "-ansdir"))
         {
-            cout << "[Info] Answer directory: " << argv[++i] << endl;
+            cout << col::CYAN << "[Info] Answer directory: " << argv[++i] << endl;
             ansdir = argv[i];
             continue;
         }
         if (!strcmp(argv[i], "-ans-regex"))
         {
-            cout << "[Info] Answer regex: \'" << argv[++i] << "\'" << endl;
+            cout << col::CYAN << "[Info] Answer regex: \'" << argv[++i] << "\'" << endl;
             ansreg = regex(argv[i]);
             continue;
         }
@@ -207,16 +204,16 @@ int main(int argc, char* argv[])
             point::tes.cmd = argv[++i];
         if (!strcmp(argv[i], "-time"))
         {
-            point::lim = atoi(argv[++i]) * timType(1000) * 1000;
+            point::lim = atoi(argv[++i]) * timType(1000);
             point::hardlim = point::lim * 10;
         }
         if (!strcmp(argv[i], "-hlimit"))
-            point::hardlim = atoi(argv[++i]) * timType(1000) * 1000;
+            point::hardlim = atoi(argv[++i]) * timType(1000);
         if (!strcmp(argv[i], "-args"))
         {
             int ccmd = atoi(argv[++i]);
             ++i;
-            cout << "[Info] Arguments: ";
+            cout << col::CYAN << "[Info] Arguments: ";
             for (int j = 1; j <= ccmd; ++j, ++i)
             {
                 point::exe.args += argv[i];
@@ -228,15 +225,17 @@ int main(int argc, char* argv[])
         {
             int num = atoi(argv[++i]);
             ++i;
-            cout << "[Info] Test command: ";
+            cout << col::CYAN << "[Info] Test command: ";
             for (int j = 0; j < num; ++j, ++i)
                 point::tes.args = point::tes.args + " " + argv[i];
             cout << point::tes.cmd << " " << point::tes.args << endl;
         }
     }
     getfiles(indir, ansdir, inreg, ansreg);
+    cout << col::CYAN;
     printT(tpoint::lim, "Time limit", cout);
     cout << endl;
+    cout << col::CYAN;
     printT(tpoint::hardlim, "Hard time limit", cout);
     cout << col::NONE << endl;
     for (auto& i : tests)
