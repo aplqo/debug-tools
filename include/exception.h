@@ -2,7 +2,7 @@
 #define EXCEPTIONS_H
 
 #include "include/define.h"
-#include<string>
+#include <string>
 
 namespace apdebug
 {
@@ -13,7 +13,7 @@ namespace apdebug
         public:
             virtual void name() = 0;
             virtual void verbose() = 0;
-            virtual void details(){};
+            virtual void details() {};
             virtual void color() = 0;
         };
 
@@ -22,7 +22,7 @@ namespace apdebug
         public:
             Pass() = default;
             Pass(apdebug::timer::timType t)
-                : tim(t){};
+                : tim(t) {};
             void name();
             void verbose();
             void color();
@@ -143,6 +143,12 @@ namespace apdebug
         public:
             void verbose();
             void details();
+        };
+        class Unknown : public state
+        {
+            void name();
+            void verbose();
+            void color();
         };
     }
 }

@@ -31,7 +31,8 @@ namespace apdebug
             /*--run result---*/
             exception::state* s = nullptr; //run state
             exception::state* ts = nullptr;
-            timer::timType tim;
+            timer::timType tim = 0;
+            bool fail = true;
 
             /*---static config---*/
             static timer::timType lim, hardlim;
