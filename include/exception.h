@@ -2,7 +2,7 @@
 #define EXCEPTIONS_H
 
 #include "include/define.h"
-#include<string>
+#include <string>
 
 namespace apdebug
 {
@@ -11,10 +11,10 @@ namespace apdebug
         class state
         {
         public:
-            virtual void name() = 0;
-            virtual void verbose() = 0;
-            virtual void details(){};
-            virtual void color() = 0;
+            virtual std::string name() = 0;
+            virtual std::string verbose() = 0;
+            virtual std::string details() { return ""; }
+            virtual std::string color() = 0;
         };
 
         class Pass : public state
@@ -22,10 +22,10 @@ namespace apdebug
         public:
             Pass() = default;
             Pass(apdebug::timer::timType t)
-                : tim(t){};
-            void name();
-            void verbose();
-            void color();
+                : tim(t) {};
+            std::string name();
+            std::string verbose();
+            std::string color();
 
         private:
             apdebug::timer::timType tim;
@@ -33,17 +33,17 @@ namespace apdebug
         class Accepted : public state
         {
         public:
-            void name();
-            void verbose();
-            void color();
+            std::string name();
+            std::string verbose();
+            std::string color();
         };
         class WrongAnswer : public state
         {
         public:
             WrongAnswer(int);
-            void name();
-            void verbose();
-            void color();
+            std::string name();
+            std::string verbose();
+            std::string color();
 
         private:
             int ret;
@@ -53,9 +53,9 @@ namespace apdebug
         {
         public:
             TimeLimit(apdebug::timer::timType);
-            void name();
-            void verbose();
-            void color();
+            std::string name();
+            std::string verbose();
+            std::string color();
 
         private:
             Pass p;
@@ -64,9 +64,9 @@ namespace apdebug
         {
         public:
             HardLimit(apdebug::timer::timType);
-            void name();
-            void verbose();
-            void color();
+            std::string name();
+            std::string verbose();
+            std::string color();
 
         private:
             apdebug::timer::timType hardlim;
@@ -76,10 +76,10 @@ namespace apdebug
         {
         public:
             Warn(const std::string typ, const std::string op);
-            void name();
-            void verbose();
-            void details();
-            void color();
+            std::string name();
+            std::string verbose();
+            std::string details();
+            std::string color();
 
         private:
             std::string type, oper;
@@ -88,15 +88,15 @@ namespace apdebug
         class RuntimeError : public state
         {
         public:
-            void name();
-            void color();
+            std::string name();
+            std::string color();
         };
         class NormalRE : public RuntimeError
         {
         public:
             NormalRE(int);
-            void verbose();
-            void details();
+            std::string verbose();
+            std::string details();
 
         private:
             int typ;
@@ -104,8 +104,8 @@ namespace apdebug
         class FloatPoint : public RuntimeError
         {
         public:
-            void verbose();
-            void details();
+            std::string verbose();
+            std::string details();
 
             enum fexcept
             {
@@ -122,8 +122,8 @@ namespace apdebug
         {
         public:
             DivByZero(const std::string typ);
-            void verbose();
-            void details();
+            std::string verbose();
+            std::string details();
 
         private:
             std::string type;
@@ -132,8 +132,8 @@ namespace apdebug
         {
         public:
             STDExcept(const std::string typ, const std::string des);
-            void verbose();
-            void details();
+            std::string verbose();
+            std::string details();
 
         private:
             std::string type, what;
@@ -141,8 +141,22 @@ namespace apdebug
         class UnknownExcept : public RuntimeError
         {
         public:
-            void verbose();
-            void details();
+            std::string verbose();
+            std::string details();
+        };
+        class Unknown : public state
+        {
+        public:
+            Unknown(int r)
+                : ret(r)
+            {
+            }
+            std::string name();
+            std::string verbose();
+            std::string color();
+
+        private:
+            int ret;
         };
     }
 }

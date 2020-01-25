@@ -1,52 +1,62 @@
 #include "include/define.h"
 #include "include/exception.h"
 #include "include/output.h"
-#include <iostream>
+#include <sstream>
+#include <string>
 
 namespace apdebug
 {
     namespace exception
     {
         using apdebug::timer::timType;
-        using std::cerr;
         using std::endl;
+        using std::ostringstream;
+        using std::string;
         using namespace apdebug::out;
 
         TimeLimit::TimeLimit(timType t)
         {
             p = Pass(t);
         }
-        void TimeLimit::name()
+        string TimeLimit::name()
         {
-            cerr << "TLE";
+            return "TLE";
         }
-        void TimeLimit::verbose()
+        string TimeLimit::verbose()
         {
-            p.verbose();
-            cerr << col::YELLOW << "[TLE] Time limit exceed." << endl;
+            ostringstream os;
+            os << p.verbose();
+            os<< col::YELLOW << "[TLE] Time limit exceed." << endl;
+            return os.str();
         }
-        void TimeLimit::color()
+        string TimeLimit::color()
         {
-            cerr << col::YELLOW;
+            ostringstream os;
+            os << col::YELLOW;
+            return os.str();
         }
 
         HardLimit::HardLimit(timType lim)
         {
             hardlim = lim;
         }
-        void HardLimit::verbose()
+        string HardLimit::verbose()
         {
-            cerr << col::RED << "[MLE/TLE] Hard time limit exceed. ";
-            PrintTime(hardlim, cerr);
-            cerr << endl;
+            ostringstream os;
+            os << col::RED << "[MLE/TLE] Hard time limit exceed. ";
+            PrintTime(hardlim, os);
+            os << endl;
+            return os.str();
         }
-        void HardLimit::name()
+        string HardLimit::name()
         {
-            cerr << "MLE/TLE";
+            return "MLE/TLE";
         }
-        void HardLimit::color()
+        string HardLimit::color()
         {
-            cerr << col::RED;
+            ostringstream os;
+            os << col::RED;
+            return os.str();
         }
     }
 }

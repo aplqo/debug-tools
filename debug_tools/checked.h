@@ -27,7 +27,7 @@ namespace apdebug
             {
             }
             template <class U>
-            inline auto operator+(U r)
+            inline auto operator+(const U r) const
             {
                 auto ret = dat + r;
                 if (ret - dat != r || ((r > 0) ^ (ret > this->dat)))
@@ -35,7 +35,7 @@ namespace apdebug
                 return ret;
             }
             template <class U>
-            inline auto operator*(U a)
+            inline auto operator*(const U a) const
             {
                 auto ret = dat * a.dat;
                 if (ret / a.dat != this->dat)
@@ -43,7 +43,7 @@ namespace apdebug
                 return ret;
             }
             template <class U>
-            inline auto operator-(U a)
+            inline auto operator-(const U a) const
             {
                 auto ret = dat - a.dat;
                 if (ret + a.dat != this->dat || ((a.dat < 0) ^ (ret < this->dat)))
@@ -51,7 +51,7 @@ namespace apdebug
                 return ret;
             }
             template <class U>
-            inline auto operator/(U r)
+            inline auto operator/(const U r) const
             {
                 if (r == 0)
                 {
@@ -60,7 +60,7 @@ namespace apdebug
                 }
                 return dat / r;
             }
-            operator T() { return dat; };
+            operator T() const { return dat; };
             /*Increment and decrement*/
             inline typename CheckedInteger<T>& operator++()
             {
@@ -96,7 +96,7 @@ namespace apdebug
             }
 #define oper(op)       \
     template <class U> \
-    inline auto operator op(U r) { return dat op r; }
+    inline auto operator op(const U r) const { return dat op r; }
             oper(%);
             /*Bitwise arithmetic operators*/
             oper(&);
@@ -127,14 +127,14 @@ namespace apdebug
             assop(>>);
             assop(<<);
 #undef assop
-            inline auto operator~()
+            inline auto operator~() const
             {
                 return ~dat;
             }
             template <class U>
-            friend inline ostream operator<<(ostream&, CheckedInteger<U>);
+            friend inline ostream& operator<<(ostream&, const CheckedInteger<U>&);
             template <class U>
-            friend inline istream operator>>(istream&, CheckedInteger<U>);
+            friend inline istream& operator>>(istream&, CheckedInteger<U>&);
 
         private:
             static void err(char* op)
@@ -146,13 +146,13 @@ namespace apdebug
         };
         /*Stream extraction and insertion*/
         template <class T>
-        inline ostream operator<<(ostream& os, CheckedInteger<T> d)
+        ostream& operator<<(ostream& os, const CheckedInteger<T>& d)
         {
             os << d.dat;
             return os;
         }
         template <class T>
-        inline istream operator>>(istream& is, CheckedInteger<T> d)
+        istream& operator>>(istream& is, CheckedInteger<T>& d)
         {
             is >> d.dat;
             return is;

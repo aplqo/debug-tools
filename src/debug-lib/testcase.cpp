@@ -56,7 +56,10 @@ namespace apdebug
                     if (tim >= lim)
                         s = new exception::TimeLimit(tim);
                     else
+                    {
+                        fail = false;
                         s = new exception::Pass(tim);
+                    }
                     return;
                 }
                 if (str == "Hlim")
@@ -140,7 +143,7 @@ namespace apdebug
                     }
                 }
             }
-            s = new exception::Pass;
+            s = new exception::Unknown(rres.ret);
         }
         void tpoint::test()
         {
@@ -158,7 +161,10 @@ namespace apdebug
         {
             remove(log);
             if (success() && !out.empty())
+            {
                 remove(out);
+                out = "(Released)";
+            }
         }
         void tpoint::getLog()
         {
