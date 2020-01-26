@@ -28,5 +28,11 @@ namespace apdebug
             os << "[UKE] Unknown error ( return " << ret << " ) " << endl;
             return os.str();
         }
+        string Unknown::details()
+        {
+            ostringstream os;
+            os << "Return " << ret;
+            return os.str();
+        }
     }
 }

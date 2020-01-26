@@ -153,6 +153,7 @@ namespace apdebug
             }
             std::string name();
             std::string verbose();
+            std::string details();
             std::string color();
 
         private:
