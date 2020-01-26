@@ -93,27 +93,30 @@ namespace apdebug
             delete[] width;
         }
         /*-----Print test point config-----*/
-        static inline void print(const char* str, const string& st, ostream& os)
+        static inline void print(const char* str, const string& st, ostream& os, bool n)
         {
             if (st.empty())
                 return;
             os << col::CYAN << "[Info] " << str << ": " << st;
+            if (n)
+                os << endl;
         }
-        void PrintRun(const testcase::tpoint& tp, ostream& os)
+        void PrintRun(const testcase::tpoint& tp, ostream& os,bool n)
         {
-            print("Input file", tp.in, os);
-            os << endl;
-            print("Output file", tp.out, os);
-            os << endl;
-            print("Run arguments", tp.rres.args, os);
+            print("Input file", tp.in, os, true);
+            print("Output file", tp.out, os, true);
+            print("Run arguments", tp.rres.args, os, n);
         }
-        void PrintTest(const testcase::tpoint& tp, ostream& os)
+        void PrintTest(const testcase::tpoint& tp, ostream& os,bool n)
         {
-            print("Answer file", tp.ans, os);
+            print("Answer file", tp.ans, os, n);
             if (!tp.tres.cmd.empty())
             {
-                os << endl;
+                if (!n)
+                    os << endl;
                 os << col::CYAN << "[Info] Test command: " << tp.tres.cmd << " " << tp.tres.args;
+                if (n)
+                    os << endl;
             }
         }
     }

@@ -17,6 +17,7 @@ target_link_libraries(group exceptions)
 
 add_executable(diff autodiff.cpp)
 target_link_libraries(diff debug-lib)
+target_link_libraries(diff exceptions)
 target_compile_features(diff PUBLIC "cxx_std_17")
 
 

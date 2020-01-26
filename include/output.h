@@ -56,17 +56,19 @@ namespace apdebug
         };
         /*-----Print test point config-----*/
         template <class T>
-        void PrintLimit(std::ostream& os) // print time limit
+        void PrintLimit(std::ostream& os, bool n) // print time limit
         {
-            static_assert(std::is_base_of<testcase::tpoint, T>);
+            static_assert(std::is_base_of_v<testcase::tpoint, T>);
             printT(T::lim, "Time limit", os);
             os << std::endl;
             printT(T::hardlim, "Hard time limit", os);
+            if (n)
+                os << std::endl;
         }
-        void PrintRun(const testcase::tpoint&, std::ostream&);
-        void PrintTest(const testcase::tpoint&, std::ostream&);
+        void PrintRun(const testcase::tpoint&, std::ostream&, bool);
+        void PrintTest(const testcase::tpoint&, std::ostream&, bool);
         /*-----Print version info-----*/
-        void PrintVersion(const char* str, std::ostream& os)
+        static void PrintVersion(const char* str, std::ostream& os)
         {
             os << std::endl;
             os << "Aplqo debug tool: " << str << std::endl;
