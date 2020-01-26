@@ -1,5 +1,7 @@
+#include "include/cmdarg.h"
 #include "include/define.h"
 #include "include/output.h"
+#include "include/testcase.h"
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
@@ -10,11 +12,14 @@ using namespace std;
 using namespace apdebug::out;
 using namespace apdebug::info;
 using namespace std::filesystem;
+using apdebug::args::ReadArgument;
+using apdebug::testcase::result;
 
 uintmax_t lim = 200;
 bool red = false, silent = false;
 ostringstream nul;
-string cmd, fil;
+string fil;
+result exe;
 
 int main(int argc, char* argv[])
 {
@@ -23,10 +28,7 @@ int main(int argc, char* argv[])
         silent = true;
         cerr.rdbuf(nul.rdbuf());
     }
-    cerr << "Aplqo debug tool: auto diff" << endl;
-    cerr << "Version git@" << apdebug::info::hash << " " << apdebug::info::version << endl;
-    cerr << "Build branch: " << apdebug::info::branch << endl;
-    cerr << "Build on " << __TIME__ << " " << __DATE__ << " by " << apdebug::info::builder << endl;
+    PrintVersion("auto diff", cerr);
 
     cerr << col::CYAN;
 
@@ -68,22 +70,19 @@ int main(int argc, char* argv[])
             }
         }
         if (!strcmp(argv[i], "-test"))
-        {
-            unsigned long n = stoul(argv[++i]);
-            cmd = argv[++i];
-            for (unsigned int j = 1; j < n; ++j)
-                cmd = cmd + " \"" + argv[++i] + "\"";
-            cerr << col::BLUE << "Autodiff: Test command " << cmd << endl;
-        }
+            exe.cmd = argv[++i];
+        if (!strcmp(argv[i], "-testargs"))
+            ReadArgument(exe, ++i, argv);
     }
+    cerr << col::BLUE << "Test command: " << exe.cmd << "  " << exe.args << endl;
     if (!red)
         cerr << col::NONE << endl;
-    int ret = system(cmd.c_str());
+    exe.exec();
     if (!red)
         cerr << endl;
     else
         fclose(stdout);
-    if (ret)
+    if (exe.ret)
         cerr << col::YELLOW;
     else
     {
@@ -94,6 +93,6 @@ int main(int argc, char* argv[])
             cerr << "Autodiff: Test passed removed output file" << endl;
         }
     }
-    cerr << "Autodiff: Test program return " << ret << col::NONE << endl;
-    return ret;
+    cerr << "Autodiff: Test program return " << exe.ret << col::NONE << endl;
+    return exe.ret;
 }

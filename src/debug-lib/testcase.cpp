@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <regex>
 #include <string>
 
 namespace apdebug
@@ -16,6 +17,8 @@ namespace apdebug
         using std::getline;
         using std::ifstream;
         using std::numeric_limits;
+        using std::regex;
+        using std::regex_replace;
         using std::string;
         using std::system;
         using std::to_string;
@@ -33,9 +36,14 @@ namespace apdebug
 
         timType tpoint::lim = 1000 * 1000;
         timType tpoint::hardlim = 1000 * 10 * 1000;
+        void tpoint::init()
+        {
+            getArgs(rres);
+            getArgs(tres);
+            getLog();
+        }
         void tpoint::run()
         {
-            getLog();
             concat(in);
             concat(out);
             concat(log);
@@ -171,6 +179,12 @@ namespace apdebug
             path p(rres.cmd);
             p.replace_extension(".log");
             log = p.string();
+        }
+        void tpoint::getArgs(result& r)
+        {
+            r.args = regex_replace(r.args, regex(R"(\[input\])"), in);
+            r.args = regex_replace(r.args, regex(R"(\[output\])"), out);
+            r.args = regex_replace(r.args, regex(R"(\[answer\])"), ans);
         }
         void tpoint::concat(string& s)
         {

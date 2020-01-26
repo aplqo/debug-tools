@@ -19,6 +19,7 @@ namespace apdebug
         class tpoint
         {
         public:
+            void init();
             void run();
             void parse();
             void test();
@@ -36,6 +37,9 @@ namespace apdebug
 
             /*---static config---*/
             static timer::timType lim, hardlim;
+
+        protected:
+            void getArgs(result& r);
 
         private:
             void getLog();

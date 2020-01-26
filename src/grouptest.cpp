@@ -1,3 +1,4 @@
+#include "include/cmdarg.h"
 #include "include/define.h"
 #include "include/output.h"
 #include "include/testcase.h"
@@ -17,6 +18,7 @@ using apdebug::timer::timType;
 using namespace std;
 using namespace std::filesystem;
 using namespace apdebug::out;
+using namespace apdebug::args;
 
 table tab {
     "Id", "State(Run)", "State(Test)", "Input",
@@ -50,7 +52,6 @@ public:
     static result exe, tes;
 
 private:
-    void getArgs(result& r);
     void getOut();
 };
 result point::exe;
@@ -60,24 +61,22 @@ void point::init()
     this->rres = exe;
     this->tres = tes;
     getOut();
-    getArgs(rres);
-    getArgs(tres);
+    this->tpoint::init();
 }
 void point::exec()
 {
     cout << endl;
     cout << col::BLUE << "[Info] Start program for test #" << id << col::CYAN << endl;
-    cout << "[Info] Input file: " << in << endl;
-    cout << "[Info] Output file: " << out << endl;
-    cout << "[Info] Run args: " << rres.args << col::NONE << endl;
+    PrintRun(*this, cout, false);
+    cout << col::NONE << endl;
     this->run();
     this->parse();
     cout << s->verbose();
     if (success() && !tres.cmd.empty() && !ans.empty())
     {
         cout << col::BLUE << "[Info] Start testing for test #" << id << col::CYAN << endl;
-        cout << "[Info] Answer file: " << ans << endl;
-        cout << "[Info] Test command: " << tres.cmd << " " << tres.args << col::NONE << endl;
+        PrintTest(*this, cout, false);
+        cout << col::NONE << endl;
         this->test();
         cout << ts->verbose();
     }
@@ -108,12 +107,6 @@ void point::print()
     tab.print(UsTim, tim, cout);
     tab.print(Det, s->details(), cout);
 }
-void point::getArgs(result& r)
-{
-    r.args = regex_replace(r.args, regex(R"(\[input\])"), in);
-    r.args = regex_replace(r.args, regex(R"(\[output\])"), out);
-    r.args = regex_replace(r.args, regex(R"(\[answer\])"), ans);
-}
 void point::getOut()
 {
     path p(rres.cmd);
@@ -130,7 +123,15 @@ void getfiles(path indir, path ansdir, regex inreg, regex ansreg)
 {
     static map<size_t, int> table;
     static int cur = 0;
-    hash<string> hs;
+    auto getHash = [](string s, regex reg) -> size_t {
+        s = regex_replace(s, regex(testreg), "");
+        s = regex_replace(s, reg, "");
+        return hash<string>()(s);
+    };
+    auto isInclude = [](string s, regex reg) -> bool {
+        smatch m1, m2;
+        return regex_search(s, m1, testreg) && regex_search(s, m2, reg);
+    };
     {
 
         directory_iterator init(indir);
@@ -139,13 +140,10 @@ void getfiles(path indir, path ansdir, regex inreg, regex ansreg)
             if (!i.is_regular_file())
                 continue;
             string s = i.path().filename().string();
-            smatch m, m2;
-            if (!(regex_search(s, m, regex(testreg), regex_constants::match_any) && regex_search(s, m2, regex(inreg), regex_constants::match_any)))
+            if (!isInclude(s, inreg))
                 continue;
-            s = regex_replace(s, regex(testreg), "");
-            s = regex_replace(s, regex(inreg), "");
             tests.push_back(point(cur));
-            table[hs(s)] = cur;
+            table[getHash(s, inreg)] = cur;
             tests[cur].in = i.path().string();
             ++cur;
         }
@@ -159,12 +157,9 @@ void getfiles(path indir, path ansdir, regex inreg, regex ansreg)
             if (!i.is_regular_file())
                 continue;
             string s = i.path().filename().string();
-            smatch m, m2;
-            if (!(regex_search(s, m, regex(testreg), regex_constants::match_any) && regex_search(s, m2, regex(ansreg), regex_constants::match_any)))
+            if (!isInclude(s, ansreg))
                 continue;
-            s = regex_replace(s, regex(testreg), "");
-            s = regex_replace(s, regex(ansreg), "");
-            auto it = table.find(hs(s));
+            auto it = table.find(getHash(s, ansreg));
             if (it == table.end())
                 continue;
             tests[it->second].ans = i.path().string();
@@ -174,12 +169,7 @@ void getfiles(path indir, path ansdir, regex inreg, regex ansreg)
 
 int main(int argc, char* argv[])
 {
-    cout << endl;
-    cout << "Aplqo debug tool: group test runner" << endl;
-    cout << "Version git@" << apdebug::info::hash << " " << apdebug::info::version << endl;
-    cout << "Build branch: " << apdebug::info::branch << endl;
-    cout << "Build on " << __TIME__ << " " << __DATE__ << " by " << apdebug::info::builder << endl;
-    cout << endl;
+    PrintVersion("group test runner", cout);
 
     path indir, ansdir;
     regex inreg, ansreg;
@@ -219,41 +209,23 @@ int main(int argc, char* argv[])
         }
         if (!strcmp(argv[i], "-test"))
             point::tes.cmd = argv[++i];
-        if (!strcmp(argv[i], "-time"))
-        {
-            point::lim = atoi(argv[++i]) * timType(1000);
-            point::hardlim = point::lim * 10;
-        }
-        if (!strcmp(argv[i], "-hlimit"))
-            point::hardlim = atoi(argv[++i]) * timType(1000);
+        if (ReadLimit<point>(i, argv))
+            continue;
         if (!strcmp(argv[i], "-args"))
         {
-            int ccmd = atoi(argv[++i]);
-            ++i;
             cout << col::CYAN << "[Info] Arguments: ";
-            for (int j = 1; j <= ccmd; ++j, ++i)
-            {
-                point::exe.args += string(" \"") + argv[i] + "\"";
-                cout << argv[i] << " ";
-            }
+            ReadArgument(point::exe, ++i, argv);
             cout << endl;
         }
         if (!strcmp(argv[i], "-testargs"))
         {
-            int num = atoi(argv[++i]);
-            ++i;
             cout << col::CYAN << "[Info] Test command: ";
-            for (int j = 0; j < num; ++j, ++i)
-                point::tes.args = point::tes.args + " \"" + argv[i] + "\"";
+            ReadArgument(point::tes, ++i, argv);
             cout << point::tes.cmd << " " << point::tes.args << endl;
         }
     }
     getfiles(indir, ansdir, inreg, ansreg);
-    cout << col::CYAN;
-    printT(tpoint::lim, "Time limit", cout);
-    cout << endl;
-    cout << col::CYAN;
-    printT(tpoint::hardlim, "Hard time limit", cout);
+    PrintLimit<point>(cout, false);
     cout << col::NONE << endl;
     for (auto& i : tests)
     {
