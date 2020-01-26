@@ -5,6 +5,7 @@
 #include <cstring>
 #include <initializer_list>
 #include <iostream>
+#include <string>
 
 namespace apdebug
 {
@@ -15,6 +16,7 @@ namespace apdebug
         using std::initializer_list;
         using std::max;
         using std::ostream;
+        using std::string;
         using std::strlen;
         using std::chrono::duration_cast;
         using std::chrono::microseconds;
@@ -89,6 +91,30 @@ namespace apdebug
         {
             delete[] head;
             delete[] width;
+        }
+        /*-----Print test point config-----*/
+        static inline void print(const char* str, const string& st, ostream& os)
+        {
+            if (st.empty())
+                return;
+            os << col::CYAN << "[Info] " << str << ": " << st;
+        }
+        void PrintRun(const testcase::tpoint& tp, ostream& os)
+        {
+            print("Input file", tp.in, os);
+            os << endl;
+            print("Output file", tp.out, os);
+            os << endl;
+            print("Run arguments", tp.rres.args, os);
+        }
+        void PrintTest(const testcase::tpoint& tp, ostream& os)
+        {
+            print("Answer file", tp.ans, os);
+            if (!tp.tres.cmd.empty())
+            {
+                os << endl;
+                os << col::CYAN << "[Info] Test command: " << tp.tres.cmd << " " << tp.tres.args;
+            }
         }
     }
 }

@@ -19,6 +19,7 @@ namespace apdebug
         class tpoint
         {
         public:
+            void init();
             void run();
             void parse();
             void test();
@@ -39,6 +40,7 @@ namespace apdebug
 
         private:
             void getLog();
+            void getArgs(result& r);
             void concat(std::string& s);
         };
     }

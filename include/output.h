@@ -6,9 +6,11 @@
 #endif
 
 #include "include/define.h"
+#include "include/testcase.h"
 #include <chrono>
 #include <initializer_list>
 #include <iostream>
+#include <type_traits>
 namespace apdebug
 {
     namespace out
@@ -52,6 +54,27 @@ namespace apdebug
             int* width;
             const char** head;
         };
+        /*-----Print test point config-----*/
+        template <class T>
+        void PrintLimit(std::ostream& os) // print time limit
+        {
+            static_assert(std::is_base_of<testcase::tpoint, T>);
+            printT(T::lim, "Time limit", os);
+            os << std::endl;
+            printT(T::hardlim, "Hard time limit", os);
+        }
+        void PrintRun(const testcase::tpoint&, std::ostream&);
+        void PrintTest(const testcase::tpoint&, std::ostream&);
+        /*-----Print version info-----*/
+        void PrintVersion(const char* str, std::ostream& os)
+        {
+            os << std::endl;
+            os << "Aplqo debug tool: " << str << std::endl;
+            os << "Version git@" << info::hash << " " << info::version << std::endl;
+            os << "Build branch: " << info::branch << std::endl;
+            os << "Build on " << __TIME__ << " " << __DATE__ << " by " << info::builder << std::endl;
+            os << std::endl;
+        }
     }
 }
 #endif

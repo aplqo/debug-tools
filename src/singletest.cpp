@@ -21,25 +21,14 @@ void info(const char* str, const char* val)
 int main(int argc, char* argv[])
 {
     tp.rres.cmd = argv[1];
-    cout << endl;
-    cout << "Aplqo debug tools: single test runner" << endl;
-    cout << "Version git@" << apdebug::info::hash << " " << apdebug::info::version << endl;
-    cout << "Build branch: " << apdebug::info::branch << endl;
-    cout << "Build on " << __DATE__ << " " << __TIME__ << " by " << apdebug::info::builder << endl;
-    cout << endl;
+    PrintVersion("single test runner", cout);
 
     for (int i = 2; i < argc; ++i)
     {
         if (!strcmp(argv[i], "-in"))
-        {
-            info("Input file", argv[++i]);
             tp.in = argv[i];
-        }
         else if (!strcmp(argv[i], "-out"))
-        {
-            info("Output file", argv[++i]);
             tp.out = argv[i];
-        }
         else if (!strcmp(argv[i], "-test"))
             tp.tres.cmd = argv[++i];
         else if (!strcmp(argv[i], "-time"))
@@ -71,10 +60,13 @@ int main(int argc, char* argv[])
             cout << tp.tres.cmd << " " << tp.tres.args << endl;
         }
     }
-    printT(tpoint::lim, "Time limit", cout);
+    PrintRun(tp, cout);
     cout << endl;
-    printT(tpoint::hardlim, "Hard time limit", cout);
+    PrintTest(tp, cout);
     cout << endl;
+    PrintLimit<tpoint>(cout);
+    cout << endl;
+
     cout << col::BLUE << "[Info] Start program" << col::NONE << endl;
     cout.flush();
     tp.run();

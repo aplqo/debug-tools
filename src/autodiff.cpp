@@ -23,10 +23,7 @@ int main(int argc, char* argv[])
         silent = true;
         cerr.rdbuf(nul.rdbuf());
     }
-    cerr << "Aplqo debug tool: auto diff" << endl;
-    cerr << "Version git@" << apdebug::info::hash << " " << apdebug::info::version << endl;
-    cerr << "Build branch: " << apdebug::info::branch << endl;
-    cerr << "Build on " << __TIME__ << " " << __DATE__ << " by " << apdebug::info::builder << endl;
+    PrintVersion("auto diff", cerr);
 
     cerr << col::CYAN;
 

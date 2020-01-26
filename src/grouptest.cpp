@@ -50,7 +50,6 @@ public:
     static result exe, tes;
 
 private:
-    void getArgs(result& r);
     void getOut();
 };
 result point::exe;
@@ -60,24 +59,22 @@ void point::init()
     this->rres = exe;
     this->tres = tes;
     getOut();
-    getArgs(rres);
-    getArgs(tres);
+    this->tpoint::init();
 }
 void point::exec()
 {
     cout << endl;
     cout << col::BLUE << "[Info] Start program for test #" << id << col::CYAN << endl;
-    cout << "[Info] Input file: " << in << endl;
-    cout << "[Info] Output file: " << out << endl;
-    cout << "[Info] Run args: " << rres.args << col::NONE << endl;
+    PrintRun(*this, cout);
+    cout << col::NONE << endl;
     this->run();
     this->parse();
     cout << s->verbose();
     if (success() && !tres.cmd.empty() && !ans.empty())
     {
         cout << col::BLUE << "[Info] Start testing for test #" << id << col::CYAN << endl;
-        cout << "[Info] Answer file: " << ans << endl;
-        cout << "[Info] Test command: " << tres.cmd << " " << tres.args << col::NONE << endl;
+        PrintTest(*this, cout);
+        cout << col::NONE << endl;
         this->test();
         cout << ts->verbose();
     }
@@ -107,12 +104,6 @@ void point::print()
     tab.print(MsTim, tim / 1000, cout);
     tab.print(UsTim, tim, cout);
     tab.print(Det, s->details(), cout);
-}
-void point::getArgs(result& r)
-{
-    r.args = regex_replace(r.args, regex(R"(\[input\])"), in);
-    r.args = regex_replace(r.args, regex(R"(\[output\])"), out);
-    r.args = regex_replace(r.args, regex(R"(\[answer\])"), ans);
 }
 void point::getOut()
 {
@@ -174,12 +165,7 @@ void getfiles(path indir, path ansdir, regex inreg, regex ansreg)
 
 int main(int argc, char* argv[])
 {
-    cout << endl;
-    cout << "Aplqo debug tool: group test runner" << endl;
-    cout << "Version git@" << apdebug::info::hash << " " << apdebug::info::version << endl;
-    cout << "Build branch: " << apdebug::info::branch << endl;
-    cout << "Build on " << __TIME__ << " " << __DATE__ << " by " << apdebug::info::builder << endl;
-    cout << endl;
+    PrintVersion("group test runner", cout);
 
     path indir, ansdir;
     regex inreg, ansreg;
@@ -249,11 +235,7 @@ int main(int argc, char* argv[])
         }
     }
     getfiles(indir, ansdir, inreg, ansreg);
-    cout << col::CYAN;
-    printT(tpoint::lim, "Time limit", cout);
-    cout << endl;
-    cout << col::CYAN;
-    printT(tpoint::hardlim, "Hard time limit", cout);
+    PrintLimit<point>(cout);
     cout << col::NONE << endl;
     for (auto& i : tests)
     {
