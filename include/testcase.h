@@ -38,9 +38,11 @@ namespace apdebug
             /*---static config---*/
             static timer::timType lim, hardlim;
 
+        protected:
+            void getArgs(result& r);
+
         private:
             void getLog();
-            void getArgs(result& r);
             void concat(std::string& s);
         };
     }
