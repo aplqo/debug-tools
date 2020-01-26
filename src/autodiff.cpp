@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
         if (!strcmp(argv[i], "-testargs"))
             ReadArgument(exe, ++i, argv);
     }
-    cerr << col::BLUE << "Test command: " << exe.cmd << "  " << exe.args << endl;
+    cerr << col::BLUE << "Autodiff: Test command " << exe.cmd << "  " << exe.args << endl;
     if (!red)
         cerr << col::NONE << endl;
     exe.exec();
