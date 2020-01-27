@@ -25,9 +25,9 @@ int main(int argc, char* argv[])
     for (int i = 2; i < argc; ++i)
     {
         if (!strcmp(argv[i], "-in"))
-            tp.in = argv[i];
+            tp.in = argv[++i];
         else if (!strcmp(argv[i], "-out"))
-            tp.out = argv[i];
+            tp.out = argv[++i];
         else if (!strcmp(argv[i], "-test"))
             tp.tres.cmd = argv[++i];
         else if (ReadLimit<tpoint>(i, argv))
