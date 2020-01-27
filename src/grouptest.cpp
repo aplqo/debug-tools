@@ -88,6 +88,8 @@ void point::print()
         cout << s->color();
     else if (ts != nullptr)
         cout << ts->color();
+    else
+        cout << s->color();
     cout << endl;
     tab.print(Id, id, cout);
     tab.setw(RState, cerr);
