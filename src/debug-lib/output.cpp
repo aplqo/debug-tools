@@ -101,23 +101,16 @@ namespace apdebug
             if (n)
                 os << endl;
         }
-        void PrintRun(const testcase::tpoint& tp, ostream& os,bool n)
+        void PrintRun(const testcase::tpoint& tp, ostream& os, bool n)
         {
             print("Input file", tp.in, os, true);
             print("Output file", tp.out, os, true);
             print("Run arguments", tp.rres.args, os, n);
         }
-        void PrintTest(const testcase::tpoint& tp, ostream& os,bool n)
+        void PrintTest(const testcase::tpoint& tp, ostream& os, bool n)
         {
-            print("Answer file", tp.ans, os, n);
-            if (!tp.tres.cmd.empty())
-            {
-                if (!n)
-                    os << endl;
-                os << col::CYAN << "[Info] Test command: " << tp.tres.cmd << " " << tp.tres.args;
-                if (n)
-                    os << endl;
-            }
+            print("Answer file", tp.ans, os, true);
+            print("Test command", tp.tres.cmd + tp.tres.args, os, n);
         }
     }
 }
