@@ -82,7 +82,7 @@ bool tests::exec()
 {
     this->run();
     this->parse();
-    if (success() && !tres.cmd.empty() && !ans.empty())
+    if (success() && !tres.cmd.empty())
         this->test();
     return success() && !this->fail;
 }

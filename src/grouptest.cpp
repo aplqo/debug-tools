@@ -52,6 +52,7 @@ public:
     static result exe, tes;
 
 private:
+    bool testen = true;
     void getOut();
 };
 result point::exe;
@@ -61,6 +62,8 @@ void point::init()
     this->rres = exe;
     this->tres = tes;
     getOut();
+    if (regex_search(tres.args, regex(R"(\[answer\])")) && ans.empty())
+        testen = false;
     this->tpoint::init();
 }
 void point::exec()
@@ -72,7 +75,7 @@ void point::exec()
     this->run();
     this->parse();
     cout << s->verbose();
-    if (success() && !tres.cmd.empty() && !ans.empty())
+    if (success() && !tres.cmd.empty() && testen)
     {
         cout << col::BLUE << "[Info] Start testing for test #" << id << col::CYAN << endl;
         PrintTest(*this, cout, false);
