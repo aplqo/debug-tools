@@ -54,5 +54,7 @@ int main(int argc, char* argv[])
         cout << tp.ts->verbose();
     }
     tp.release();
+    cout << col::NONE;
+    cout.flush();
     return 0;
 }

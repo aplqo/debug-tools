@@ -253,5 +253,6 @@ int main(int argc, char* argv[])
     }
     for (auto& i : tests)
         i.print();
+    cout << col::NONE << endl;
     return 0;
 }
