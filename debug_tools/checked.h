@@ -46,7 +46,7 @@ namespace apdebug
             inline auto operator-(const U a) const
             {
                 auto ret = dat - a;
-                if (ret + a != this->dat || ((a < 0) ^ (ret < this->dat)))
+                if (ret + a != this->dat || (((a > 0) ^ (ret < this->dat)) && a != 0))
                     err("Minus");
                 return ret;
             }
