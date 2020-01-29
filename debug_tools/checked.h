@@ -37,7 +37,7 @@ namespace apdebug
             template <class U>
             inline auto operator*(const U a) const
             {
-                auto ret = dat * a.dat;
+                auto ret = dat * a;
                 if (ret / a.dat != this->dat)
                     err("Multiply");
                 return ret;
@@ -45,8 +45,8 @@ namespace apdebug
             template <class U>
             inline auto operator-(const U a) const
             {
-                auto ret = dat - a.dat;
-                if (ret + a.dat != this->dat || ((a.dat < 0) ^ (ret < this->dat)))
+                auto ret = dat - a;
+                if (ret + a != this->dat || ((a < 0) ^ (ret < this->dat)))
                     err("Minus");
                 return ret;
             }
