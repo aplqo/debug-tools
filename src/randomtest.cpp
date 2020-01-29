@@ -82,7 +82,7 @@ bool tests::exec()
 {
     this->run();
     this->parse();
-    if (success() && !tres.cmd.empty() && !ans.empty())
+    if (success() && !tres.cmd.empty())
         this->test();
     return success() && !this->fail;
 }
@@ -138,7 +138,7 @@ void tests::getFiles()
 }
 
 unsigned long times;
-bool stop = false, create = false;
+bool stop = false, create = false, fail = false;
 
 int main(int argc, char* argv[])
 {
@@ -196,7 +196,8 @@ int main(int argc, char* argv[])
     cout << "Test Results:" << endl;
     //Set table width
     {
-        unsigned int len = tests::exe.cmd.length() + 1 + log10(times) + 2, rlen = strlen("(Released)");
+        unsigned int len = tests::exe.cmd.length() + 1 + log10(times) + 2 + tests::tmpdir.string().length() + 1;
+        unsigned int rlen = strlen("(Released)");
         tab.update(Id, log10(times) + 2);
         tab.update(In, max(len, rlen));
         tab.update(Out, max(len + 1, rlen));
@@ -213,16 +214,20 @@ int main(int argc, char* argv[])
         tp.init();
         tp.generate();
         s = tp.exec();
-        if ((!s) && stop)
+        if ((!s))
         {
-            tp.print();
-            return 0;
+            if (stop)
+            {
+                tp.print();
+                return 0;
+            }
+            fail = true;
         }
         if (s)
             tp.release();
         tp.print();
     }
-    if (create)
+    if (create && !fail)
     {
         cout << col::CYAN << endl
              << "[Info] Test passed removed temporary directory." << endl;
