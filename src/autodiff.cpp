@@ -94,5 +94,8 @@ int main(int argc, char* argv[])
         }
     }
     cerr << "Autodiff: Test program return " << exe.ret << col::NONE << endl;
-    return exe.ret;
+    if(exe.ret)
+	    return exe.ret+10;
+    else
+	    return 0;
 }
