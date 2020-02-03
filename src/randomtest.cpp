@@ -219,6 +219,7 @@ int main(int argc, char* argv[])
             if (stop)
             {
                 tp.print();
+                cout << col::NONE << endl;
                 return 0;
             }
             fail = true;
@@ -233,5 +234,7 @@ int main(int argc, char* argv[])
              << "[Info] Test passed removed temporary directory." << endl;
         remove_all(tests::tmpdir);
     }
+    cout << col::NONE;
+    cout.flush();
     return 0;
 }

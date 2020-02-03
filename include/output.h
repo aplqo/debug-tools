@@ -59,8 +59,9 @@ namespace apdebug
         void PrintLimit(std::ostream& os, bool n) // print time limit
         {
             static_assert(std::is_base_of_v<testcase::tpoint, T>);
+            os << col::CYAN;
             printT(T::lim, "Time limit", os);
-            os << std::endl;
+            os << col::CYAN << std::endl;
             printT(T::hardlim, "Hard time limit", os);
             if (n)
                 os << std::endl;
