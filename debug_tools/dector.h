@@ -60,7 +60,7 @@ namespace apdebug
 #ifdef _MSC_VER
             _controlfp(0, _MCW_EM); //Enable floating point exception
 #else
-	    feenableexcept(FE_DIVBYZERO | FE_INEXACT | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW );
+            feenableexcept(FE_DIVBYZERO | FE_INEXACT | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW);
 #endif
             signal(SIGSEGV, sig);
             signal(SIGFPE, fpe_handler);
