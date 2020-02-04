@@ -81,7 +81,8 @@ namespace apdebug
                 if (str == "Warn")
                 {
                     string op, typ;
-                    lo >> op >> op >> typ;
+                    lo >> op >> op;
+                    getline(lo, typ);
                     s = new exception::Warn(typ, op);
                     tim = 0;
                     return;
