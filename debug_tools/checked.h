@@ -38,7 +38,7 @@ namespace apdebug
             inline auto operator*(const U a) const
             {
                 auto ret = dat * a;
-                if (ret / a.dat != this->dat)
+                if (ret / a != this->dat)
                     err("Multiply");
                 return ret;
             }
