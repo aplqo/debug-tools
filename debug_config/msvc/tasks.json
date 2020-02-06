@@ -8,7 +8,7 @@
             "args": [
                 "/Zi",
                 "/EHsc",
-                "/DAPDEBUG",
+                "/DAPTEST",
                 "/Zc:__cplusplus",
                 "/Fe:",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
@@ -28,7 +28,7 @@
             "command": "C:\\MingW\\bin\\g++.exe",
             "args": [
                 "${file}",
-                "-DAPDEBUG",
+                "-DAPTEST",
                 "-std=c++11",
                 "-g",
                 "-o",
@@ -50,6 +50,7 @@
                 "/Zi",
                 "/EHsc",
                 "/Zc:__cplusplus",
+                "/DAPDEBUG",
                 "/Fe:",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
                 "${file}"
@@ -66,6 +67,7 @@
             "args": [
                 "${file}",
                 "-std=c++11",
+                "-DAPDEBUG",
                 "-g",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe"

@@ -196,13 +196,13 @@ int main(int argc, char* argv[])
     cout << "Test Results:" << endl;
     //Set table width
     {
-        unsigned int len = tests::exe.cmd.length() + 1 + log10(times) + 2 + tests::tmpdir.string().length() + 1;
+        unsigned int len = tests::exe.cmd.length() + 1 + log10(times) + 1 + tests::tmpdir.string().length() + 2;
         unsigned int rlen = strlen("(Released)");
         tab.update(Id, log10(times) + 2);
-        tab.update(In, max(len, rlen));
-        tab.update(Out, max(len + 1, rlen));
-        tab.update(Ans, max(len + 1, rlen));
-        tab.update(Dif, max(len + 2, rlen));
+        tab.update(In, max(len + 3, rlen));
+        tab.update(Out, max(len + 4, rlen));
+        tab.update(Ans, max(len + 4, rlen));
+        tab.update(Dif, max(len + 5, rlen));
         tab.update(MsTim, log10(tpoint::hardlim / 1000) + 2);
         tab.update(UsTim, log10(tpoint::hardlim) + 2);
     }

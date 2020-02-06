@@ -21,13 +21,13 @@ namespace apdebug
         {
         public:
             static_assert(is_integral<T>::value, "Check type must be integral!");
-            CheckedInteger() = default;
-            CheckedInteger(T s)
+            constexpr CheckedInteger() = default;
+            constexpr CheckedInteger(T s)
                 : dat(s)
             {
             }
             template <class U>
-            inline auto operator+(const U r) const
+            constexpr auto operator+(const U r) const
             {
                 auto ret = dat + r;
                 if (ret - dat != r || ((r > 0) ^ (ret > this->dat)))
@@ -35,15 +35,15 @@ namespace apdebug
                 return ret;
             }
             template <class U>
-            inline auto operator*(const U a) const
+            constexpr auto operator*(const U a) const
             {
                 auto ret = dat * a;
-                if (ret / a.dat != this->dat)
+                if (this->dat != 0 && a != 0 && (ret == 0 || ret / a != this->dat))
                     err("Multiply");
                 return ret;
             }
             template <class U>
-            inline auto operator-(const U a) const
+            constexpr auto operator-(const U a) const
             {
                 auto ret = dat - a;
                 if (ret + a != this->dat || (((a > 0) ^ (ret < this->dat)) && a != 0))
@@ -51,7 +51,7 @@ namespace apdebug
                 return ret;
             }
             template <class U>
-            inline auto operator/(const U r) const
+            constexpr auto operator/(const U r) const
             {
                 if (r == 0)
                 {
@@ -96,7 +96,7 @@ namespace apdebug
             }
 #define oper(op)       \
     template <class U> \
-    inline auto operator op(const U r) const { return dat op r; }
+    constexpr auto operator op(const U r) const { return dat op r; }
             oper(%);
             /*Bitwise arithmetic operators*/
             oper(&);
@@ -127,7 +127,7 @@ namespace apdebug
             assop(>>);
             assop(<<);
 #undef assop
-            inline auto operator~() const
+            constexpr auto operator~() const
             {
                 return ~dat;
             }
