@@ -47,7 +47,7 @@ configure_file(
 	@ONLY
 )
 
-option(color on)
+option(color "Whether enable color output" on)
 if(color)
 	message("Color mode enabled")
 	add_compile_definitions(COLOR)
