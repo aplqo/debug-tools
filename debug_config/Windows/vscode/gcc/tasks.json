@@ -1,0 +1,45 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "g++.exe build active file(test)",
+            "command": "C:\\MingW\\bin\\g++.exe",
+            "args": [
+                "${file}",
+                "-DAPTEST",
+                "-std=c++11",
+                "-g",
+                "-o",
+                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+            ],
+            "options": {
+                "cwd": "C:\\MingW\\bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "g++.exe build active file(debug)",
+            "command": "C:\\MingW\\bin\\g++.exe",
+            "args": [
+                "${file}",
+                "-std=c++11",
+                "-DAPDEBUG",
+                "-g",
+                "-o",
+                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+            ],
+            "options": {
+                "cwd": "C:\\MingW\\bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        }
+    ]
+}
