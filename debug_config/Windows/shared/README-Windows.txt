@@ -1,0 +1,1 @@
+This folder contains shared files on Windows system.
