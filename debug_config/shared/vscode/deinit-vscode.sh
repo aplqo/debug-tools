@@ -1,9 +1,9 @@
 #!/bin/bash
 
 readonly typ=$(cat ./.config/vscode)
-if [ -e ".dtors/$typ-deinit.sh" ]
+if [ -e ".dtors/deinit-$typ.sh" ]
 then
-    ./.dtors/$typ-deinit.sh
-    rm -rf ./.dtors/$typ-deinit.sh
+    ./.dtors/deinit-$typ.sh
+    rm -rf ./.dtors/deinit-$typ.sh
 fi
 rm -rf .vscode
