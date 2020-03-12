@@ -1,4 +1,4 @@
-function read-typ()
+function deinit()
 {
     typ=$(cat "./.config/$1")
     if [ -e "./.dtors/deinit-$typ.sh" ]
