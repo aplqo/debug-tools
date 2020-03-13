@@ -1,4 +1,4 @@
-function find-init([String]$path, [String]$config, [String]$compiler, [String]$extra, [System.Action]$def) {
+function find-init([System.Action]$def, [String]$path, [String]$config, [String]$compiler, [String]$extra) {
     if (Test-Path -Path "$config/init-$compiler.ps1") {
         Invoke-Expression -Command "$config/init-$compiler.ps1 \"$path\" $extra"
     }
@@ -41,6 +41,6 @@ function init([System.Action]$def, [string]$path, [string]$editor, [String]$comp
     }
     Out-File -InputObject "$compiler" -FilePath "$path/.config/$editor"
     $c = find-config "$editor" "$compiler"
-    find-init "$path" "$c" "$compiler" "$extra" $def
+    find-init $def "$path" "$c" "$compiler" "$extra"
     Copy-Item -Path ./config/compiler-deinit.ps1 "$path/.dtors"
 }
