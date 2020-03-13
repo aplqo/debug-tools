@@ -37,8 +37,8 @@ function init([System.Action]$def, [string]$path, [string]$editor, [String]$comp
     if (!$compiler) {
         list-config $editor
         $compiler = read-config $Function:find-config $editor
-        Out-File -InputObject $compiler -FilePath "$path/.config/cmd" -Append:$true
-    }
+        Out-File -InputObject $compiler -FilePath "$path/.config/cmd" -Append:$true -NoNewline
+    } 
     Out-File -InputObject "$compiler" -FilePath "$path/.config/$editor"
     $c = find-config "$editor" "$compiler"
     find-init $def "$path" "$c" "$compiler" "$extra"
