@@ -7,4 +7,4 @@ function default()
 
 . ./.dtors/compiler-deinit.sh
 
-deinit
+deinit "default" "vscode"

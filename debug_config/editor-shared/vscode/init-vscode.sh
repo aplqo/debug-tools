@@ -8,4 +8,4 @@ function default()
 
 . ./config/compiler-init.sh
 
-init "$1" vscode "$2" "$3"
+init "default" "$1" vscode "$2" "$3"

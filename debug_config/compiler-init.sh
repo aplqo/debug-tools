@@ -1,23 +1,24 @@
-function find-init() # $1: path $2: config path $3: compiler $4: extra args
+function find-init() # $1: default $2: path $3: config path $4: compiler $5: extra args
 {
-    if [ -e "$2/init-$3.sh" ]
+    if [ -e "$3/init-$4.sh" ]
     then
-        $2/init-$3.sh "$1" $4
+        $4/init-$4.sh "$2" $5
     else
-        default "$1" $2 $4
+        $1 "$2" $3 $5
     fi
 }
-function find-config() # $1: path $2:editor $3: compiler $4 extra args
+function find-config() # $1:editor $2: compiler
 {
-    if [ -e "./config/$2/$3" ]
+    find_result=""
+    if [ -e "./config/$1/$2" ]
     then
-        find-init "$1" "./config/$2/$3" "$3" "$4"
-    elif [ -e "./config/compiler-shared/$2-$3" ]
+        find_result="./config/$1/$2"
+    elif [ -e "./config/compiler-shared/$1-$2" ]
     then
-        find-init "$1" "./config/compiler-shared/$2-$3/$3" "$3" "$4"
-    elif [ -e "./config/compiler-shared/$3" ]
+        find_result="./config/compiler-shared/$1-$2"
+    elif [ -e "./config/compiler-shared/$2" ]
     then
-        find-init "$1" "./config/compiler-shared/$3" "$3" "$4"
+        find_result="./config/compiler-shared/$2"
     else
         echo "Can't find config for selected compiler!"
         return 1
@@ -31,28 +32,32 @@ function list-config() # $1: editor
     ls "./config/compiler-shared/$1-*"
     ls "./config/compiler-shared" --ingore="*-*"
 }
-function read-config() # $1: path $2: editor $3: extra
+function read-config() # $1: f $2: editor 
 {
+    compiler=""
     echo "Enter compiler: "
     read com
-    find-config "$1" "$2" "$com" "$3"
+    $f "$2" "$com"
     while [ $? -gt 0 ]
     do
          echo "Enter compiler"
          read com
-         find-config "$1" "$2" "$com" "$3"
+         $f "$2" "$com"
     done
-    echo "$com" > "$1/.config/$2"
 }
-function init() # $1: path $2: editor $3:compiler $4: extra args
+function init() # $1: def $2: path $3: editor $4 compiler $5 extra
 {
-    if [ -z "$3" ]
+    if [ -z "$4" ]
     then
-        list-config "$2"
-        read-config "$1" "$2" "$4"
-    else
-        echo "$3" > "$1/.config/$2"
-        find-config "$1" "$2" "$3" "$4"
+        list-config "$3"
+        read-config "$2" "$2" "$4"
+        $4=$compiler
+        echo " $compiler" -n >> "$2/.config/cmd"
+        unset compiler
     fi
-    cp ./config/compiler-deinit.sh $1/.dtors/
+    echo "$4" > "$1/.config/$3"
+    find-config "$3" "$4"
+    find-init "$1" "$2" "$find_result" "$4" "$5" 
+    unset find_result
+    cp ./config/compiler-deinit.sh "$2/.dtors/"
 }
