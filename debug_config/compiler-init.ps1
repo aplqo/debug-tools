@@ -33,7 +33,7 @@ function read-config([System.Action]$f, [String]$editor) {
     } until (!$f.Invoke($editor, $com))
     return $com
 }
-function init([string]$path, [string]$editor, [String]$compiler, [String[]]$extra) {
+function init([System.Action]$def, [string]$path, [string]$editor, [String]$compiler, [String[]]$extra) {
     if (!$compiler) {
         list-config $editor
         $compiler = read-config $Function:find-config $editor
@@ -41,6 +41,6 @@ function init([string]$path, [string]$editor, [String]$compiler, [String[]]$extr
     }
     Out-File -InputObject "$compiler" -FilePath "$path/.config/$editor"
     $c = find-config "$editor" "$compiler"
-    find-init "$path" "$c" "$compiler" "$extra" $Function::def
+    find-init "$path" "$c" "$compiler" "$extra" $def
     Copy-Item -Path ./config/compiler-deinit.ps1 "$path/.dtors"
 }
