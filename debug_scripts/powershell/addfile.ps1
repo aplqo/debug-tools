@@ -5,7 +5,7 @@ param (
     [bool]$nocpp = $false
 )
 if (!(Test-Path -Path "$1.cpp") -and !$nocpp) {
-    New-Item -ItemType "File" -Name $1.cpp
+    New-Item -ItemType "File" -Name "$1.cpp"
 }
 for ($i = 0; $i -lt $2; $i++) {
     New-Item -ItemType "File" -Name $1$i.in
