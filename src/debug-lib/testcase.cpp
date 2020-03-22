@@ -1,6 +1,7 @@
 #include "include/testcase.h"
 #include "include/define.h"
 #include "include/exception.h"
+#include "include/utility.h"
 #include <csignal>
 #include <cstdlib>
 #include <filesystem>
@@ -8,6 +9,7 @@
 #include <limits>
 #include <regex>
 #include <string>
+#include <thread>
 
 namespace apdebug
 {
@@ -178,6 +180,7 @@ namespace apdebug
         void tpoint::getLog()
         {
             path p(rres.cmd);
+            p = p.stem().concat("-" + utility::GetThreadId());
             p.replace_extension(".log");
             log = p.string();
         }
