@@ -188,13 +188,16 @@ void PrintThrdAll()
     {
         if (wait.load())
         {
-            lock_guard lk(mqueue);
-            while (!pqueue.empty())
+            while (wait.load())
             {
-                pqueue.front()->id = ++id;
-                pqueue.front()->print();
-                delete pqueue.front();
+                unique_lock lk(mqueue);
+                tests*i=pqueue.front();
                 pqueue.pop();
+                lk.unlock();
+                
+                i->id = ++id;
+                i->print();
+                delete i;
                 --wait;
             }
         }
