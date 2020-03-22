@@ -37,7 +37,7 @@ enum cols
     UsTim = 7,
     Det = 8
 };
-class point : public tpoint
+class point : tpoint
 {
 public:
     point(int i)
@@ -47,9 +47,16 @@ public:
     void init();
     void exec();
     void print();
+    void update_table(table& t);
     int id;
 
+    using tpoint::hardlim;
+    using tpoint::lim;
+    using tpoint::release;
+
     static result exe, tes;
+
+    friend void getfiles(path indir, path ansdir, regex inreg, regex ansreg);
 
 private:
     bool testen = true;
@@ -111,6 +118,13 @@ void point::print()
     tab.print(MsTim, tim / 1000, cout);
     tab.print(UsTim, tim, cout);
     tab.print(Det, s->details(), cout);
+}
+void point::update_table(table& t)
+{
+    t.update(In, in.length() + 2);
+    t.update(Out, out.length() + 2);
+    t.update(Ans, ans.length() + 2);
+    t.update(Det, s->details().length() + 2);
 }
 void point::getOut()
 {
@@ -237,10 +251,7 @@ int main(int argc, char* argv[])
         i.init();
         i.exec();
         i.release();
-        tab.update(In, i.in.length() + 2);
-        tab.update(Out, i.out.length() + 2);
-        tab.update(Ans, i.ans.length() + 2);
-        tab.update(Det, i.s->details().length() + 2);
+        i.update_table(tab);
     }
     //print table
     {
