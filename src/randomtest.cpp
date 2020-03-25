@@ -138,11 +138,11 @@ void tests::release()
 }
 void tests::update_table(table& t)
 {
-    t.update(In, in.length());
-    t.update(Out, out.length());
-    t.update(Ans, ans.length());
-    t.update(Dif, dif.length());
-    t.update(Det, s->details().length());
+    t.update(In, in.length() + 2);
+    t.update(Out, out.length() + 2);
+    t.update(Ans, ans.length() + 2);
+    t.update(Dif, dif.length() + 2);
+    t.update(Det, s->details().length() + 2);
 }
 void tests::getArgs(result& r)
 {
@@ -168,10 +168,14 @@ bool stop = false, create = false, showall = true;
 queue<tests*> pqueue; // print queue
 vector<tests*> fqueue; //failed tests
 
+inline bool isRun()
+{
+    return cur.load() < times && !(stop && fail.load());
+}
 void PrintThrdFail()
 {
     unsigned long lst = 0;
-    while (cur.load() < times)
+    while (isRun())
     {
         if (cur.load() != lst)
         {
@@ -184,17 +188,17 @@ void PrintThrdFail()
 }
 void PrintThrdAll()
 {
-    while (wait.load() || cur.load() < times)
+    while (wait.load() || isRun())
     {
         if (wait.load())
         {
             while (wait.load())
             {
                 unique_lock lk(mqueue);
-                tests*i=pqueue.front();
+                tests* i = pqueue.front();
                 pqueue.pop();
                 lk.unlock();
-                
+
                 i->id = ++id;
                 i->print();
                 delete i;
@@ -232,7 +236,7 @@ inline void PrintPass(tests* s)
 }
 void thrd()
 {
-    for (unsigned long i = 0; cur.load() < times && (!(stop && fail.load())); ++i, ++cur)
+    for (unsigned long i = 0; isRun() && (!(stop && fail.load())); ++i, ++cur)
     {
         tests* tp = new tests(i);
         bool s;
@@ -346,9 +350,12 @@ int main(int argc, char* argv[])
         cout << col::NONE << endl;
         cout << "Test results:" << endl;
         cout.flush();
-        tab.header(cout);
         for (auto i : fqueue)
+        {
             i->update_table(tab);
+            i->id = id++;
+        }
+        tab.header(cout);
         for (auto i : fqueue)
         {
             i->print();
