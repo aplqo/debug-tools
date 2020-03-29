@@ -2,7 +2,7 @@ function find-init() # $1: default $2: path $3: config path $4: compiler $5: ext
 {
     if [ -e "$3/init-$4.sh" ]
     then
-        $4/init-$4.sh "$2" $5
+        command "$4/init-$4.sh" "$2" $5
     else
         $1 "$2" $3 $5
     fi
@@ -47,17 +47,20 @@ function read-config() # $1: f $2: editor
 }
 function init() # $1: def $2: path $3: editor $4 compiler $5 extra
 {
+    local comp=""
     if [ -z "$4" ]
     then
         list-config "$3"
         read-config "$2" "$2" "$4"
-        $4=$compiler
+        $comp=$compiler
         echo " $compiler" -n >> "$2/.config/cmd"
         unset compiler
+    else
+        comp="$4"
     fi
-    echo "$4" > "$1/.config/$3"
-    find-config "$3" "$4"
-    find-init "$1" "$2" "$find_result" "$4" "$5" 
+    echo "$comp" > "$1/.config/$3"
+    find-config "$3" "$comp"
+    find-init "$1" "$2" "$find_result" "$comp" "$5" 
     unset find_result
     cp ./config/compiler-deinit.sh "$2/.dtors/"
 }

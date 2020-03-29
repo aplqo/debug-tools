@@ -34,4 +34,4 @@ if (!$editor) {
 Out-File -InputObject "$editor" -FilePath "$path/.config/editor"
 $c = find-editor "$editor"
 Invoke-Expression -Command "$c/init-$compiler.ps1 $path \"$compiler\" \"$extra\""
-Copy-Item -Path ./config-deinit.ps1 "$path/.dtors"
+Copy-Item -Path ./config/config-deinit.ps1 "$path/.dtors"
