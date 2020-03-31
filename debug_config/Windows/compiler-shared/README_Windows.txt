@@ -1,0 +1,1 @@
+This folder contains shared compiler config for windows.

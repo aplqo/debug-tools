@@ -1,0 +1,1 @@
+This folder contains editor shared files for Linux.

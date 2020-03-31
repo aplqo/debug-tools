@@ -61,7 +61,7 @@ add_subdirectory(src)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_tools/ DESTINATION debug_tools/)
 install(FILES ${CMAKE_BINARY_DIR}/include/define.h DESTINATION debug_tools/)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_config/ DESTINATION config/)
+add_subdirectory(debug_config)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_scripts/ DESTINATION scripts/ PATTERN "*" PERMISSIONS OWNER_READ  OWNER_EXECUTE PATTERN "init.*" EXCLUDE)
 file(GLOB init LIST_DIRECTORIES false ./debug_scripts/init.*)
 install(FILES ${init} DESTINATION . PERMISSIONS OWNER_READ OWNER_EXECUTE)
