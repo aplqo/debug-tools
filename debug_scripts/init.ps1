@@ -5,13 +5,16 @@ param(
     [String]$extra
 )
 
+if (!$path) {
+    $path = Read-Host -Prompt "Enter file path"
+}
 if (!(Test-Path -Path "$path")) {
-    mkdir -Path "$path"
+    mkdir -Path "$path" -Verbose:$false > $null
 }
 
-mkdir -Path "$path/scripts"
-mkdir -Path "$1/.config"
-mkdir "$path/.dtors"
+mkdir -Path "$path/scripts" -Verbose:$false > $null
+mkdir -Path "$path/.config" -Verbose:$false > $null
+mkdir "$path/.dtors" -Verbose:$false > $null
 
 Copy-Item -Path "./bin" -Destination "$path/bin" -Recurse
 Copy-Item -Path "./scripts/powershell/*" -Destination "$path/scripts"
