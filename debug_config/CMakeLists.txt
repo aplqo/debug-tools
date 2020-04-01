@@ -11,6 +11,7 @@ install(DIRECTORY ${sys}/ DESTINATION config/ PATTERN "*compiler-shared" EXCLUDE
 install(DIRECTORY ${sys}/compiler-shared/ DESTINATION config/compiler-shared/ ${scripts_perm})
 install(DIRECTORY ${sys}/editor-shared/ DESTINATION config/editor-shared/ ${scripts_perm})
 file(GLOB scripts LIST_DIRECTORIES false ${CMAKE_CURRENT_SOURCE_DIR}/*)
+list(FILTER scripts EXCLUDE REGEX "CMakeLists.txt")
 message(${sys})
 message(${scripts})
 install(FILES ${scripts} DESTINATION config/ ${permission})
