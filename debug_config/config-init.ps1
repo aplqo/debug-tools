@@ -6,14 +6,25 @@ param(
 )
 
 function list-editor() {
-    Get-ChildItem -Path ./config/, ./config/editor-shared/* -Exclude "compiler-shared", "editor-shared" -Directory
+    [System.Collections.ArrayList]$lst=@()
+    foreach($i in (Get-ChildItem -Path ./config/ -Exclude "compiler-shared", "editor-shared" -Directory)){
+        if(Test-Path -Path ./config/$($i.Name)/* -Include "init*.ps1"){
+            $lst.Add($i) > $null
+        }
+    }
+    foreach($i in (Get-ChildItem -Path ./config/editor-shared/ -Directory)){
+        if(Test-Path -Path ./config/editor-shared/$($i.Name)/* -Include "init*.ps1"){
+            $lst.Add($i) > $null
+        }
+    }
+    Write-Output -InputObject $lst.ToArray()
 }
 function find-editor([String]$editor) {
-    if (Test-Path -Path "./config/$editor") {
+    if (Test-Path -Path "./config/$editor/init-$editor.ps1") {
         return "./config/$editor"
     }
-    elseif (Test-Path -Path "./.config/editor-shared/$editor") {
-        return "./.config/editor-shared/$editor"
+    elseif (Test-Path -Path "./config/editor-shared/$editor/init-$editor.ps1") {
+        return "./config/editor-shared/$editor"
     }
     Write-Error -Message "Can't find config for $editor"
     return $null
@@ -23,7 +34,7 @@ function read-editor() {
     do {
         $ret = Read-Host -Prompt "Enter editor"
     }until(find-editor $ret)
-    return ret
+    return $ret
 }
 
 if (!$editor) {
@@ -33,5 +44,6 @@ if (!$editor) {
 }
 Out-File -InputObject "$editor" -FilePath "$path/.config/editor"
 $c = find-editor "$editor"
-Invoke-Expression -Command "$c/init-$compiler.ps1 $path \"$compiler\" \"$extra\""
+Invoke-Expression -Command "$c/init-$editor.ps1 ""$path"" ""$compiler"" ""$extra"""
+
 Copy-Item -Path ./config/config-deinit.ps1 "$path/.dtors"
