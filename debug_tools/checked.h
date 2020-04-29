@@ -62,7 +62,7 @@ namespace apdebug
             }
             operator T() const { return dat; };
             /*Increment and decrement*/
-            inline typename CheckedInteger<T>& operator++()
+            inline CheckedInteger<T>& operator++()
             {
                 T ret = dat;
                 ++dat;
@@ -70,7 +70,7 @@ namespace apdebug
                     err("post-incresaement");
                 return *this;
             }
-            inline typename CheckedInteger<T> operator++(int t)
+            inline CheckedInteger<T> operator++(int t)
             {
                 T ret = dat;
                 ++dat;
@@ -78,7 +78,7 @@ namespace apdebug
                     err("pre-increasement");
                 return ret;
             }
-            inline typename CheckedInteger<T>& operator--()
+            inline CheckedInteger<T>& operator--()
             {
                 T ret = dat;
                 --dat;
@@ -86,7 +86,7 @@ namespace apdebug
                     err("post-decreasement");
                 return *this;
             }
-            inline typename CheckedInteger<T> operator--(int t)
+            inline CheckedInteger<T> operator--(int t)
             {
                 T ret = dat;
                 --dat;
@@ -101,7 +101,7 @@ namespace apdebug
             /*Bitwise arithmetic operators*/
             oper(&);
             oper(|);
-            oper (^);
+            oper(^);
             oper(>>);
             oper(<<);
             /*Relational operators*/
@@ -115,7 +115,7 @@ namespace apdebug
             /*Binary arithmetic operators*/
 #define assop(op)      \
     template <class U> \
-    inline typename CheckedInteger<T> operator op##=(U a) { return *this = *this op a; }
+    inline CheckedInteger<T> operator op##=(U a) { return *this = *this op a; }
             assop(/);
             assop(*);
             assop(-);
@@ -123,7 +123,7 @@ namespace apdebug
             assop(%);
             assop(&);
             assop(|);
-            assop (^);
+            assop(^);
             assop(>>);
             assop(<<);
 #undef assop
@@ -132,12 +132,12 @@ namespace apdebug
                 return ~dat;
             }
             template <class U>
-            friend inline ostream& operator<<(ostream&, const CheckedInteger<U>&);
+            friend ostream& operator<<(ostream&, const CheckedInteger<U>&);
             template <class U>
-            friend inline istream& operator>>(istream&, CheckedInteger<U>&);
+            friend istream& operator>>(istream&, CheckedInteger<U>&);
 
         private:
-            static void err(char* op)
+            static void err(const char* op)
             {
                 cerr << "Warn OVERFLOW " << op << " " << typeid(T).name() << endl;
                 quick_exit(2);
