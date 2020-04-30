@@ -33,7 +33,7 @@ namespace PublicFiles
             copy(c / "scripts" / "powershell", dest / "scripts", copyOpt);
             break;
         case Script::Bash:
-            copy(c / "scripts" / "bash", dest / "scripts", copyOpt);
+            copy(c / "scripts" / "shell", dest / "scripts", copyOpt);
             break;
         }
     }
