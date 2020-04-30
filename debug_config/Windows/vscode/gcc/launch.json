@@ -5,8 +5,8 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "cl.exe build and debug active file",
-            "type": "cppvsdbg",
+            "name": "(gdb) lauunch",
+            "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}\\${fileBasenameNoExtension}.exe",
             "args": [],
@@ -14,6 +14,15 @@
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": true,
+            "MIMode": "gdb",
+            "miDebuggerPath": "C:\\MingW\\bin\\gdb.exe",
+            "setupCommands": [
+                {
+                    "description": "pretty-printing",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
         }
     ]
 }
