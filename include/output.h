@@ -37,7 +37,7 @@ namespace apdebug
         {
         public:
             table(std::initializer_list<const char*> col);
-            void update(int col, int val);
+            void update(int col, size_t val);
             void header(std::ostream& os);
             void setw(int col, std::ostream& os);
             ~table();
@@ -50,8 +50,8 @@ namespace apdebug
             }
 
         private:
-            const int num;
-            int* width;
+            const size_t num;
+            size_t* width;
             const char** head;
         };
         /*-----Print test point config-----*/

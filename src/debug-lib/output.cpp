@@ -55,7 +55,7 @@ namespace apdebug
         table::table(initializer_list<const char*> cols)
             : num(cols.size())
         {
-            width = new int[num];
+            width = new size_t[num];
             head = new const char*[num];
             int j = 0;
             for (auto i = cols.begin(); i != cols.end(); ++i, ++j)
@@ -64,7 +64,7 @@ namespace apdebug
                 head[j] = *i;
             }
         }
-        void table::update(int col, int val)
+        void table::update(int col, size_t val)
         {
             width[col] = max(width[col], val);
         }
