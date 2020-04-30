@@ -57,15 +57,11 @@ endif()
 include_directories(".")
 include_directories(${CMAKE_BINARY_DIR})
 
-
 add_subdirectory(src)
-
+add_subdirectory(debug_config)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_tools/ DESTINATION debug_tools/)
 install(FILES ${CMAKE_BINARY_DIR}/include/define.h DESTINATION debug_tools/)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_config/ DESTINATION config/)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_scripts/ DESTINATION scripts/ PATTERN "*" PERMISSIONS OWNER_READ  OWNER_EXECUTE PATTERN "init.*" EXCLUDE)
-file(GLOB init LIST_DIRECTORIES false ./debug_scripts/init.*)
-install(FILES ${init} DESTINATION . PERMISSIONS OWNER_READ OWNER_EXECUTE)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_scripts/ DESTINATION scripts/ PATTERN "*" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
 
 set(CPACK_GENERATOR "ZIP")
 set(CPACK_PACKAGE_VENDOR "aplqo")
