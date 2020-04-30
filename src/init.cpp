@@ -41,7 +41,7 @@ namespace PublicFiles
     {
         create_directory(dest / ".config");
         writeFile(dest / ".config" / "src", current_path().string());
-        writeFile(dest / ".config" / "src", static_cast<unsigned int>(sc));
+        writeFile(dest / ".config" / "stype", static_cast<unsigned int>(sc));
         initPublic(dest, sc);
     }
     void update(const path& dest)
@@ -60,8 +60,6 @@ namespace PublicFiles
 
 void install(const path& dest)
 {
-    if (!exists(dest))
-        create_directory(dest);
     unsigned int sc;
     editor* e;
     compiler* c;
@@ -101,23 +99,30 @@ void uninatll(const path& dest)
 int main(int argc, char* argv[])
 {
     apdebug::out::PrintVersion("Config installer", cout);
-    path d;
+    const auto cd = [&argv](const path& dest) -> path {
+        path& ret = canonical(dest);
+        current_path(path(argv[0]).parent_path());
+        return ret;
+    };
     if (argc <= 1 || !strcmp(argv[1], "install"))
     {
+        path dest;
         if (argc <= 1)
         {
             cout << "Enter destination: ";
             cout.flush();
-            cin >> d;
+            cin >> dest;
             cout << endl;
+            if (!exists(dest))
+                create_directory(dest);
         }
         else
-            d = argv[2];
-        install(d);
+            dest = argv[2];
+        install(cd(dest));
     }
     else if (!strcmp(argv[1], "update"))
-        update(argv[2]);
+        update(cd(argv[2]));
     else if (!strcmp(argv[1], "deinit"))
-        uninatll(argv[1]);
+        uninatll(cd(argv[2]));
     return 0;
 }
