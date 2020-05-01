@@ -69,4 +69,8 @@ namespace apdebug::init::vscode
     inline static DirectCopy gcc("gcc", "GCC in MinGW", "./config/vscode/gcc");
     inline static DirectCopy devc("Dev c++", "Dev-c++ (Header path only)", "./config/vscode/devc");
 #endif
+#ifdef Linux
+    inline static DirectCopy gcc("gcc","GCC for linux","./config/vscode/gcc");
+    inline static DirectCopy clang("Clang","Clang for linux","./config/vscode/clang");
+#endif
 }
