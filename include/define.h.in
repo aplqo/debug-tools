@@ -21,6 +21,7 @@ namespace apdebug
         static const char* hash = "@hash@";
         static const char* version = "@ver@";
         static const char* builder = "@build@";
+        static const char* compier = "@CMAKE_CXX_COMPILER_ID@ @CMAKE_CXX_COMPILER_VERSION@";
     }
 }
 #endif

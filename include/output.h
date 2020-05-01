@@ -73,8 +73,8 @@ namespace apdebug
         {
             os << std::endl;
             os << "Aplqo debug tool: " << str << std::endl;
-            os << "Version git@" << info::hash << " " << info::version << std::endl;
-            os << "Build branch: " << info::branch << std::endl;
+            os << "Version "<<info::branch<<"@" << info::hash << " " << info::version << std::endl;
+            os << "Build compiler: " << info::compier << std::endl;
             os << "Build on " << __TIME__ << " " << __DATE__ << " by " << info::builder << std::endl;
             os << std::endl;
         }
