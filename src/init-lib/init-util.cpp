@@ -64,6 +64,7 @@ namespace apdebug::init
     void editor::print() const
     {
         com.print();
+        std::cout<<std::endl;
         shared()->print(com.lst.size());
     }
     void editor::update(const path& dest)

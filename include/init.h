@@ -60,15 +60,15 @@ namespace apdebug::init
         T read() const
         {
             unsigned int sel;
-            cout << "Enter selection: ";
-            cout.flush();
-            cin >> sel;
+            std::cout << "Enter selection: ";
+            std::cout.flush();
+            std::cin >> sel;
             while (size() <= sel)
             {
-                cout << "No such configuration!" << endl;
-                cout << "Enter selection: ";
-                cout.flush();
-                cin >> sel;
+                std::cout << "No such configuration!" << std::endl;
+                std::cout << "Enter selection: ";
+                std::cout.flush();
+                std::cin >> sel;
             }
             return lst[sel];
         }
