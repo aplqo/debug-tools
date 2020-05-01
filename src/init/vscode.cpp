@@ -32,8 +32,6 @@ namespace apdebug::init::vscode
     private:
         void initImpl(const path& p, const bool upd = false)
         {
-            if (upd)
-                return;
             create_directory(p / ".vscode");
         }
         void deinitImpl(const path& dest, const bool)
