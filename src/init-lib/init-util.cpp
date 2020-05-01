@@ -75,7 +75,7 @@ namespace apdebug::init
     }
     void editor::deinit(const path& dest)
     {
-        com.find(readFileLn(dest / ".config" / "compiler"))->deinit(dest);
+        find(readFileLn(dest / ".config" / "compiler"))->deinit(dest);
         deinitImpl(dest);
     }
 
