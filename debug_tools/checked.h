@@ -1,6 +1,9 @@
 #ifndef CHECKED_H
 #define CHECKED_H
+#include "debug_tools/log.h"
+#include "debug_tools/logfile.h"
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <type_traits>
 
@@ -8,6 +11,8 @@ namespace apdebug
 {
     namespace checked
     {
+        using logfile::RStatus;
+        using logfile::Warning;
         using std::cerr;
         using std::common_type;
         using std::endl;
@@ -15,6 +20,7 @@ namespace apdebug
         using std::istream;
         using std::ostream;
         using std::quick_exit;
+        using namespace log;
 
         template <class T>
         class CheckedInteger
@@ -55,7 +61,9 @@ namespace apdebug
             {
                 if (r == 0)
                 {
-                    cerr << "RE DIV " << typeid(T).name() << endl;
+                    WriteObj(RStatus::Runtime);
+                    WriteObj(logfile::RtError::DivByZero);
+                    WriteString(typeid(T).name());
                     quick_exit(1);
                 }
                 return dat / r;
@@ -139,7 +147,10 @@ namespace apdebug
         private:
             static void err(const char* op)
             {
-                cerr << "Warn OVERFLOW " << op << " " << typeid(T).name() << endl;
+                WriteObj(RStatus::Warn);
+                WriteObj(Warning::Overflow);
+                WriteString(typeid(T).name());
+                WriteString(op);
                 quick_exit(2);
             }
             T dat;

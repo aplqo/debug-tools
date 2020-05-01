@@ -1,6 +1,7 @@
 #include "include/testcase.h"
 #include "include/define.h"
 #include "include/exception.h"
+#include "include/logfile.h"
 #include "include/utility.h"
 #include <csignal>
 #include <cstdlib>
@@ -55,104 +56,34 @@ namespace apdebug
         }
         void tpoint::parse()
         {
-            ifstream lo(log);
-            while (lo)
+            using logfile::RStatus;
+            ifstream lo(log, std::ios::binary | std::ios::in);
+            RStatus st;
+            lo.read(reinterpret_cast<char*>(&st), sizeof(st));
+            switch (st)
             {
-                string str;
-                lo >> str;
-                if (str == "Time")
+            case RStatus::Time:
+                lo.read(reinterpret_cast<char*>(&tim), sizeof(tim));
+                if (tim >= lim)
+                    s = new exception::TimeLimit(tim);
+                else
                 {
-                    lo >> tim;
-                    if (tim >= lim)
-                        s = new exception::TimeLimit(tim);
-                    else
-                    {
-                        fail = false;
-                        s = new exception::Pass(tim);
-                    }
-                    return;
+                    fail = false;
+                    s = new exception::Pass(tim);
                 }
-                if (str == "Hlim")
-                {
-                    s = new exception::HardLimit(hardlim);
-                    tim = hardlim;
-                    return;
-                }
-                if (str == "Ret")
-                    return;
-                if (str == "Warn")
-                {
-                    string op, typ;
-                    lo >> op >> op;
-                    getline(lo, typ);
-                    s = new exception::Warn(typ, op);
-                    tim = 0;
-                    return;
-                }
-                if (str == "RE")
-                {
-                    tim = 0;
-                    string typ;
-                    lo >> typ;
-                    if (typ == "STDException")
-                    {
-                        string what, typ;
-                        lo >> typ;
-                        lo.ignore(numeric_limits<std::streamsize>::max(), '\n');
-                        while (lo)
-                        {
-                            string t;
-                            getline(lo, t);
-                            what += t + '\n';
-                        }
-                        s = new exception::STDExcept(typ, what);
-                        return;
-                    }
-                    if (typ == "UnknownException")
-                    {
-                        s = new exception::UnknownExcept;
-                        return;
-                    }
-                    if (typ == "SIGFPE")
-                    {
-                        exception::FloatPoint* f = new exception::FloatPoint();
-                        while (lo)
-                        {
-                            string st;
-                            lo >> st;
-                            if (st == "FE_DIVBYZERO")
-                                f->stat |= exception::FloatPoint::FE_DIVBYZREO;
-                            else if (st == "FE_INEXACT")
-                                f->stat |= exception::FloatPoint::FE_INEXACT;
-                            else if (st == "FE_INVALID")
-                                f->stat |= exception::FloatPoint::FE_INVALID;
-                            else if (st == "FE_OVERFLOW")
-                                f->stat |= exception::FloatPoint::FE_OVERFLOW;
-                            else if (st == "FE_UNDERFLOW")
-                                f->stat |= exception::FloatPoint::FE_UNDERFLOW;
-                        }
-                        s = f;
-                        return;
-                    }
-                    if (typ == "DIV")
-                    {
-                        string typ;
-                        lo >> typ;
-                        s = new exception::DivByZero(typ);
-                        return;
-                    }
-                    {
-                        if (typ == "SIGTERM")
-                            s = new exception::NormalRE(SIGTERM);
-                        else if (typ == "SIGINT")
-                            s = new exception::NormalRE(SIGINT);
-                        else if (typ == "SIGILL")
-                            s = new exception::NormalRE(SIGILL);
-                        else if (typ == "SIGSEGV")
-                            s = new exception::NormalRE(SIGSEGV);
-                        return;
-                    }
-                }
+                return;
+            case RStatus::HardLimit:
+                s = new exception::HardLimit(hardlim);
+                tim = hardlim;
+                return;
+            case RStatus::Return:
+                return;
+            case RStatus::Warn:
+                s = exception::Warn::read(lo);
+                return;
+            case RStatus::Runtime:
+                s = exception::RuntimeError::read(lo);
+                return;
             }
             s = new exception::Unknown(rres.ret);
         }

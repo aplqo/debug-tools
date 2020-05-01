@@ -2,6 +2,7 @@
 #define EXCEPTIONS_H
 
 #include "include/define.h"
+#include "include/logfile.h"
 #include <string>
 
 namespace apdebug
@@ -28,7 +29,7 @@ namespace apdebug
             std::string color();
 
         private:
-            apdebug::timer::timType tim;
+            apdebug::timer::timType tim = 0;
         };
         class Accepted : public state
         {
@@ -81,6 +82,8 @@ namespace apdebug
             std::string details();
             std::string color();
 
+            static state* read(std::istream& is);
+
         private:
             std::string type, oper;
         };
@@ -90,16 +93,20 @@ namespace apdebug
         public:
             std::string name();
             std::string color();
+
+            static state* read(std::istream& is);
         };
         class NormalRE : public RuntimeError
         {
         public:
-            NormalRE(int);
+            NormalRE(logfile::Signal);
             std::string verbose();
             std::string details();
 
+            static state* read(std::istream& is);
+
         private:
-            int typ;
+            logfile::Signal typ;
         };
         class FloatPoint : public RuntimeError
         {
@@ -107,16 +114,9 @@ namespace apdebug
             std::string verbose();
             std::string details();
 
-            enum fexcept
-            {
-                Normal = 0,
-                FE_DIVBYZREO = 1,
-                FE_INEXACT = 1 << 1,
-                FE_INVALID = 1 << 2,
-                FE_OVERFLOW = 1 << 3,
-                FE_UNDERFLOW = 1 << 4
-            };
-            uint32_t stat = 0;
+            static state* read(std::istream& is);
+
+            logfile::FPE stat = logfile::FPE::Normal;
         };
         class DivByZero : public RuntimeError
         {
@@ -124,6 +124,8 @@ namespace apdebug
             DivByZero(const std::string typ);
             std::string verbose();
             std::string details();
+
+            static state* read(std::istream& is);
 
         private:
             std::string type;
@@ -134,6 +136,8 @@ namespace apdebug
             STDExcept(const std::string typ, const std::string des);
             std::string verbose();
             std::string details();
+
+            static state* read(std::istream& is);
 
         private:
             std::string type, what;
