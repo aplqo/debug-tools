@@ -73,6 +73,7 @@ void install(const path& dest)
         cout << "Available editors:" << endl;
         editors()->print();
         e = editors()->read();
+        cout<<endl;
     }
     {
         cout << "Available compilers" << endl;
@@ -100,7 +101,7 @@ int main(int argc, char* argv[])
 {
     apdebug::out::PrintVersion("Config installer", cout);
     const auto cd = [&argv](const path& dest) -> path {
-        path& ret = canonical(dest);
+        path ret = canonical(dest);
         current_path(path(argv[0]).parent_path());
         return ret;
     };
