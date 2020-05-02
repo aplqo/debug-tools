@@ -41,8 +41,8 @@ namespace apdebug::init
         {
             m[c->name] = size();
             lst.push_back(c);
-            tab.update(1, c->name.length());
-            tab.update(2, c->description.length());
+            tab.update(1, c->name.length() + 2);
+            tab.update(2, c->description.length() + 2);
         }
         void print(unsigned int beg = 0) const
         {
