@@ -62,31 +62,36 @@ public:
     using tpoint::lim;
 
     static path tmpdir;
-    static result gen, exe, tes;
+    static result gen, std, exe, tes;
 
 private:
     string dif;
-    result generator;
+    result generator, standard;
     inline void getArgs(result& r);
     void getFiles();
 };
-result tests::gen, tests::exe, tests::tes;
+result tests::gen, tests::exe, tests::tes, tests::std;
 path tests::tmpdir;
 void tests::init()
 {
     this->generator = gen;
     this->rres = exe;
     this->tres = tes;
+    this->standard = std;
     getFiles();
     getArgs(this->generator);
+    getArgs(this->standard);
     getArgs(this->rres);
     getArgs(this->tres);
     this->tpoint::getArgs(this->generator);
+    this->tpoint::getArgs(this->standard);
     this->tpoint::init();
 }
 void tests::generate()
 {
     this->generator.exec();
+    if (!standard.cmd.empty())
+        this->standard.exec();
 }
 bool tests::exec()
 {
@@ -308,6 +313,14 @@ int main(int argc, char* argv[])
             parallel = stoi(argv[++i]);
         if (!strcmp(argv[i], "-fail-only"))
             showall = false;
+        if (!strcmp(argv[i], "-standard"))
+            tests::std.cmd = argv[++i];
+        if (!strcmp(argv[i], "-std-args"))
+        {
+            cout << col::CYAN << "[Info] Answer command: ";
+            ReadArgument(tests::std, ++i, argv);
+            cout << tests::std.cmd << " " << tests::std.args << endl;
+        }
     }
     cout << col::CYAN << "[Info] Test time: " << times << endl;
     cout << col::CYAN << "[Info] Parallelism: " << parallel << endl;
