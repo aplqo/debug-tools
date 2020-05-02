@@ -49,7 +49,10 @@ namespace apdebug::init
             std::cout.flush();
             std::cin >> sel;
         }
-        return sel >= com.size() ? shared()->lst[sel - com.size()] : com.lst[sel];
+        std::cout << std::endl;
+        compiler* ret = sel >= com.size() ? shared()->lst[sel - com.size()] : com.lst[sel];
+        ret->read();
+        return ret;
     }
     void editor::add(compiler* c)
     {
@@ -64,7 +67,7 @@ namespace apdebug::init
     void editor::print() const
     {
         com.print();
-        std::cout<<std::endl;
+        std::cout << std::endl;
         shared()->print(com.lst.size());
     }
     void editor::update(const path& dest)
