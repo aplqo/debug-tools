@@ -11,6 +11,7 @@ namespace apdebug::init::cmake
 {
     using std::array;
     using std::endl;
+    using std::getline;
     using std::regex;
     using std::regex_match;
     using std::smatch;
@@ -65,7 +66,8 @@ namespace apdebug::init::cmake
             system("cmake --help");
             cout << "Enter selection(. for empty):";
             cout.flush();
-            cin >> gen;
+            cin.ignore(10, '\n');
+            getline(cin, gen);
         }
         void init(const path& dest)
         {
@@ -102,7 +104,7 @@ namespace apdebug::init::cmake
     };
     Generator gen;
 
-    template <int siz>
+    template <size_t siz>
     class DirectOpen : public compiler
     {
     public:
@@ -115,7 +117,7 @@ namespace apdebug::init::cmake
         }
 
     private:
-        void initImpl(const path&, const bool) override {}
+        void initImpl(const path&, const bool) override { }
         void deinitImpl(const path& dest, const bool upd = false)
         {
             for (const auto& i : rmList)
@@ -131,10 +133,13 @@ namespace apdebug::init::cmake
 
         const array<regex, siz> rmList;
     };
-    template <int i>
-    DirectOpen(const char*, const char*, const array<regex, i>)->DirectOpen<i>;
+    template <size_t i>
+    DirectOpen(const char*, const char*, const array<regex, i>) -> DirectOpen<i>;
 
 #ifdef Windows
-    DirectOpen vs("VS", "Visual Studio CMake project", array<regex, 2> { regex("\.vs$"), regex("out") });
+    DirectOpen vs("VS", "Visual Studio CMake project", array<regex, 2> { regex(R"(\.vs$)"), regex("out") });
+#endif
+#ifdef Linux
+    DirectOpen kdevelop("kdevelop", "KDevelop cmake project", array<regex, 2> { regex(R"(.*\.kdev4$)"), regex("build") });
 #endif
 }
