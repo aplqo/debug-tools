@@ -330,7 +330,7 @@ int main(int argc, char* argv[])
     cout << col::NONE << endl;
     //Set table width
     {
-        unsigned int len = tests::exe.cmd.length() + 1 + log10(times) + 1 + tests::tmpdir.string().length() + 2;
+        unsigned int len = path(tests::exe.cmd).stem().string().length() + 1 + log10(times) + 1 + tests::tmpdir.string().length() + 2;
         unsigned int rlen = strlen("(Released)");
         tab.update(Id, log10(times) + 2);
         tab.update(MsTim, log10(tpoint::hardlim / 1000) + 2);
