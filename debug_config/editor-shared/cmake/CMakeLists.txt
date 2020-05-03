@@ -5,7 +5,7 @@ aux_source_directory(. src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 foreach(i IN LISTS src)
-	get_filename_component(f ${i} NAME_WLE)
+	get_filename_component(f ${i} NAME_WE)
 	add_executable(${f} ${i})
 
 	if(CMAKE_BUILD_TYPE EQUAL "Release" )
