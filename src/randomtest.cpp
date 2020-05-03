@@ -315,7 +315,7 @@ int main(int argc, char* argv[])
             showall = false;
         if (!strcmp(argv[i], "-standard"))
             tests::std.cmd = argv[++i];
-        if (!strcmp(argv[i], "-std-args"))
+        if (!strcmp(argv[i], "-stdargs"))
         {
             cout << col::CYAN << "[Info] Answer command: ";
             ReadArgument(tests::std, ++i, argv);
