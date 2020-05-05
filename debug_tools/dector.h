@@ -2,6 +2,8 @@
 #define DECTOR_H
 
 #pragma STDC FENV_ACCESS ON
+#include "debug_tools/log.h"
+#include "debug_tools/logfile.h"
 #include <cfenv>
 #include <csignal>
 #include <cstdlib>
@@ -9,7 +11,6 @@
 
 namespace apdebug
 {
-
     namespace dector
     {
         using std::cerr;
@@ -17,42 +18,51 @@ namespace apdebug
         using std::fetestexcept;
         using std::quick_exit;
         using std::signal;
+        using namespace logfile;
+        using namespace log;
         /*-----Signal support-----*/
         extern "C" void
         sig(int s)
         {
-            cerr << "RE SIG";
+            WriteObj(RStatus::Runtime);
+            WriteObj(RtError::Signal);
             switch (s)
             {
             case SIGSEGV:
-                cerr << "SEGV";
+                WriteObj(Signal::Sigsegv);
                 break;
             case SIGINT:
-                cerr << "INT";
+                WriteObj(Signal::Sigint);
                 break;
             case SIGILL:
-                cerr << "ILL";
+                WriteObj(Signal::Sigill);
                 break;
             case SIGTERM:
-                cerr << "TERM";
+                WriteObj(Signal::Sigterm);
                 break;
             }
-            cerr << endl;
             quick_exit(1);
+        }
+        uint32_t& operator|=(uint32_t& l, FPE r)
+        {
+            return l |= static_cast<uint32_t>(r);
         }
         extern "C" void fpe_handler(int sig)
         {
-            cerr << "RE SIGFPE " << endl;
+            WriteObj(RStatus::Runtime);
+            WriteObj(RtError::Sigfpe);
+            uint32_t v = 0;
             if (fetestexcept(FE_DIVBYZERO))
-                cerr << "FE_DIVBYZERO " << endl;
+                v |= FPE::FE_Divbyzero;
             if (fetestexcept(FE_INEXACT))
-                cerr << "FE_INEXACT " << endl;
+                v |= FPE::FE_Inexact;
             if (fetestexcept(FE_INVALID))
-                cerr << "FE_INVALID " << endl;
+                v |= FPE::FE_Invavid;
             if (fetestexcept(FE_OVERFLOW))
-                cerr << "FE_OVERFLOW " << endl;
+                v |= FPE::FE_Overflow;
             if (fetestexcept(FE_UNDERFLOW))
-                cerr << "FE_UNDERFLOW " << endl;
+                v |= FPE::FE_Underflow;
+            WriteObj(v);
             quick_exit(1);
         }
         void regsig()

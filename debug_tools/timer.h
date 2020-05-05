@@ -5,7 +5,9 @@
 #error ISO c++11 is required to use timer!
 #endif
 
-#include "define.h"
+#include "debug_tools/define.h"
+#include "debug_tools/log.h"
+#include "debug_tools/logfile.h"
 #include <chrono>
 #include <condition_variable>
 #include <cstdlib>
@@ -29,6 +31,8 @@ namespace apdebug
         using std::chrono::microseconds;
         using std::chrono::steady_clock;
         using std::chrono::time_point;
+        using namespace log;
+        using namespace logfile;
 
         template <class tim, class rep, class period>
         class timer
@@ -62,7 +66,8 @@ namespace apdebug
                     return;
                 pr = false;
                 duration<rep, period> d1 = duration_cast<duration<rep, period>>(aft - beg);
-                cerr << "Time " << d1.count() << endl;
+                WriteObj(RStatus::Time);
+                WriteObj(static_cast<timType>(d1.count()));
             }
 
         private:
@@ -80,7 +85,7 @@ namespace apdebug
                 unique_lock<mutex> lk(mstat);
                 if (cv.wait_for(lk, microseconds(hardlim), [&]() -> bool { return !stat; }))
                     return;
-                cerr << "Hlim" << endl;
+                WriteObj(RStatus::HardLimit);
                 quick_exit(5);
             }
         };

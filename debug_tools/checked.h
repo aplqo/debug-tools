@@ -1,6 +1,9 @@
 #ifndef CHECKED_H
 #define CHECKED_H
+#include "debug_tools/log.h"
+#include "debug_tools/logfile.h"
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <type_traits>
 
@@ -8,6 +11,8 @@ namespace apdebug
 {
     namespace checked
     {
+        using logfile::RStatus;
+        using logfile::Warning;
         using std::cerr;
         using std::common_type;
         using std::endl;
@@ -15,6 +20,7 @@ namespace apdebug
         using std::istream;
         using std::ostream;
         using std::quick_exit;
+        using namespace log;
 
         template <class T>
         class CheckedInteger
@@ -55,14 +61,16 @@ namespace apdebug
             {
                 if (r == 0)
                 {
-                    cerr << "RE DIV " << typeid(T).name() << endl;
+                    WriteObj(RStatus::Runtime);
+                    WriteObj(logfile::RtError::DivByZero);
+                    WriteString(typeid(T).name());
                     quick_exit(1);
                 }
                 return dat / r;
             }
             operator T() const { return dat; };
             /*Increment and decrement*/
-            inline typename CheckedInteger<T>& operator++()
+            inline CheckedInteger<T>& operator++()
             {
                 T ret = dat;
                 ++dat;
@@ -70,7 +78,7 @@ namespace apdebug
                     err("post-incresaement");
                 return *this;
             }
-            inline typename CheckedInteger<T> operator++(int t)
+            inline CheckedInteger<T> operator++(int t)
             {
                 T ret = dat;
                 ++dat;
@@ -78,7 +86,7 @@ namespace apdebug
                     err("pre-increasement");
                 return ret;
             }
-            inline typename CheckedInteger<T>& operator--()
+            inline CheckedInteger<T>& operator--()
             {
                 T ret = dat;
                 --dat;
@@ -86,7 +94,7 @@ namespace apdebug
                     err("post-decreasement");
                 return *this;
             }
-            inline typename CheckedInteger<T> operator--(int t)
+            inline CheckedInteger<T> operator--(int t)
             {
                 T ret = dat;
                 --dat;
@@ -101,7 +109,7 @@ namespace apdebug
             /*Bitwise arithmetic operators*/
             oper(&);
             oper(|);
-            oper (^);
+            oper(^);
             oper(>>);
             oper(<<);
             /*Relational operators*/
@@ -115,7 +123,7 @@ namespace apdebug
             /*Binary arithmetic operators*/
 #define assop(op)      \
     template <class U> \
-    inline typename CheckedInteger<T> operator op##=(U a) { return *this = *this op a; }
+    inline CheckedInteger<T> operator op##=(U a) { return *this = *this op a; }
             assop(/);
             assop(*);
             assop(-);
@@ -123,7 +131,7 @@ namespace apdebug
             assop(%);
             assop(&);
             assop(|);
-            assop (^);
+            assop(^);
             assop(>>);
             assop(<<);
 #undef assop
@@ -132,14 +140,17 @@ namespace apdebug
                 return ~dat;
             }
             template <class U>
-            friend inline ostream& operator<<(ostream&, const CheckedInteger<U>&);
+            friend ostream& operator<<(ostream&, const CheckedInteger<U>&);
             template <class U>
-            friend inline istream& operator>>(istream&, CheckedInteger<U>&);
+            friend istream& operator>>(istream&, CheckedInteger<U>&);
 
         private:
-            static void err(char* op)
+            static void err(const char* op)
             {
-                cerr << "Warn OVERFLOW " << op << " " << typeid(T).name() << endl;
+                WriteObj(RStatus::Warn);
+                WriteObj(Warning::Overflow);
+                WriteString(typeid(T).name());
+                WriteString(op);
                 quick_exit(2);
             }
             T dat;

@@ -14,6 +14,7 @@ else()
 	link_libraries(stdc++fs)
 endif()
 
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_SOURCE_DIR}/CMakeFiles")
 set(branch "")
 set(hash "")
 # get git information
@@ -47,7 +48,7 @@ configure_file(
 	@ONLY
 )
 
-option(color on)
+option(color "Whether enable color output" on)
 if(color)
 	message("Color mode enabled")
 	add_compile_definitions(COLOR)
@@ -56,20 +57,18 @@ endif()
 include_directories(".")
 include_directories(${CMAKE_BINARY_DIR})
 
-
 add_subdirectory(src)
-
+add_subdirectory(debug_config)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_tools/ DESTINATION debug_tools/)
 install(FILES ${CMAKE_BINARY_DIR}/include/define.h DESTINATION debug_tools/)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_config/ DESTINATION config/)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_scripts/ DESTINATION scripts/ PATTERN "*" PERMISSIONS OWNER_READ  OWNER_EXECUTE PATTERN "init.*" EXCLUDE)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_scripts/ DESTINATION .  FILES_MATCHING PATTERN "init.*" PERMISSIONS OWNER_READ OWNER_EXECUTE)
+install(FILES ./include/logfile.h DESTINATION debug_tools/)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_scripts/ DESTINATION scripts/ PATTERN "*" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
 
 set(CPACK_GENERATOR "ZIP")
 set(CPACK_PACKAGE_VENDOR "aplqo")
 if(color)
-	set(CPACK_PACKAGE_FILE_NAME aplqo-debug-tools-${CMAKE_HOST_SYSTEM_NAME}-${ver}-color)
+	set(CPACK_PACKAGE_FILE_NAME aplqo-debug-tools-${CMAKE_SYSTEM_NAME}-${ver}-color)
 else()
-	set(CPACK_PACKAGE_FILE_NAME aplqo-debug-tools-${CMAKE_HOST_SYSTEM_NAME}-${ver}-nocolor)
+	set(CPACK_PACKAGE_FILE_NAME aplqo-debug-tools-${CMAKE_SYSTEM_NAME}-${ver}-nocolor)
 endif()
 include(CPack)
