@@ -62,6 +62,7 @@ add_subdirectory(debug_config)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_tools/ DESTINATION debug_tools/)
 install(FILES ${CMAKE_BINARY_DIR}/include/define.h DESTINATION debug_tools/)
 install(FILES ./include/logfile.h DESTINATION debug_tools/)
+install(FILES ./LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/debug_scripts/ DESTINATION scripts/ PATTERN "*" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
 
 set(CPACK_GENERATOR "ZIP")
