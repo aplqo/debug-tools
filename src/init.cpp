@@ -114,11 +114,11 @@ int main(int argc, char* argv[])
             cout.flush();
             cin >> dest;
             cout << endl;
-            if (!exists(dest))
-                create_directory(dest);
         }
         else
             dest = argv[2];
+        if (!exists(dest))
+            create_directory(dest);
         install(cd(dest));
     }
     else if (!strcmp(argv[1], "update"))
