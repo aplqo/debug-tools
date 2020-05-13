@@ -100,8 +100,8 @@ namespace apdebug::init
         virtual void init(const std::filesystem::path& dest);
         virtual void update(const std::filesystem::path& dest);
         virtual void deinit(const std::filesystem::path& dest);
-        virtual void read() {}
-        virtual ~compiler() {}
+        virtual void read() { }
+        virtual ~compiler() { }
 
         const std::string name, description;
 
@@ -127,7 +127,7 @@ namespace apdebug::init
         virtual void init(const std::filesystem::path& dest, compiler* c);
         virtual void update(const std::filesystem::path& dest);
         virtual void deinit(const std::filesystem::path& dest);
-        virtual ~editor() {}
+        virtual ~editor() { }
 
         const std::string name, description;
 
