@@ -73,7 +73,7 @@ void install(const path& dest)
         cout << "Available editors:" << endl;
         editors()->print();
         e = editors()->read();
-        cout<<endl;
+        cout << endl;
     }
     {
         cout << "Available compilers" << endl;

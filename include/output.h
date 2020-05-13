@@ -24,7 +24,9 @@ namespace apdebug
             YELLOW = 3,
             BLUE = 4,
             PURPLE = 5,
-            CYAN = 6
+            CYAN = 6,
+            Highlight = 7,
+            Underline = 8
         };
         std::ostream& operator<<(std::ostream&, col);
 
@@ -73,7 +75,7 @@ namespace apdebug
         {
             os << std::endl;
             os << "Aplqo debug tool: " << str << std::endl;
-            os << "Version "<<info::branch<<"@" << info::hash << " " << info::version << std::endl;
+            os << "Version " << info::branch << "@" << info::hash << " " << info::version << std::endl;
             os << "Build compiler: " << info::compier << std::endl;
             os << "Build on " << __TIME__ << " " << __DATE__ << " by " << info::builder << std::endl;
             os << std::endl;

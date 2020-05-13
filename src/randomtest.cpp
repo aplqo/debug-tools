@@ -128,6 +128,7 @@ void tests::print()
     tab.print(MsTim, tim / 1000, cout);
     tab.print(UsTim, tim, cout);
     tab.print(Det, s->details(), cout);
+    cout << col::NONE;
 }
 void tests::release()
 {
