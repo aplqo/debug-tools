@@ -55,6 +55,7 @@ public:
     using tpoint::release;
 
     static result exe, tes;
+    static bool verbose;
 
     friend void getfiles(path indir, path ansdir, regex inreg, regex ansreg);
 
@@ -64,6 +65,7 @@ private:
 };
 result point::exe;
 result point::tes;
+bool point::verbose = false;
 void point::init()
 {
     this->rres = exe;
@@ -76,16 +78,24 @@ void point::init()
 void point::exec()
 {
     cout << endl;
-    cout << col::BLUE << "[Info] Start program for test #" << id << col::CYAN << endl;
-    PrintRun(*this, cout, false);
+    cout << col::BLUE << "[Info] Start program for test #" << id;
+    if (verbose)
+    {
+        cout << col::CYAN << endl;
+        PrintRun(*this, cout, false);
+    }
     cout << col::NONE << endl;
     this->run();
     this->parse();
     cout << s->verbose();
     if (success() && !tres.cmd.empty() && testen)
     {
-        cout << col::BLUE << "[Info] Start testing for test #" << id << col::CYAN << endl;
-        PrintTest(*this, cout, false);
+        cout << col::BLUE << "[Info] Start testing for test #" << id;
+        if (verbose)
+        {
+            cout << col::CYAN << endl;
+            PrintTest(*this, cout, false);
+        }
         cout << col::NONE << endl;
         this->test();
         cout << ts->verbose();
@@ -189,7 +199,8 @@ void getfiles(path indir, path ansdir, regex inreg, regex ansreg)
 
 int main(int argc, char* argv[])
 {
-    PrintVersion("group test runner", cout);
+    if (strcmp(argv[2], "-no-version"))
+        PrintVersion("group test runner", cout);
 
     path indir, ansdir;
     regex inreg, ansreg;
@@ -243,8 +254,11 @@ int main(int argc, char* argv[])
             ReadArgument(point::tes, ++i, argv);
             cout << point::tes.cmd << " " << point::tes.args << endl;
         }
+        if (!strcmp(argv[i], "-verbose"))
+            point::verbose = true;
     }
     getfiles(indir, ansdir, inreg, ansreg);
+    cout << col::CYAN << "[Info] Verbose output: " << boolalpha << point::verbose << endl;
     PrintLimit<point>(cout, false);
     cout << col::NONE << endl;
     for (auto& i : tests)
