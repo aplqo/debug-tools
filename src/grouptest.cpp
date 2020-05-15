@@ -257,10 +257,15 @@ int main(int argc, char* argv[])
         if (!strcmp(argv[i], "-verbose"))
             point::verbose = true;
     }
-    getfiles(indir, ansdir, inreg, ansreg);
     cout << col::CYAN << "[Info] Verbose output: " << boolalpha << point::verbose << endl;
     PrintLimit<point>(cout, false);
     cout << col::NONE << endl;
+    getfiles(indir, ansdir, inreg, ansreg);
+    if (!tests.size())
+    {
+        cout << col::RED << "[Err] Can't find any test data." << col::NONE << endl;
+        return 1;
+    }
     for (auto& i : tests)
     {
         i.init();
