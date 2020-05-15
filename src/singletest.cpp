@@ -19,7 +19,8 @@ tpoint tp;
 int main(int argc, char* argv[])
 {
     tp.rres.cmd = argv[1];
-    PrintVersion("single test runner", cout);
+    if (strcmp(argv[2], "-no-version"))
+        PrintVersion("single test runner", cout);
 
     for (int i = 2; i < argc; ++i)
     {
