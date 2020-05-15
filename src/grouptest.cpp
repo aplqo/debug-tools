@@ -78,7 +78,7 @@ void point::init()
 void point::exec()
 {
     cout << endl;
-    cout << col::BLUE << "[Info] Start program for test #" << id;
+    cout << col::Underline << col::BLUE << "[Info] Start program for test #" << id << col::NONE;
     if (verbose)
     {
         cout << col::CYAN << endl;
@@ -100,7 +100,7 @@ void point::exec()
         this->test();
         cout << ts->verbose();
     }
-    cout << col::BLUE << "[Info] Test #" << id << " finished." << endl;
+    cout << col::Underline << col::BLUE << "[Info] Test #" << id << " finished." << col::NONE << endl;
 }
 void point::print()
 {
