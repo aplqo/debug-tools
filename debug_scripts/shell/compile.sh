@@ -6,7 +6,7 @@ readonly args="-std=c++11"
 
 if [ "$2" = 'test' ]
 then
-	$CC -DAPTEST -lpthread -I. $args "$fdir/$base.cpp" -o "$fdir/$base"
+	$CXX -DAPTEST -lpthread -I. $args "$fdir/$base.cpp" -o "$fdir/$base"
 else
-	$CC -DAPDEBUG $args "$fdir/$base.cpp" -g  -o "$fdir/$base"
+	$CXX -DAPDEBUG $args "$fdir/$base.cpp" -g  -o "$fdir/$base"
 fi

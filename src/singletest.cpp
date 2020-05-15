@@ -1,5 +1,4 @@
 #include "include/cmdarg.h"
-#include "include/cmdarg.h"
 #include "include/define.h"
 #include "include/exception.h"
 #include "include/output.h"
@@ -20,7 +19,8 @@ tpoint tp;
 int main(int argc, char* argv[])
 {
     tp.rres.cmd = argv[1];
-    PrintVersion("single test runner", cout);
+    if (strcmp(argv[2], "-no-version"))
+        PrintVersion("single test runner", cout);
 
     for (int i = 2; i < argc; ++i)
     {
@@ -38,9 +38,9 @@ int main(int argc, char* argv[])
             ReadArgument(tp.tres, ++i, argv);
     }
     tp.init();
-    PrintRun(tp, cout,true);
-    PrintTest(tp, cout,true);
-    PrintLimit<tpoint>(cout,true);
+    PrintRun(tp, cout, true);
+    PrintTest(tp, cout, true);
+    PrintLimit<tpoint>(cout, true);
     cout << col::BLUE << "[Info] Start program" << col::NONE << endl;
     cout.flush();
     tp.run();

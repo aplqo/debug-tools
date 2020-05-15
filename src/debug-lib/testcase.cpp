@@ -58,7 +58,7 @@ namespace apdebug
         {
             using logfile::RStatus;
             ifstream lo(log, std::ios::binary | std::ios::in);
-            RStatus st;
+            RStatus st = RStatus::Unknown;
             lo.read(reinterpret_cast<char*>(&st), sizeof(st));
             switch (st)
             {
@@ -84,8 +84,10 @@ namespace apdebug
             case RStatus::Runtime:
                 s = exception::RuntimeError::read(lo);
                 return;
+            default:
+                s = new exception::Unknown(rres.ret);
+                return;
             }
-            s = new exception::Unknown(rres.ret);
         }
         void tpoint::test()
         {

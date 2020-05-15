@@ -73,7 +73,7 @@ void install(const path& dest)
         cout << "Available editors:" << endl;
         editors()->print();
         e = editors()->read();
-        cout<<endl;
+        cout << endl;
     }
     {
         cout << "Available compilers" << endl;
@@ -114,11 +114,11 @@ int main(int argc, char* argv[])
             cout.flush();
             cin >> dest;
             cout << endl;
-            if (!exists(dest))
-                create_directory(dest);
         }
         else
             dest = argv[2];
+        if (!exists(dest))
+            create_directory(dest);
         install(cd(dest));
     }
     else if (!strcmp(argv[1], "update"))

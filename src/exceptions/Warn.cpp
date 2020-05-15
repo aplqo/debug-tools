@@ -29,7 +29,7 @@ namespace apdebug
         string Warn::verbose()
         {
             ostringstream os;
-            os << col::YELLOW << "[Warn] Integer overflow ( Operation " << oper << " Type: " << type << ")" << endl;
+            os << color() << "[Warn] Integer overflow ( Operation " << oper << " Type: " << type << ")" << endl;
             return os.str();
         }
         string Warn::details()

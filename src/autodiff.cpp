@@ -28,7 +28,8 @@ int main(int argc, char* argv[])
         silent = true;
         cerr.rdbuf(nul.rdbuf());
     }
-    PrintVersion("auto diff", cerr);
+    else if (strcmp(argv[1], "-no-version"))
+        PrintVersion("auto diff", cerr);
 
     cerr << col::CYAN;
 
@@ -76,11 +77,12 @@ int main(int argc, char* argv[])
     }
     cerr << col::BLUE << "Autodiff: Test command " << exe.cmd << "  " << exe.args << endl;
     if (!red)
-        cerr << col::NONE << endl;
+    {
+        cerr << col::NONE;
+        cerr.flush();
+    }
     exe.exec();
-    if (!red)
-        cerr << endl;
-    else
+    if (red)
         fclose(stdout);
     if (exe.ret)
         cerr << col::YELLOW;

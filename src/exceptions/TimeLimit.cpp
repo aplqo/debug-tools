@@ -26,7 +26,7 @@ namespace apdebug
         {
             ostringstream os;
             os << p.verbose();
-            os<< col::YELLOW << "[TLE] Time limit exceed." << endl;
+            os << color() << "[TLE] Time limit exceed." << endl;
             return os.str();
         }
         string TimeLimit::color()
@@ -43,7 +43,7 @@ namespace apdebug
         string HardLimit::verbose()
         {
             ostringstream os;
-            os << col::RED << "[MLE/TLE] Hard time limit exceed. ";
+            os << color() << "[MLE/TLE] Hard time limit exceed. ";
             PrintTime(hardlim, os);
             os << endl;
             return os.str();

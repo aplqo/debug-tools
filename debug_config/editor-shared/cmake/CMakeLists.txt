@@ -14,7 +14,7 @@ foreach(i IN LISTS src)
 
         if(CMAKE_BUILD_TYPE MATCHES "Release" )
                 if(CMAKE_CXX_COMPILER MATCHES "cl")
-                        target_compile_options(${f} "/Zc:__cplusplus")
+                        target_compile_options(${f} PUBLIC "/Zc:__cplusplus")
                 endif()
                 target_compile_definitions(${f} PUBLIC -DAPTEST)
         else()

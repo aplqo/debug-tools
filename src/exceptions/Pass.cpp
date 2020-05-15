@@ -8,8 +8,8 @@ namespace apdebug
     namespace exception
     {
         using apdebug::timer::timType;
-        using std::ostringstream;
         using std::endl;
+        using std::ostringstream;
         using namespace apdebug::out;
 
         std::string Pass::name()
@@ -19,7 +19,7 @@ namespace apdebug
         std::string Pass::verbose()
         {
             ostringstream os;
-            os << col::GREEN << "[Pass] Program finished after ";
+            os << color() << "[Pass] Program finished after ";
             PrintTime(tim, os);
             os << endl;
             return os.str();
@@ -33,12 +33,12 @@ namespace apdebug
 
         std::string Accepted::name()
         {
-           return "AC";
+            return "AC";
         }
         std::string Accepted::verbose()
         {
             ostringstream os;
-            os << col::GREEN << "[AC] Test program return code 0";
+            os << color() << "[AC] Test program return code 0";
             os << endl;
             return os.str();
         }
@@ -60,7 +60,8 @@ namespace apdebug
         std::string WrongAnswer::verbose()
         {
             ostringstream os;
-            os << col::RED << "[WA] Test program return " << ret << endl;
+            os << color();
+            os << "[WA] Test program return " << ret << endl;
             return os.str();
         }
         std::string WrongAnswer::color()

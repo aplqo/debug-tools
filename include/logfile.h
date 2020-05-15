@@ -11,7 +11,8 @@ namespace apdebug
             Time = 0x01,
             HardLimit = 0x02,
             Warn = 0x03,
-            Runtime = 0x04
+            Runtime = 0x04,
+            Unknown = 0xffffffff
         };
         enum class Warning : uint32_t
         {

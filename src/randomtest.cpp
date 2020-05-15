@@ -128,6 +128,7 @@ void tests::print()
     tab.print(MsTim, tim / 1000, cout);
     tab.print(UsTim, tim, cout);
     tab.print(Det, s->details(), cout);
+    cout << col::NONE;
 }
 void tests::release()
 {
@@ -263,7 +264,8 @@ void thrd()
 }
 int main(int argc, char* argv[])
 {
-    PrintVersion("random test runner", cout);
+    if (strcmp(argv[2], "-no-version"))
+        PrintVersion("random test runner", cout);
 
     tests::exe.cmd = argv[1];
     for (int i = 2; i < argc; ++i)
