@@ -1,13 +1,13 @@
 aux_source_directory(./debug-lib libsrc)
 aux_source_directory(./exceptions libex)
 
-add_library(debug-lib STATIC ${libsrc})
-set(TARGET debug-lib PROPERTY CXX_STANDARD 17)
-set(TARGET debug-lib PROPERTY CXX_STANDARD_REQUIRED ON)
-add_library(exceptions STATIC ${libex})
-target_compile_features(debug-lib PUBLIC "cxx_std_17")
-
 include(Utility)
+
+add_library(debug-lib STATIC ${libsrc})
+set_standard(debug-lib)
+add_library(exceptions STATIC ${libex})
+set_standard(exceptions)
+
 function(add_target target_name src)
 	add_executable(${target_name} ${src})
 	set_standard(${target_name})
