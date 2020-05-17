@@ -74,7 +74,7 @@ namespace apdebug
         static void PrintVersion(const char* str, std::ostream& os)
         {
             os << std::endl;
-            os << "Aplqo debug tool: " << str << std::endl;
+            os << "Debug tool: " << str << std::endl;
             os << "Version " << info::branch << "@" << info::hash << " " << info::version << std::endl;
             os << "Build compiler: " << info::compier << std::endl;
             os << "Build on " << __TIME__ << " " << __DATE__ << " by " << info::builder << std::endl;
