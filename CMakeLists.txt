@@ -1,7 +1,7 @@
 project(aplqo-debug-tools)
 cmake_minimum_required(VERSION 3.7)
 
-if(CMAKE_CXX_COMPLIER MATCHES "clang" )
+if(CMAKE_CXX_COMPILER MATCHES "clang" )
 	add_compile_options(-stdlib=libc++)
 	link_libraries(pthread)
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld-8 -stdlib=libc++")
