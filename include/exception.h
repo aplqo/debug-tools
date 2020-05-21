@@ -16,6 +16,7 @@ namespace apdebug
             virtual std::string verbose() = 0;
             virtual std::string details() { return ""; }
             virtual std::string color() = 0;
+            virtual ~state() { }
         };
 
         class Pass : public state

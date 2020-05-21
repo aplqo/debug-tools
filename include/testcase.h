@@ -27,7 +27,7 @@ namespace apdebug
             bool success();
             ~tpoint();
 
-            std::string in, out, ans, log;
+            std::string in, out, ans;
             result rres, tres;
             /*--run result---*/
             exception::state* s = nullptr; //run state
@@ -42,6 +42,7 @@ namespace apdebug
             void getArgs(result& r);
 
         private:
+            std::string log;
             void getLog();
             void concat(std::string& s);
         };

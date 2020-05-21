@@ -2,6 +2,7 @@
 #define TESTER_H
 
 #include <fstream>
+#include <ostream>
 
 namespace apdebug
 {
@@ -17,6 +18,12 @@ namespace apdebug
             };
         }
 
+        template <class... Args>
+        std::ostream& print(std::ostream& os, Args... arg)
+        {
+            (os << ... << arg) << std::endl;
+            return os;
+        }
         template <class T>
         T ReadOutput(std::ifstream& is)
         {

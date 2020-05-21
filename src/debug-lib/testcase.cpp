@@ -7,7 +7,9 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <limits>
+#include <memory>
 #include <regex>
 #include <string>
 #include <thread>
@@ -25,6 +27,7 @@ namespace apdebug
         using std::string;
         using std::system;
         using std::to_string;
+        using std::filesystem::exists;
         using std::filesystem::path;
         using std::filesystem::remove;
 
@@ -103,7 +106,6 @@ namespace apdebug
         }
         void tpoint::release()
         {
-            remove(log);
             if (success() && !out.empty())
             {
                 remove(out);
@@ -112,10 +114,10 @@ namespace apdebug
         }
         void tpoint::getLog()
         {
-            path p(rres.cmd);
-            p = p.stem().concat("-" + utility::GetThreadId());
-            p.replace_extension(".log");
-            log = p.string();
+            static thread_local std::unique_ptr<path, std::function<void(path*)>> fil(
+                new path(utility::GetThreadId() + ".log"),
+                [](path* s) {if (exists(*s)) remove(*s); delete s; });
+            log = fil->string();
         }
         void tpoint::getArgs(result& r)
         {
@@ -134,6 +136,7 @@ namespace apdebug
         tpoint::~tpoint()
         {
             delete s;
+            delete ts;
         }
     }
 }

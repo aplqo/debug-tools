@@ -41,20 +41,6 @@
                 "$gcc"
             ],
             "group": "build"
-        },
-        {
-            "type": "shell",
-            "label": "clang++ build active file",
-            "command": "/usr/bin/clang++",
-            "args": [
-                "-g",
-                "${file}",
-                "-o",
-                "${fileDirname}/${fileBasenameNoExtension}"
-            ],
-            "options": {
-                "cwd": "/usr/bin"
-            }
         }
     ]
 }
