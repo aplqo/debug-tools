@@ -117,7 +117,7 @@ namespace apdebug::init::cmake
         }
 
     private:
-        void initImpl(const path&, const bool) override { }
+        void initImpl(const path&, const bool) override {}
         void deinitImpl(const path& dest, const bool upd = false)
         {
             for (const auto& i : rmList)
@@ -134,10 +134,10 @@ namespace apdebug::init::cmake
         const array<regex, siz> rmList;
     };
     template <size_t i>
-    DirectOpen(const char*, const char*, const array<regex, i>) -> DirectOpen<i>;
+    DirectOpen(const char*, const char*, const array<regex, i>)->DirectOpen<i>;
 
 #ifdef Windows
-    DirectOpen vs("VS", "Visual Studio CMake project", array<regex, 2> { regex(R"(\.vs$)"), regex("out") });
+    DirectOpen vs("VS", "Visual Studio CMake project", array<regex, 3> { regex(R"(\.vs$)"), regex("out"), regex("CMakeSettings.json") });
 #endif
 #ifdef Linux
     DirectOpen kdevelop("kdevelop", "KDevelop cmake project", array<regex, 2> { regex(R"(.*\.kdev4$)"), regex("build") });
