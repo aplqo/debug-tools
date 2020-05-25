@@ -7,4 +7,4 @@ param(
     [String]$ansreg = '\.ans$'
 )
 
-./bin/group "$pro" -test-regex "$regex" -indir "$data" -in-regex "$inreg" -ansdir "$data" -ans-regex "$ansreg" -test "powershell .\scripts\test.ps1" -testargs 3 [input] [output] [answer]
+./bin/group "$pro" -test-regex "$regex" -indir "$data" -in-regex "$inreg" -ansdir "$data" -ans-regex "$ansreg" -test "powershell .\scripts\test.ps1" -testargs [ "<input>" "<output>" "<answer>" ]
