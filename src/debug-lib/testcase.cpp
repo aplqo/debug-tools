@@ -30,6 +30,7 @@ namespace apdebug
         using std::filesystem::exists;
         using std::filesystem::path;
         using std::filesystem::remove;
+        using std::regex_constants::syntax_option_type;
 
         void result::exec()
         {
@@ -42,6 +43,14 @@ namespace apdebug
 
         timType tpoint::lim = 1000 * 1000;
         timType tpoint::hardlim = 1000 * 10 * 1000;
+        const thread_local string tpoint::thrdId = utility::GetThreadId();
+        constexpr syntax_option_type regFlag = syntax_option_type::ECMAScript | syntax_option_type::optimize | syntax_option_type::nosubs;
+        const std::regex tpoint::rin(R"(<input>)", regFlag),
+            tpoint::rout(R"(<output>)", regFlag),
+            tpoint::rans(R"(<answer>)", regFlag),
+            tpoint::rthr(R"(<thread>)", regFlag),
+            tpoint::rind("R(<directory>)", regFlag);
+
         void tpoint::init()
         {
             getArgs(rres);
@@ -115,15 +124,17 @@ namespace apdebug
         void tpoint::getLog()
         {
             static thread_local std::unique_ptr<path, std::function<void(path*)>> fil(
-                new path(utility::GetThreadId() + ".log"),
+                new path(thrdId + ".log"),
                 [](path* s) {if (exists(*s)) remove(*s); delete s; });
             log = fil->string();
         }
         void tpoint::getArgs(result& r)
         {
-            r.args = regex_replace(r.args, regex(R"(\[input\])"), in);
-            r.args = regex_replace(r.args, regex(R"(\[output\])"), out);
-            r.args = regex_replace(r.args, regex(R"(\[answer\])"), ans);
+            r.args = regex_replace(r.args,rin, in);
+            r.args = regex_replace(r.args, rout, out);
+            r.args = regex_replace(r.args, rans, ans);
+            r.args = regex_replace(r.args, rthr, thrdId);
+            r.args = regex_replace(r.args, rind, path(in).parent_path().string());
         }
         void tpoint::concat(string& s)
         {

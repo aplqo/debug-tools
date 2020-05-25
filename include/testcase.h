@@ -3,6 +3,7 @@
 
 #include "include/define.h"
 #include "include/exception.h"
+#include <regex>
 #include <string>
 
 namespace apdebug
@@ -40,11 +41,15 @@ namespace apdebug
 
         protected:
             void getArgs(result& r);
+            static const thread_local std::string thrdId;
 
         private:
             std::string log;
             void getLog();
             void concat(std::string& s);
+
+            // regex for argument placeholders
+            static const std::regex rin, rout, rans, rthr, rind;
         };
     }
 }
