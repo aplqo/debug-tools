@@ -3,6 +3,7 @@
 #include "include/output.h"
 #include "include/testcase.h"
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <iostream>
@@ -21,6 +22,20 @@ ostringstream nul;
 string fil;
 result exe;
 
+bool testSize(const path& p)
+{
+    if (!exists(p))
+    {
+        cerr << col::RED << "Autodiff: can't find file " << p << endl;
+        std::exit(1);
+    }
+    if (file_size(p) > lim && (!red))
+    {
+        cerr << "Autodiff: File " << p << " too large, redirect stdout to file." << endl;
+        return true;
+    }
+    return false;
+}
 int main(int argc, char* argv[])
 {
     if (!strcmp(argv[1], "-quiet"))
@@ -43,20 +58,12 @@ int main(int argc, char* argv[])
         }
         if (!strcmp(argv[i], "-files"))
         {
-            unsigned long n = stoul(argv[++i]);
-            for (unsigned int j = 0; j < n; ++j)
+            if (strcmp(argv[++i], "["))
+                red = testSize(argv[i]);
+            else
             {
-                path f(argv[++i]);
-                if (!exists(f))
-                {
-                    cerr << col::RED << "Autodiff: can't find file " << f << endl;
-                    return 1;
-                }
-                if (file_size(f) > lim && (!red))
-                {
-                    red = true;
-                    cerr << "Autodiff: File " << f << " too large, redirect stdout to file." << endl;
-                }
+                for (++i; strcmp(argv[i], "]") && !red; ++i)
+                    red |= testSize(argv[i]);
             }
             continue;
         }
