@@ -3,17 +3,18 @@
 #include "include/output.h"
 #include "include/testcase.h"
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 using namespace std;
 using namespace apdebug::out;
 using namespace apdebug::info;
 using namespace std::filesystem;
 using apdebug::args::ReadArgument;
+using apdebug::args::readArray;
 using apdebug::testcase::result;
 
 uintmax_t lim = 200;
@@ -36,7 +37,7 @@ bool testSize(const path& p)
     }
     return false;
 }
-int main(int argc, char* argv[])
+int main(int argc,const char* argv[])
 {
     if (!strcmp(argv[1], "-quiet"))
     {
@@ -58,13 +59,9 @@ int main(int argc, char* argv[])
         }
         if (!strcmp(argv[i], "-files"))
         {
-            if (strcmp(argv[++i], "["))
-                red = testSize(argv[i]);
-            else
-            {
-                for (++i; strcmp(argv[i], "]") && !red; ++i)
-                    red |= testSize(argv[i]);
-            }
+            vector<path> f = readArray<path>(i, argv);
+            for (auto i = f.cbegin(); i != f.end() && !red; ++i)
+                testSize(*i);
             continue;
         }
         if (!strcmp(argv[i], "-diff"))
