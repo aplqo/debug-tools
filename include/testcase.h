@@ -49,7 +49,7 @@ namespace apdebug
             void concat(std::string& s);
 
             // regex for argument placeholders
-            static const std::regex rin, rout, rans, rthr, rind;
+            static const std::regex rin, rout, rans, rthr;
         };
     }
 }

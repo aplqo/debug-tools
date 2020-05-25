@@ -48,8 +48,7 @@ namespace apdebug
         const std::regex tpoint::rin(R"(<input>)", regFlag),
             tpoint::rout(R"(<output>)", regFlag),
             tpoint::rans(R"(<answer>)", regFlag),
-            tpoint::rthr(R"(<thread>)", regFlag),
-            tpoint::rind("R(<directory>)", regFlag);
+            tpoint::rthr(R"(<thread>)", regFlag);
 
         void tpoint::init()
         {
@@ -134,7 +133,6 @@ namespace apdebug
             r.args = regex_replace(r.args, rout, out);
             r.args = regex_replace(r.args, rans, ans);
             r.args = regex_replace(r.args, rthr, thrdId);
-            r.args = regex_replace(r.args, rind, path(in).parent_path().string());
         }
         void tpoint::concat(string& s)
         {
