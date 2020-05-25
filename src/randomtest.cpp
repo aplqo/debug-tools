@@ -23,6 +23,7 @@ using namespace std::filesystem;
 using namespace apdebug::args;
 using namespace apdebug::out;
 using namespace apdebug::utility;
+using regex_constants::syntax_option_type;
 
 const chrono::milliseconds print_duration(100);
 table tab {
@@ -69,7 +70,10 @@ private:
     result generator, standard;
     inline void getArgs(result& r);
     void getFiles();
+
+    static const regex rdiff;
 };
+const regex tests::rdiff(R"(<differ>)", syntax_option_type::ECMAScript | syntax_option_type::optimize | syntax_option_type::nosubs);
 result tests::gen, tests::exe, tests::tes, tests::std;
 path tests::tmpdir;
 void tests::init()
@@ -152,7 +156,7 @@ void tests::update_table(table& t)
 }
 void tests::getArgs(result& r)
 {
-    r.args = regex_replace(r.args, regex(R"(\[differ\])"), dif);
+    r.args = regex_replace(r.args, rdiff, dif);
 }
 void tests::getFiles()
 {
