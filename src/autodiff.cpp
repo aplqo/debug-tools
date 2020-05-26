@@ -37,7 +37,7 @@ bool testSize(const path& p)
     }
     return false;
 }
-int main(int argc,char* argv[])
+int main(int argc, char* argv[])
 {
     if (!strcmp(argv[1], "-quiet"))
     {
@@ -59,7 +59,7 @@ int main(int argc,char* argv[])
         }
         if (!strcmp(argv[i], "-files"))
         {
-            vector<path> f = readArray<path>(i, argv);
+            vector<path> f = readArray<path>(++i, argv);
             for (auto i = f.cbegin(); i != f.end() && !red; ++i)
                 testSize(*i);
             continue;
