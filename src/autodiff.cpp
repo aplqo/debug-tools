@@ -37,7 +37,7 @@ bool testSize(const path& p)
     }
     return false;
 }
-int main(int argc,const char* argv[])
+int main(int argc,char* argv[])
 {
     if (!strcmp(argv[1], "-quiet"))
     {

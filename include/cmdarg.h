@@ -31,7 +31,7 @@ namespace apdebug
             return false;
         }
         template <class T, class... Args>
-        std::vector<T> readArray(int& pos, const char* argv[], Args... args)
+        std::vector<T> readArray(int& pos, char* argv[], Args... args)
         {
             std::vector<T> ret;
             if (strcmp(argv[pos], "["))
