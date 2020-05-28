@@ -30,7 +30,7 @@ bool testSize(const path& p)
         cerr << col::RED << "Autodiff: can't find file " << p << endl;
         std::exit(1);
     }
-    if (file_size(p) > lim && (!red))
+    if (file_size(p) > lim)
     {
         cerr << "Autodiff: File " << p << " too large, redirect stdout to file." << endl;
         return true;
@@ -60,8 +60,8 @@ int main(int argc, char* argv[])
         if (!strcmp(argv[i], "-files"))
         {
             vector<path> f = readArray<path>(++i, argv);
-            for (auto i = f.cbegin(); i != f.end() && !red; ++i)
-                testSize(*i);
+            for (auto it = f.cbegin(); it != f.end() && !red; ++it)
+                red |= testSize(*it);
             continue;
         }
         if (!strcmp(argv[i], "-diff"))

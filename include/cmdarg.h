@@ -36,12 +36,11 @@ namespace apdebug
             std::vector<T> ret;
             if (strcmp(argv[pos], "["))
             {
-                ret.emplace_back(argv[pos++], args...);
+                ret.emplace_back(argv[pos], args...);
                 return ret;
             }
             for (++pos; strcmp(argv[pos], "]"); ++pos)
                 ret.emplace_back(argv[pos], args...);
-            ++pos;
             return ret;
         }
     }
