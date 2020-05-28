@@ -8,11 +8,13 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 using namespace std;
 using namespace apdebug::out;
 using namespace apdebug::info;
 using namespace std::filesystem;
 using apdebug::args::ReadArgument;
+using apdebug::args::readArray;
 using apdebug::testcase::result;
 
 uintmax_t lim = 200;
@@ -21,6 +23,20 @@ ostringstream nul;
 string fil;
 result exe;
 
+bool testSize(const path& p)
+{
+    if (!exists(p))
+    {
+        cerr << col::RED << "Autodiff: can't find file " << p << endl;
+        std::exit(1);
+    }
+    if (file_size(p) > lim)
+    {
+        cerr << "Autodiff: File " << p << " too large, redirect stdout to file." << endl;
+        return true;
+    }
+    return false;
+}
 int main(int argc, char* argv[])
 {
     if (!strcmp(argv[1], "-quiet"))
@@ -43,21 +59,9 @@ int main(int argc, char* argv[])
         }
         if (!strcmp(argv[i], "-files"))
         {
-            unsigned long n = stoul(argv[++i]);
-            for (unsigned int j = 0; j < n; ++j)
-            {
-                path f(argv[++i]);
-                if (!exists(f))
-                {
-                    cerr << col::RED << "Autodiff: can't find file " << f << endl;
-                    return 1;
-                }
-                if (file_size(f) > lim && (!red))
-                {
-                    red = true;
-                    cerr << "Autodiff: File " << f << " too large, redirect stdout to file." << endl;
-                }
-            }
+            vector<path> f = readArray<path>(++i, argv);
+            for (auto it = f.cbegin(); it != f.end() && !red; ++it)
+                red |= testSize(*it);
             continue;
         }
         if (!strcmp(argv[i], "-diff"))

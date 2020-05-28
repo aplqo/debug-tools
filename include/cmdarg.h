@@ -5,6 +5,7 @@
 #include "include/testcase.h"
 #include <cstring>
 #include <type_traits>
+#include <vector>
 
 namespace apdebug
 {
@@ -28,6 +29,19 @@ namespace apdebug
                 return true;
             }
             return false;
+        }
+        template <class T, class... Args>
+        std::vector<T> readArray(int& pos, char* argv[], Args... args)
+        {
+            std::vector<T> ret;
+            if (strcmp(argv[pos], "["))
+            {
+                ret.emplace_back(argv[pos], args...);
+                return ret;
+            }
+            for (++pos; strcmp(argv[pos], "]"); ++pos)
+                ret.emplace_back(argv[pos], args...);
+            return ret;
         }
     }
 }
