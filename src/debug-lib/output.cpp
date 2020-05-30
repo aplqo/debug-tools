@@ -12,6 +12,7 @@ namespace apdebug
     namespace out
     {
         using apdebug::timer::timType;
+        using std::copy;
         using std::endl;
         using std::initializer_list;
         using std::max;
@@ -24,7 +25,7 @@ namespace apdebug
 
         /*-----Color-----*/
         const char* colors[] = { "\033[0m", "\033[31m", "\033[1m\033[32m", "\033[33m",
-            "\033[1m\033[34m", "\033[1m\033[35m", "\033[36m","\033[1m","\033[4m" };
+            "\033[1m\033[34m", "\033[1m\033[35m", "\033[36m", "\033[1m", "\033[4m" };
 
 #ifdef COLOR
         ostream& operator<<(ostream& os, col c)
@@ -56,7 +57,7 @@ namespace apdebug
             : num(cols.size())
         {
             width = new size_t[num];
-            head = new const char*[num];
+            head = new std::string[num];
             int j = 0;
             for (auto i = cols.begin(); i != cols.end(); ++i, ++j)
             {
@@ -64,9 +65,25 @@ namespace apdebug
                 head[j] = *i;
             }
         }
-        void table::update(int col, size_t val)
+        table::table(const table& t)
+            : num(t.num)
         {
-            width[col] = max(width[col], val);
+            if (&t == this)
+                return;
+            width = new size_t[num];
+            head = new string[num];
+            copy(t.head, t.head + num, head);
+            copy(t.width, t.width + num, width);
+        }
+        table::table(table&& t)
+            : num(t.num)
+        {
+            if (&t == this)
+                return;
+            width = t.width;
+            head = t.head;
+            t.width = nullptr;
+            t.head = nullptr;
         }
         void table::header(ostream& os)
         {
@@ -82,10 +99,6 @@ namespace apdebug
                     os << "-";
                 os << "  ";
             }
-        }
-        void table::setw(int col, ostream& os)
-        {
-            os.width(width[col]);
         }
         table::~table()
         {

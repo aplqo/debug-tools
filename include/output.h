@@ -39,9 +39,17 @@ namespace apdebug
         {
         public:
             table(std::initializer_list<const char*> col);
-            void update(int col, size_t val);
+            table(const table& t);
+            table(table&& t);
+            inline void update(int col, size_t val)
+            {
+                width[col] =std::max(width[col], val);
+            }
             void header(std::ostream& os);
-            void setw(int col, std::ostream& os);
+            inline void setw(int col, std::ostream& os)
+            {
+                os.width(width[col]);
+            }
             ~table();
 
             template <class T>
@@ -54,7 +62,7 @@ namespace apdebug
         private:
             const size_t num;
             size_t* width;
-            const char** head;
+            std::string* head;
         };
         /*-----Print test point config-----*/
         template <class T>
