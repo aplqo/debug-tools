@@ -1,8 +1,13 @@
 #!/bin/bash
 
+regex='^(.*)\.[^\.]*', # match without extension
 inreg='in$'
 ansreg='ans$'
 
+if [ -n "$3" ]
+then
+    regex="$3"
+fi
 if [ -n "$4" ]
 then
     inreg="$4"
@@ -11,4 +16,4 @@ if [ -n "$5" ]
 then
     ansreg="$5"
 fi
-./bin/group $1 -test-regex "$3" -indir "$2" -in-regex "$inreg" -ansdir "$2" -ans-regex "$ansreg" -test './scripts/test.sh' -testargs [ "<input>" "<output>" "<answer>" ]
+./bin/group $1 -test-regex [ "$regex" -em 1 ';' ] -indir "$2" -in-regex [ "$inreg" -mm  ';' ] -ansdir "$2" -ans-regex [ "$ansreg" -mm ';' ] -test './scripts/test.sh' -testargs [ "<input>" "<output>" "<answer>" ] ';'
