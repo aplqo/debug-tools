@@ -12,6 +12,7 @@ namespace apdebug
     namespace out
     {
         using apdebug::timer::timType;
+        using std::copy;
         using std::endl;
         using std::initializer_list;
         using std::max;
@@ -24,7 +25,7 @@ namespace apdebug
 
         /*-----Color-----*/
         const char* colors[] = { "\033[0m", "\033[31m", "\033[1m\033[32m", "\033[33m",
-            "\033[1m\033[34m", "\033[1m\033[35m", "\033[36m","\033[1m","\033[4m" };
+            "\033[1m\033[34m", "\033[1m\033[35m", "\033[36m", "\033[1m", "\033[4m" };
 
 #ifdef COLOR
         ostream& operator<<(ostream& os, col c)
@@ -50,67 +51,30 @@ namespace apdebug
             os << "[Info] " << in << ": ";
             os << n / 1000 << "ms ( " << (double)n / 1000000 << "s )";
         }
-
-        /*----- Print table-----*/
-        table::table(initializer_list<const char*> cols)
-            : num(cols.size())
-        {
-            width = new size_t[num];
-            head = new const char*[num];
-            int j = 0;
-            for (auto i = cols.begin(); i != cols.end(); ++i, ++j)
-            {
-                width[j] = strlen(*i) + 2;
-                head[j] = *i;
-            }
-        }
-        void table::update(int col, size_t val)
-        {
-            width[col] = max(width[col], val);
-        }
-        void table::header(ostream& os)
-        {
-            for (int i = 0; i < num; ++i)
-            {
-                setw(i, os);
-                os << head[i] << "  ";
-            }
-            os << endl;
-            for (int i = 0; i < num; ++i)
-            {
-                for (int j = 0; j < width[i]; ++j)
-                    os << "-";
-                os << "  ";
-            }
-        }
-        void table::setw(int col, ostream& os)
-        {
-            os.width(width[col]);
-        }
-        table::~table()
-        {
-            delete[] head;
-            delete[] width;
-        }
         /*-----Print test point config-----*/
-        static inline void print(const char* str, const string& st, ostream& os, bool n)
+        static inline bool print(const char* str, const string& st, ostream& os, bool n)
         {
             if (st.empty())
-                return;
-            os << col::CYAN << "[Info] " << str << ": " << st;
+                return false;
             if (n)
                 os << endl;
+            os << col::CYAN << "[Info] " << str << ": " << st;
+            return true;
         }
         void PrintRun(const testcase::tpoint& tp, ostream& os, bool n)
         {
-            print("Input file", tp.in, os, true);
+            print("Input file", tp.in, os, false);
             print("Output file", tp.out, os, true);
-            print("Run arguments", tp.rres.args, os, n);
+            print("Run arguments", tp.rres.args, os, true);
+            if (n)
+                os << endl;
         }
         void PrintTest(const testcase::tpoint& tp, ostream& os, bool n)
         {
-            print("Answer file", tp.ans, os, true);
-            print("Test command", tp.tres.cmd + tp.tres.args, os, n);
+            const bool t = print("Answer file", tp.ans, os, false);
+            print("Test command", tp.tres.cmd + tp.tres.args, os, t);
+            if (n)
+                os << endl;
         }
     }
 }

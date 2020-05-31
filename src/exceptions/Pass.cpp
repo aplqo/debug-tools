@@ -70,5 +70,26 @@ namespace apdebug
             os << col::RED;
             return os.str();
         }
+
+        std::string JudgeFail::name()
+        {
+            return "Fail";
+        }
+        std::string JudgeFail::verbose()
+        {
+            ostringstream os;
+            os << color() << "[Fail] " << vmsg << endl;
+            return os.str();
+        }
+        std::string JudgeFail::color()
+        {
+            ostringstream os;
+            os << col::NONE;
+            return os.str();
+        }
+        std::string JudgeFail::details()
+        {
+            return dmsg;
+        }
     }
 }

@@ -11,6 +11,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <mutex>
 #include <thread>
@@ -46,7 +47,7 @@ namespace apdebug
             inline void start()
             {
                 stat = true;
-                watch = thread(&timer::watchdog, this);
+                watch = thread(std::mem_fn(&timer::watchdog), this);
                 beg = tim::now();
             }
             void stop()
@@ -54,9 +55,12 @@ namespace apdebug
                 if (!stat)
                     return;
                 aft = tim::now();
-                stat = false;
-                pr = true;
+                {
+                    std::lock_guard<std::mutex> lk(mstat);
+                    stat = false;
+                }
                 cv.notify_all();
+                pr = true;
                 if (watch.joinable())
                     watch.join();
             }

@@ -16,7 +16,6 @@ namespace apdebug
         template <class T>
         bool ReadLimit(int& pos, char* argv[])
         {
-            static_assert(std::is_base_of_v<testcase::tpoint, T>);
             if (!strcmp(argv[pos], "-time"))
             {
                 T::lim = atoi(argv[++pos]) * timType(1000);

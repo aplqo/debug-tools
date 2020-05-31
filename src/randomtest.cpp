@@ -26,11 +26,13 @@ using namespace apdebug::utility;
 using regex_constants::syntax_option_type;
 
 const chrono::milliseconds print_duration(100);
-table tab {
-    "Id", "State(Run)", "State(Test)",
-    "Input", "Output", "Answer", "Diff",
-    "Time(ms)", "Time(us)", "Details"
-};
+const unsigned int maxStdRetries = 20, maxVaRetries = 20;
+table tab(std::array<const char*, 10> {
+              "Id", "State(Run)", "State(Test)",
+              "Input", "Output", "Answer", "Diff",
+              "Time(ms)", "Time(us)", "Details" },
+    col::NONE);
+using resultTab = decltype(tab);
 enum cols
 {
     Id = 0,
@@ -56,25 +58,24 @@ public:
     bool exec();
     void print();
     void release();
-    void update_table(table& t);
 
     int id;
     using tpoint::hardlim;
     using tpoint::lim;
 
     static path tmpdir;
-    static result gen, std, exe, tes;
+    static result gen, std, exe, tes, va;
 
 private:
     string dif;
-    result generator, standard;
+    result generator, standard, valid;
     inline void getArgs(result& r);
     void getFiles();
 
     static const regex rdiff;
 };
 const regex tests::rdiff(R"(<differ>)", syntax_option_type::ECMAScript | syntax_option_type::optimize | syntax_option_type::nosubs);
-result tests::gen, tests::exe, tests::tes, tests::std;
+result tests::gen, tests::exe, tests::tes, tests::std, tests::va;
 path tests::tmpdir;
 void tests::init()
 {
@@ -82,23 +83,60 @@ void tests::init()
     this->rres = exe;
     this->tres = tes;
     this->standard = std;
+    this->valid = va;
     getFiles();
     getArgs(this->generator);
     getArgs(this->standard);
     getArgs(this->rres);
     getArgs(this->tres);
+    getArgs(this->valid);
     this->tpoint::getArgs(this->generator);
     this->tpoint::getArgs(this->standard);
+    this->tpoint::getArgs(this->valid);
     this->tpoint::init();
 }
 void tests::generate()
 {
-    this->generator.exec();
-    if (!standard.cmd.empty())
-        this->standard.exec();
+    if (standard.cmd.empty() && valid.cmd.empty())
+    {
+        this->generator.exec();
+        return;
+    }
+    unsigned int fv = 0, fs = 0;
+    do
+    {
+        this->generator.exec();
+        if (!valid.cmd.empty())
+        {
+            this->valid.exec();
+            if (valid.ret)
+            {
+                ++fv;
+                continue;
+            }
+        }
+        if (!standard.cmd.empty())
+        {
+            this->standard.exec();
+            if (standard.ret)
+            {
+                ++fs;
+                continue;
+            }
+        }
+    } while (fv < maxVaRetries && fs < maxStdRetries);
+    if (standard.ret || valid.ret)
+    {
+        fail = true;
+        out = "(Null)";
+        dif = "(Null)";
+        s = new apdebug::exception::JudgeFail("", "Generate data failed.");
+    }
 }
 bool tests::exec()
 {
+    if (fail)
+        return false;
     this->run();
     this->parse();
     if (success() && !tres.cmd.empty())
@@ -109,30 +147,24 @@ bool tests::exec()
 void tests::print()
 {
     if (rres.ret || fail)
-        cout << s->color();
+        tab.newColumn(s->color());
     else if (ts != nullptr)
-        cout << ts->color();
+        tab.newColumn(ts->color());
     else
-        cout << s->color();
-    cout << endl;
-    tab.print(Id, id, cout);
-    tab.print(RState, s->name(), cout);
+        tab.newColumn(s->color());
+    tab.writeColumn(Id, id);
+    tab.writeColumn(RState, s->name());
     if (ts != nullptr)
-        tab.print(TState, ts->name(), cout);
+        tab.writeColumn(TState, ts->name());
     else
-    {
-        tab.setw(TState, cout);
-        cout << "skipped"
-             << "  ";
-    }
-    tab.print(In, in, cout);
-    tab.print(Out, out, cout);
-    tab.print(Ans, ans, cout);
-    tab.print(Dif, dif, cout);
-    tab.print(MsTim, tim / 1000, cout);
-    tab.print(UsTim, tim, cout);
-    tab.print(Det, s->details(), cout);
-    cout << col::NONE;
+        tab.writeColumn(TState, "skip");
+    tab.writeColumn(In, in);
+    tab.writeColumn(Out, out);
+    tab.writeColumn(Ans, ans);
+    tab.writeColumn(Dif, dif);
+    tab.writeColumn(MsTim, tim / 1000);
+    tab.writeColumn(UsTim, tim);
+    tab.writeColumn(Det, s->details());
 }
 void tests::release()
 {
@@ -145,14 +177,6 @@ void tests::release()
     rm(out);
     rm(ans);
     rm(dif);
-}
-void tests::update_table(table& t)
-{
-    t.update(In, in.length() + 2);
-    t.update(Out, out.length() + 2);
-    t.update(Ans, ans.length() + 2);
-    t.update(Dif, dif.length() + 2);
-    t.update(Det, s->details().length() + 2);
 }
 void tests::getArgs(result& r)
 {
@@ -214,6 +238,7 @@ void PrintThrdAll()
                 delete i;
                 --wait;
             }
+            tab.printAll(cout);
         }
         std::this_thread::sleep_for(print_duration);
     }
@@ -287,41 +312,49 @@ int main(int argc, char* argv[])
             cout << endl;
             continue;
         }
-        if (!strcmp(argv[i], "-test"))
+        else if (!strcmp(argv[i], "-test"))
             tests::tes.cmd = argv[++i];
-        if (ReadLimit<tests>(i, argv))
+        else if (ReadLimit<tests>(i, argv))
             continue;
-        if (!strcmp(argv[i], "-args"))
+        else if (!strcmp(argv[i], "-args"))
         {
             cout << col::CYAN << "[Info] Arguments: ";
             ReadArgument(tests::exe, ++i, argv);
             cout << tests::exe.args << endl;
         }
-        if (!strcmp(argv[i], "-testargs"))
+        else if (!strcmp(argv[i], "-testargs"))
         {
             cout << col::CYAN << "[Info] Test command: ";
             ReadArgument(tests::tes, ++i, argv);
             cout << tests::tes.cmd << " " << tests::tes.args << endl;
         }
-        if (!strcmp(argv[i], "-generator"))
+        else if (!strcmp(argv[i], "-generator"))
             tests::gen.cmd = argv[++i];
-        if (!strcmp(argv[i], "-genargs"))
+        else if (!strcmp(argv[i], "-genargs"))
         {
             cout << col::CYAN << "[Info] Generator command: ";
             ReadArgument(tests::gen, ++i, argv);
             cout << tests::gen.cmd << " " << tests::gen.args << endl;
         }
-        if (!strcmp(argv[i], "-times"))
+        else if (!strcmp(argv[i], "-validator"))
+            tests::va.cmd = argv[++i];
+        else if (!strcmp(argv[i], "-valargs"))
+        {
+            cout << col::CYAN << "[Info] Validator command: ";
+            ReadArgument(tests::va, ++i, argv);
+            cout << tests::va.cmd << " " << tests::va.args << endl;
+        }
+        else if (!strcmp(argv[i], "-times"))
             times = stoul(argv[++i]);
-        if (!strcmp(argv[i], "-stop-on-error"))
+        else if (!strcmp(argv[i], "-stop-on-error"))
             stop = true;
-        if (!strcmp(argv[i], "-parallelism"))
+        else if (!strcmp(argv[i], "-parallelism"))
             parallel = stoi(argv[++i]);
-        if (!strcmp(argv[i], "-fail-only"))
+        else if (!strcmp(argv[i], "-fail-only"))
             showall = false;
-        if (!strcmp(argv[i], "-standard"))
+        else if (!strcmp(argv[i], "-standard"))
             tests::std.cmd = argv[++i];
-        if (!strcmp(argv[i], "-stdargs"))
+        else if (!strcmp(argv[i], "-stdargs"))
         {
             cout << col::CYAN << "[Info] Answer command: ";
             ReadArgument(tests::std, ++i, argv);
@@ -348,7 +381,7 @@ int main(int argc, char* argv[])
             tab.update(Ans, max(len + 4 + 12 + 1, rlen));
             tab.update(Dif, max(len + 5 + 12 + 1, rlen));
             cout << "Test Results:" << endl;
-            tab.header(cout);
+            tab.printHeader(cout);
         }
     }
 
@@ -368,20 +401,16 @@ int main(int argc, char* argv[])
     {
         cout << col::NONE << endl;
         cout << "Test results:" << endl;
-        cout.flush();
         for (auto i : fqueue)
-        {
-            i->update_table(tab);
             i->id = id++;
-        }
-        tab.header(cout);
         for (auto i : fqueue)
         {
             i->print();
             delete i;
         }
+        tab.printHeader(cout);
+        tab.printAll(cout);
     }
-    cout << col::NONE << endl;
 
     if (create && !fail)
     {
