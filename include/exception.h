@@ -16,7 +16,7 @@ namespace apdebug
             virtual std::string verbose() = 0;
             virtual std::string details() { return ""; }
             virtual std::string color() = 0;
-            virtual ~state() { }
+            virtual ~state() {}
         };
 
         class Pass : public state
@@ -49,6 +49,20 @@ namespace apdebug
 
         private:
             int ret;
+        };
+        class JudgeFail : public state
+        {
+        public:
+            JudgeFail(const char* vstr = "", const char* dstr = "")
+                : dmsg(dstr)
+                , vmsg(vstr) {};
+            std::string name();
+            std::string verbose();
+            std::string color();
+            std::string details();
+
+        private:
+            const char *dmsg, *vmsg;
         };
 
         class TimeLimit : public state
