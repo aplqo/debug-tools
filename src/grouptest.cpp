@@ -135,7 +135,7 @@ struct config
     bool inrec = false, ansrec = false, verbose = false;
     shared_ptr<RegexSeq> rin, rans, rtest;
     shared_ptr<result> exe, tes;
-    timType hlimit = 1000 * 1000, lim = 1000 * 10 * 1000;
+    timType hlimit = 10 * 1000 * 1000, lim = 1000 * 1000;
 
 protected:
     void read(int& pos, char* argv[]);
