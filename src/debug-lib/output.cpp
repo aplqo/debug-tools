@@ -52,13 +52,14 @@ namespace apdebug
             os << n / 1000 << "ms ( " << (double)n / 1000000 << "s )";
         }
         /*-----Print test point config-----*/
-        static inline void print(const char* str, const string& st, ostream& os, bool n)
+        static inline bool print(const char* str, const string& st, ostream& os, bool n)
         {
             if (st.empty())
-                return;
+                return false;
             if (n)
                 os << endl;
             os << col::CYAN << "[Info] " << str << ": " << st;
+            return true;
         }
         void PrintRun(const testcase::tpoint& tp, ostream& os, bool n)
         {
@@ -70,8 +71,8 @@ namespace apdebug
         }
         void PrintTest(const testcase::tpoint& tp, ostream& os, bool n)
         {
-            print("Answer file", tp.ans, os, false);
-            print("Test command", tp.tres.cmd + tp.tres.args, os, true);
+            const bool t = print("Answer file", tp.ans, os, false);
+            print("Test command", tp.tres.cmd + tp.tres.args, os, t);
             if (n)
                 os << endl;
         }
