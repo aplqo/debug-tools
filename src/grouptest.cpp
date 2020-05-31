@@ -23,6 +23,7 @@ using namespace std::filesystem;
 using namespace apdebug::out;
 using namespace apdebug::args;
 
+using resultTab = table<9>;
 enum cols
 {
     Id = 0,
@@ -44,8 +45,7 @@ public:
     }
     void init(const result& exe, const result& tes);
     void exec();
-    void print(table& tab);
-    void update_table(table& t);
+    void print(resultTab& tab);
     int id;
 
     using tpoint::hardlim;
@@ -99,40 +99,26 @@ void point::exec()
     }
     cout << col::Underline << col::BLUE << "[Info] Test #" << grpId << "." << id << " finished." << col::NONE << endl;
 }
-void point::print(table& tab)
+void point::print(resultTab& tab)
 {
     if (rres.ret || fail)
-        cout << s->color();
+        tab.newColumn(s->color());
     else if (ts != nullptr)
-        cout << ts->color();
+        tab.newColumn(ts->color());
     else
-        cout << s->color();
-    cout << endl;
-    tab.print(Id, id, cout);
-    tab.setw(RState, cerr);
-    tab.print(RState, s->name(), cout);
+        tab.newColumn(s->color());
+    tab.writeColumn(cols::Id, id);
+    tab.writeColumn(cols::RState, s->name());
     if (ts != nullptr)
-        tab.print(TState, ts->name(), cout);
+        tab.writeColumn(cols::TState, ts->name());
     else
-    {
-        tab.setw(TState, cout);
-        cout << "skip"
-             << "  ";
-    }
-    tab.print(In, in, cout);
-    tab.print(Out, out, cout);
-    tab.print(Ans, ans, cout);
-    tab.print(MsTim, tim / 1000, cout);
-    tab.print(UsTim, tim, cout);
-    tab.print(Det, s->details(), cout);
-    cout << col::NONE;
-}
-void point::update_table(table& t)
-{
-    t.update(In, in.length() + 2);
-    t.update(Out, out.length() + 2);
-    t.update(Ans, ans.length() + 2);
-    t.update(Det, s->details().length() + 2);
+        tab.writeColumn(cols::TState, "skip");
+    tab.writeColumn(cols::In, in);
+    tab.writeColumn(cols::Out, out);
+    tab.writeColumn(Ans, ans);
+    tab.writeColumn(MsTim, tim / 1000);
+    tab.writeColumn(UsTim, tim);
+    tab.writeColumn(Det, s->details());
 }
 void point::getOut()
 {
@@ -221,7 +207,7 @@ public:
     group(const unsigned int c, unsigned int i, int& pos, char* argv[]);
     void exec();
     void findFile();
-    void print();
+    void printResult();
 
 private:
     template <bool rec>
@@ -231,22 +217,27 @@ private:
     template <bool rec>
     pair<bool, size_t> isInclude(const path& p, const RegexSeq& r);
 
-    table tab { "Id", "State(Run)", "State(Test)", "Input",
-        "Output", "Answer", "Time(ms)", "Time(us)",
-        "Details" };
+    static const array<const char*, 9> colName;
+
+    resultTab tab;
     unsigned int id = 0;
     vector<point> tests;
     map<size_t, int> table;
 };
+const array<const char*, 9> group::colName { "Id", "State(Run)", "State(Test)", "Input",
+    "Output", "Answer", "Time(ms)", "Time(us)",
+    "Details" };
 vector<group> grp;
 group::group(unsigned int i, int& pos, char* argv[])
     : id(i)
+    , tab(colName, col::NONE)
 {
     read(pos, argv);
 }
 group::group(const unsigned int c, unsigned int i, int& pos, char* argv[])
     : config::config(grp[c])
     , id(i)
+    , tab(colName, col::NONE)
 {
     read(pos, argv);
 }
@@ -262,12 +253,11 @@ void group::exec()
         i.init(deref(exe), deref(tes));
         i.exec();
         i.release();
-        i.update_table(tab);
     }
     cout << col::BLUE << col::Underline << "[Info] Group #" << id << " finished." << col::NONE << endl;
     cout << endl;
 }
-void group::print()
+void group::printResult()
 {
     cout << col::NONE << "Test result for group #" << id << endl;
     if (!tests.size())
@@ -275,16 +265,10 @@ void group::print()
         cout << col::RED << "[Err] Can't find any test data." << col::NONE << endl;
         return;
     }
-    //print table
-    {
-        tab.update(Id, log10(tests.size()) + 2);
-        tab.update(MsTim, log10(hlimit / 1000) + 2);
-        tab.update(UsTim, log10(hlimit) + 2);
-        tab.header(cout);
-    }
     for (auto& i : tests)
         i.print(tab);
-    cout << col::NONE << endl;
+    tab.printHeader(cout);
+    tab.printAll(cout);
 }
 void group::findFile()
 {
@@ -368,13 +352,17 @@ int main(int argc, char* argv[])
             grp.emplace_back(u, id++, ++i, argv);
         }
     }
+
+    // test code
+    clog << "Waiting for debugger..." << endl;
+    cin.get();
+
     for (auto& i : grp)
     {
         i.findFile();
         i.exec();
     }
     for (auto& i : grp)
-        i.print();
-    cout << col::NONE << endl;
+        i.printResult();
     return 0;
 }

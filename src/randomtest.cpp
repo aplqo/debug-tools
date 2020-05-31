@@ -26,11 +26,12 @@ using namespace apdebug::utility;
 using regex_constants::syntax_option_type;
 
 const chrono::milliseconds print_duration(100);
-table tab {
-    "Id", "State(Run)", "State(Test)",
-    "Input", "Output", "Answer", "Diff",
-    "Time(ms)", "Time(us)", "Details"
-};
+table tab(std::array<const char*, 10> {
+              "Id", "State(Run)", "State(Test)",
+              "Input", "Output", "Answer", "Diff",
+              "Time(ms)", "Time(us)", "Details" },
+    col::NONE);
+using resultTab = decltype(tab);
 enum cols
 {
     Id = 0,
@@ -56,7 +57,6 @@ public:
     bool exec();
     void print();
     void release();
-    void update_table(table& t);
 
     int id;
     using tpoint::hardlim;
@@ -109,30 +109,24 @@ bool tests::exec()
 void tests::print()
 {
     if (rres.ret || fail)
-        cout << s->color();
+        tab.newColumn(s->color());
     else if (ts != nullptr)
-        cout << ts->color();
+        tab.newColumn(ts->color());
     else
-        cout << s->color();
-    cout << endl;
-    tab.print(Id, id, cout);
-    tab.print(RState, s->name(), cout);
+        tab.newColumn(s->color());
+    tab.writeColumn(Id, id);
+    tab.writeColumn(RState, s->name());
     if (ts != nullptr)
-        tab.print(TState, ts->name(), cout);
+        tab.writeColumn(TState, ts->name());
     else
-    {
-        tab.setw(TState, cout);
-        cout << "skipped"
-             << "  ";
-    }
-    tab.print(In, in, cout);
-    tab.print(Out, out, cout);
-    tab.print(Ans, ans, cout);
-    tab.print(Dif, dif, cout);
-    tab.print(MsTim, tim / 1000, cout);
-    tab.print(UsTim, tim, cout);
-    tab.print(Det, s->details(), cout);
-    cout << col::NONE;
+        tab.writeColumn(TState, "skip");
+    tab.writeColumn(In, in);
+    tab.writeColumn(Out, out);
+    tab.writeColumn(Ans, ans);
+    tab.writeColumn(Dif, dif);
+    tab.writeColumn(MsTim, tim / 1000);
+    tab.writeColumn(UsTim, tim);
+    tab.writeColumn(Det, s->details());
 }
 void tests::release()
 {
@@ -145,14 +139,6 @@ void tests::release()
     rm(out);
     rm(ans);
     rm(dif);
-}
-void tests::update_table(table& t)
-{
-    t.update(In, in.length() + 2);
-    t.update(Out, out.length() + 2);
-    t.update(Ans, ans.length() + 2);
-    t.update(Dif, dif.length() + 2);
-    t.update(Det, s->details().length() + 2);
 }
 void tests::getArgs(result& r)
 {
@@ -214,6 +200,7 @@ void PrintThrdAll()
                 delete i;
                 --wait;
             }
+            tab.printAll(cout);
         }
         std::this_thread::sleep_for(print_duration);
     }
@@ -348,7 +335,7 @@ int main(int argc, char* argv[])
             tab.update(Ans, max(len + 4 + 12 + 1, rlen));
             tab.update(Dif, max(len + 5 + 12 + 1, rlen));
             cout << "Test Results:" << endl;
-            tab.header(cout);
+            tab.printHeader(cout);
         }
     }
 
@@ -368,20 +355,16 @@ int main(int argc, char* argv[])
     {
         cout << col::NONE << endl;
         cout << "Test results:" << endl;
-        cout.flush();
         for (auto i : fqueue)
-        {
-            i->update_table(tab);
             i->id = id++;
-        }
-        tab.header(cout);
         for (auto i : fqueue)
         {
             i->print();
             delete i;
         }
+        tab.printHeader(cout);
+        tab.printAll(cout);
     }
-    cout << col::NONE << endl;
 
     if (create && !fail)
     {

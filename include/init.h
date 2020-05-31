@@ -34,28 +34,25 @@ namespace apdebug::init
     {
     public:
         list(const char* typ)
-            : tab({ "Id", typ, "Description" })
+            : tab(std::array<const char*, 3> { "Id", typ, "Description" }, out::col::NONE)
         {
         }
         void append(T c)
         {
             m[c->name] = size();
             lst.push_back(c);
-            tab.update(1, c->name.length() + 2);
-            tab.update(2, c->description.length() + 2);
         }
         void print(unsigned int beg = 0) const
         {
-            tab.header(std::cout);
-            std::cout << std::endl;
+            tab.printHeader(std::cout);
             for (auto i : lst)
             {
-                tab.print(0, beg, std::cout);
-                tab.print(1, i->name, std::cout);
-                tab.print(2, i->description, std::cout);
-                std::cout << std::endl;
+                tab.writeColumn(0, beg);
+                tab.writeColumn(1, i->name);
+                tab.writeColumn(2, i->description);
                 ++beg;
             }
+            tab.printAll(std::cout);
         }
         T read() const
         {
@@ -86,7 +83,7 @@ namespace apdebug::init
 
     private:
         std::map<std::string, size_t> m;
-        mutable out::table tab;
+        mutable out::table<3> tab;
     };
 
     class compiler
@@ -100,8 +97,8 @@ namespace apdebug::init
         virtual void init(const std::filesystem::path& dest);
         virtual void update(const std::filesystem::path& dest);
         virtual void deinit(const std::filesystem::path& dest);
-        virtual void read() { }
-        virtual ~compiler() { }
+        virtual void read() {}
+        virtual ~compiler() {}
 
         const std::string name, description;
 
@@ -127,7 +124,7 @@ namespace apdebug::init
         virtual void init(const std::filesystem::path& dest, compiler* c);
         virtual void update(const std::filesystem::path& dest);
         virtual void deinit(const std::filesystem::path& dest);
-        virtual ~editor() { }
+        virtual ~editor() {}
 
         const std::string name, description;
 

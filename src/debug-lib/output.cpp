@@ -51,60 +51,6 @@ namespace apdebug
             os << "[Info] " << in << ": ";
             os << n / 1000 << "ms ( " << (double)n / 1000000 << "s )";
         }
-
-        /*----- Print table-----*/
-        table::table(initializer_list<const char*> cols)
-            : num(cols.size())
-        {
-            width = new size_t[num];
-            head = new std::string[num];
-            int j = 0;
-            for (auto i = cols.begin(); i != cols.end(); ++i, ++j)
-            {
-                width[j] = strlen(*i) + 2;
-                head[j] = *i;
-            }
-        }
-        table::table(const table& t)
-            : num(t.num)
-        {
-            if (&t == this)
-                return;
-            width = new size_t[num];
-            head = new string[num];
-            copy(t.head, t.head + num, head);
-            copy(t.width, t.width + num, width);
-        }
-        table::table(table&& t)
-            : num(t.num)
-        {
-            if (&t == this)
-                return;
-            width = t.width;
-            head = t.head;
-            t.width = nullptr;
-            t.head = nullptr;
-        }
-        void table::header(ostream& os)
-        {
-            for (int i = 0; i < num; ++i)
-            {
-                setw(i, os);
-                os << head[i] << "  ";
-            }
-            os << endl;
-            for (int i = 0; i < num; ++i)
-            {
-                for (int j = 0; j < width[i]; ++j)
-                    os << "-";
-                os << "  ";
-            }
-        }
-        table::~table()
-        {
-            delete[] head;
-            delete[] width;
-        }
         /*-----Print test point config-----*/
         static inline void print(const char* str, const string& st, ostream& os, bool n)
         {
