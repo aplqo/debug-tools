@@ -56,20 +56,24 @@ namespace apdebug
         {
             if (st.empty())
                 return;
-            os << col::CYAN << "[Info] " << str << ": " << st;
             if (n)
                 os << endl;
+            os << col::CYAN << "[Info] " << str << ": " << st;
         }
         void PrintRun(const testcase::tpoint& tp, ostream& os, bool n)
         {
-            print("Input file", tp.in, os, true);
+            print("Input file", tp.in, os, false);
             print("Output file", tp.out, os, true);
-            print("Run arguments", tp.rres.args, os, n);
+            print("Run arguments", tp.rres.args, os, true);
+            if (n)
+                os << endl;
         }
         void PrintTest(const testcase::tpoint& tp, ostream& os, bool n)
         {
-            print("Answer file", tp.ans, os, true);
-            print("Test command", tp.tres.cmd + tp.tres.args, os, n);
+            print("Answer file", tp.ans, os, false);
+            print("Test command", tp.tres.cmd + tp.tres.args, os, true);
+            if (n)
+                os << endl;
         }
     }
 }

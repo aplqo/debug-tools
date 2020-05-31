@@ -87,7 +87,7 @@ void point::exec()
     cout << s->verbose();
     if (success() && !tres.cmd.empty() && !ans.empty())
     {
-        cout << col::BLUE << "[Info] Start testing for test #" << grpId << "." << id;
+        cout << col::BLUE << "[Info] Start testing for test #" << grpId << "." << id << col::NONE;
         if (verbose)
         {
             cout << col::CYAN << endl;
@@ -135,7 +135,7 @@ struct config
     bool inrec = false, ansrec = false, verbose = false;
     shared_ptr<RegexSeq> rin, rans, rtest;
     shared_ptr<result> exe, tes;
-    timType hlimit = 1000 * 1000, lim = 100 * 10 * 1000;
+    timType hlimit = 1000 * 1000, lim = 1000 * 10 * 1000;
 
 protected:
     void read(int& pos, char* argv[]);
@@ -200,6 +200,23 @@ void config::read(int& pos, char* argv[])
             break;
     }
 }
+
+table confTable(std::array<const char*, 8> {
+                    "Id", "Input directory", "Answer directory", "Argument",
+                    "Test command", "Time limit", "Hard time limit", "Verbose" },
+    col::CYAN);
+enum class confCol
+{
+    Id = 0,
+    Input = 1,
+    Answer = 2,
+    Arg = 3,
+    Test = 4,
+    Time = 5,
+    HardLim = 6,
+    Verbose = 7
+};
+using confTab = decltype(confTable);
 class group : config
 {
 public:
@@ -208,6 +225,7 @@ public:
     void exec();
     void findFile();
     void printResult();
+    void printConfig(confTab& t);
 
 private:
     template <bool rec>
@@ -247,6 +265,7 @@ void group::exec()
     point::lim = lim;
     point::hardlim = hlimit;
     point::grpId = id;
+    point::verbose = verbose;
     cout << col::BLUE << col::Underline << "[Info] Start testing for group #" << id << col::NONE;
     for (auto& i : tests)
     {
@@ -269,6 +288,19 @@ void group::printResult()
         i.print(tab);
     tab.printHeader(cout);
     tab.printAll(cout);
+}
+void group::printConfig(confTab& t)
+{
+    const auto col = [](confCol a) { return static_cast<int>(a); };
+    t.newColumn(col::CYAN);
+    t.writeColumn(col(confCol::Id), id);
+    t.writeColumn(col(confCol::Input), *indir, inrec ? "(recursive)" : "");
+    t.writeColumn(col(confCol::Answer), *ansdir, ansrec ? "(recursive)" : "");
+    t.writeColumn(col(confCol::Arg), exe ? exe->args : "");
+    t.writeColumn(col(confCol::Test), tes->cmd + " " + tes->args);
+    t.writeColumn(col(confCol::Time), lim / 1000.0, "ms (", lim / 1e6, "s)");
+    t.writeColumn(col(confCol::HardLim), hlimit / 1e3, "ms (", hlimit / 1e6, "s)");
+    t.writeColumn(col(confCol::Verbose), boolalpha, verbose);
 }
 void group::findFile()
 {
@@ -352,10 +384,12 @@ int main(int argc, char* argv[])
             grp.emplace_back(u, id++, ++i, argv);
         }
     }
-
-    // test code
-    clog << "Waiting for debugger..." << endl;
-    cin.get();
+    cout << col::CYAN << "[Info] Group config: " << endl;
+    for (auto& i : grp)
+        i.printConfig(confTable);
+    confTable.printHeader(cout);
+    confTable.printAll(cout);
+    cout << endl;
 
     for (auto& i : grp)
     {
