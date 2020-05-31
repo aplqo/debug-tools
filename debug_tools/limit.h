@@ -29,6 +29,7 @@ namespace apdebug::limit
             isStart = false;
             mtx.unlock();
             cnd.notify_all();
+            wdt.join();
         }
 
     private:
