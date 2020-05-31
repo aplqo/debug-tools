@@ -5,11 +5,14 @@ then
 	echo "Make select version"
 	exit 1
 fi
-
+readonly build='/tmp/debug-tols_build'
 readonly src=$(pwd)
-cd /tmp
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE="Release" -DCMAKE_INSTALL_PREFIX="$2" -Dcolor=on -Dver="$1" -S "${src}/debug-tools" -B .
+if [ ! -e "$build"  ]
+then
+	mkdir -p "$build"
+fi
+
+cmake -DCMAKE_BUILD_TYPE="Release" -DCMAKE_INSTALL_PREFIX="$2" -Dcolor=on -Dver="$1" -S "${src}" -B "$build"
+cd "$build"
 make
 make install
