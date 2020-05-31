@@ -1,5 +1,5 @@
-#ifndef LIMIT_H
-
+#ifndef DebugTools_LIMIT_H
+#define DebugTools_LIMIT_H
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
