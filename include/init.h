@@ -44,14 +44,15 @@ namespace apdebug::init
         }
         void print(unsigned int beg = 0) const
         {
-            tab.printHeader(std::cout);
             for (auto i : lst)
             {
+                tab.newColumn();
                 tab.writeColumn(0, beg);
                 tab.writeColumn(1, i->name);
                 tab.writeColumn(2, i->description);
                 ++beg;
             }
+            tab.printHeader(std::cout);
             tab.printAll(std::cout);
         }
         T read() const
