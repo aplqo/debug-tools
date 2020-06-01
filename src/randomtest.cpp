@@ -102,29 +102,24 @@ void tests::generate()
         this->generator.exec();
         return;
     }
-    unsigned int fv = 0, fs = 0;
+    unsigned int fv = maxVaRetries, fs = maxStdRetries;
+    static auto tryRun = [](result& r, unsigned int& i) -> bool {
+        if (r.cmd.empty())
+            return true;
+        r.exec();
+        if (r.ret)
+            --i;
+        return !r.ret;
+    };
     do
     {
         this->generator.exec();
-        if (!valid.cmd.empty())
-        {
-            this->valid.exec();
-            if (valid.ret)
-            {
-                ++fv;
-                continue;
-            }
-        }
-        if (!standard.cmd.empty())
-        {
-            this->standard.exec();
-            if (standard.ret)
-            {
-                ++fs;
-                continue;
-            }
-        }
-    } while (fv < maxVaRetries && fs < maxStdRetries);
+        if (!tryRun(this->valid, fv))
+            continue;
+        if (!tryRun(this->standard, fs))
+            continue;
+        break;
+    } while (fv && fs);
     if (standard.ret || valid.ret)
     {
         fail = true;
