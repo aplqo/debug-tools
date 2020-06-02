@@ -67,6 +67,7 @@ public:
     static result gen, std, exe, tes, va;
 
 private:
+    bool genFail = false;
     string dif;
     result generator, standard, valid;
     inline void getArgs(result& r);
@@ -122,7 +123,7 @@ void tests::generate()
     } while (fv && fs);
     if (standard.ret || valid.ret)
     {
-        fail = true;
+        genFail = true;
         out = "(Null)";
         dif = "(Null)";
         s = new apdebug::exception::JudgeFail("", "Generate data failed.");
@@ -130,7 +131,7 @@ void tests::generate()
 }
 bool tests::exec()
 {
-    if (fail)
+    if (genFail)
         return false;
     this->run();
     this->parse();
