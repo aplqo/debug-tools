@@ -18,12 +18,15 @@ namespace apdebug
             };
         }
 
+#if __cplusplus >= 201703L
         template <class... Args>
         std::ostream& print(std::ostream& os, Args... arg)
         {
             (os << ... << arg) << std::endl;
             return os;
         }
+#endif
+
         template <class T>
         T ReadOutput(std::ifstream& is)
         {

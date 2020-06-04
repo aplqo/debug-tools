@@ -1,5 +1,10 @@
 #ifndef CHECKED_H
 #define CHECKED_H
+
+#if __cplusplus < 201402L
+#error C++14 is required to use checked.h
+#endif
+
 #include "debug_tools/log.h"
 #include "debug_tools/logfile.h"
 #include <cstdlib>
