@@ -295,9 +295,12 @@ void group::printConfig(confTab& t)
     t.newColumn(col::CYAN);
     t.writeColumn(col(confCol::Id), id);
     t.writeColumn(col(confCol::Input), *indir, inrec ? "(recursive)" : "");
-    t.writeColumn(col(confCol::Answer), *ansdir, ansrec ? "(recursive)" : "");
-    t.writeColumn(col(confCol::Arg), exe ? exe->args : "");
-    t.writeColumn(col(confCol::Test), tes->cmd + " " + tes->args);
+    if (ansdir)
+        t.writeColumn(col(confCol::Answer), *ansdir, ansrec ? "(recursive)" : "");
+    if (exe)
+        t.writeColumn(col(confCol::Arg), exe ? exe->args : "");
+    if (tes)
+        t.writeColumn(col(confCol::Test), tes->cmd + " " + tes->args);
     t.writeColumn(col(confCol::Time), lim / 1000.0, "ms (", lim / 1e6, "s)");
     t.writeColumn(col(confCol::HardLim), hlimit / 1e3, "ms (", hlimit / 1e6, "s)");
     t.writeColumn(col(confCol::Verbose), boolalpha, verbose);
@@ -335,7 +338,7 @@ void group::findInput()
 template <bool rec>
 void group::findAnswer()
 {
-    if (!exists(*ansdir))
+    if (!ansdir || !exists(*ansdir))
         return;
     conditional_t<rec, recursive_directory_iterator, directory_iterator> ansit(*ansdir);
     for (auto& i : ansit)
