@@ -27,6 +27,7 @@ using regex_constants::syntax_option_type;
 
 const chrono::milliseconds print_duration(100);
 const unsigned int maxStdRetries = 20, maxVaRetries = 20;
+const unsigned int pHeadCnt = 50;
 table tab(std::array<const char*, 10> {
               "Id", "State(Run)", "State(Test)",
               "Input", "Output", "Answer", "Diff",
@@ -218,6 +219,12 @@ void PrintThrdFail()
 }
 void PrintThrdAll()
 {
+    static unsigned int cnt = 0;
+    static bool fl = false;
+    static auto pheader = []() {
+        cout << "Test Results:" << endl;
+        tab.printHeader(cout);
+    };
     while (wait.load() || isRun())
     {
         if (wait.load())
@@ -233,10 +240,23 @@ void PrintThrdAll()
                 i->print();
                 delete i;
                 --wait;
+                ++cnt;
+            }
+            if (cnt < pHeadCnt)
+                continue;
+            if (!fl)
+            {
+                fl = true;
+                pheader();
             }
             tab.printAll(cout);
         }
         std::this_thread::sleep_for(print_duration);
+    }
+    if (!fl)
+    {
+        pheader();
+        tab.printAll(cout);
     }
 }
 inline void PrintFail(tests* s)
@@ -365,19 +385,17 @@ int main(int argc, char* argv[])
     cout << col::NONE << endl;
     //Set table width
     {
-        unsigned int len = path(tests::exe.cmd).stem().string().length() + 1 + log10(times) + 1 + tests::tmpdir.string().length() + 2;
+        unsigned int len = path(tests::exe.cmd).stem().string().length() + 1 + log10(times) + 1 + tests::tmpdir.string().length();
         unsigned int rlen = strlen("(Released)");
-        tab.update(Id, log10(times) + 2);
-        tab.update(MsTim, log10(tpoint::hardlim / 1000) + 2);
-        tab.update(UsTim, log10(tpoint::hardlim) + 2);
+        tab.update(Id, log10(times));
+        tab.update(MsTim, log10(tpoint::hardlim / 1000));
+        tab.update(UsTim, log10(tpoint::hardlim));
         if (showall)
         {
-            tab.update(In, max(len + 3 + 12 + 1, rlen));
-            tab.update(Out, max(len + 4 + 12 + 1, rlen));
-            tab.update(Ans, max(len + 4 + 12 + 1, rlen));
-            tab.update(Dif, max(len + 5 + 12 + 1, rlen));
-            cout << "Test Results:" << endl;
-            tab.printHeader(cout);
+            tab.update(In, max(len + 3, rlen));
+            tab.update(Out, max(len + 4, rlen));
+            tab.update(Ans, max(len + 4, rlen));
+            tab.update(Dif, max(len + 5, rlen));
         }
     }
 
