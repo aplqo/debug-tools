@@ -73,7 +73,7 @@ namespace apdebug
         {
             const bool t = print("Answer file", tp.ans, os, false);
             print("Test command", tp.tres.cmd + tp.tres.args, os, t);
-            if (n)
+            if (n && t)
                 os << endl;
         }
     }
