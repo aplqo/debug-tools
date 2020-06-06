@@ -27,7 +27,6 @@ using regex_constants::syntax_option_type;
 
 const chrono::milliseconds print_duration(100);
 const unsigned int maxStdRetries = 20, maxVaRetries = 20;
-const unsigned int pHeadCnt = 50;
 table tab(std::array<const char*, 10> {
               "Id", "State(Run)", "State(Test)",
               "Input", "Output", "Answer", "Diff",
@@ -199,6 +198,12 @@ bool stop = false, create = false, showall = true;
 queue<tests*> pqueue; // print queue
 vector<tests*> fqueue; //failed tests
 
+// for table setup
+atomic_uint thrdCnt = 0;
+mutex mTab;
+condition_variable thrdCnd;
+unsigned int tmpV;
+
 inline bool isRun()
 {
     return cur.load() < times && !(stop && fail.load());
@@ -219,12 +224,13 @@ void PrintThrdFail()
 }
 void PrintThrdAll()
 {
-    static unsigned int cnt = 0;
-    static bool fl = false;
-    static auto pheader = []() {
+    if (showall)
+    {
+        unique_lock lk(mTab);
+        thrdCnd.wait(lk, []() { return !thrdCnt; });
         cout << "Test Results:" << endl;
         tab.printHeader(cout);
-    };
+    }
     while (wait.load() || isRun())
     {
         if (wait.load())
@@ -240,23 +246,10 @@ void PrintThrdAll()
                 i->print();
                 delete i;
                 --wait;
-                ++cnt;
-            }
-            if (cnt < pHeadCnt)
-                continue;
-            if (!fl)
-            {
-                fl = true;
-                pheader();
             }
             tab.printAll(cout);
         }
         std::this_thread::sleep_for(print_duration);
-    }
-    if (!fl)
-    {
-        pheader();
-        tab.printAll(cout);
     }
 }
 inline void PrintFail(tests* s)
@@ -287,6 +280,18 @@ inline void PrintPass(tests* s)
 }
 void thrd()
 {
+    if (showall)
+    {
+        const unsigned int l = tmpV + GetThreadId().length() + 1;
+        unique_lock lk(mTab);
+        tab.update(In, l + 3);
+        tab.update(Out, l + 4);
+        tab.update(Ans, l + 4);
+        tab.update(Dif, l + 5);
+        lk.unlock();
+        --thrdCnt;
+        thrdCnd.notify_one();
+    }
     for (unsigned long i = 0; isRun() && (!(stop && fail.load())); ++i, ++cur)
     {
         tests* tp = new tests(i);
@@ -386,16 +391,18 @@ int main(int argc, char* argv[])
     //Set table width
     {
         unsigned int len = path(tests::exe.cmd).stem().string().length() + 1 + log10(times) + 1 + tests::tmpdir.string().length();
-        unsigned int rlen = strlen("(Released)");
         tab.update(Id, log10(times));
         tab.update(MsTim, log10(tpoint::hardlim / 1000));
         tab.update(UsTim, log10(tpoint::hardlim));
         if (showall)
         {
-            tab.update(In, max(len + 3, rlen));
-            tab.update(Out, max(len + 4, rlen));
-            tab.update(Ans, max(len + 4, rlen));
-            tab.update(Dif, max(len + 5, rlen));
+            const unsigned int rlen = strlen("(Released)");
+            tmpV = len;
+            tab.update(In, rlen);
+            tab.update(Out, rlen);
+            tab.update(Ans, rlen);
+            tab.update(Dif, rlen);
+            thrdCnt.store(parallel);
         }
     }
 
