@@ -23,7 +23,6 @@ using namespace std::filesystem;
 using namespace apdebug::args;
 using namespace apdebug::out;
 using namespace apdebug::utility;
-using regex_constants::syntax_option_type;
 
 const chrono::milliseconds print_duration(100);
 const unsigned int maxStdRetries = 20, maxVaRetries = 20;
@@ -75,7 +74,7 @@ private:
 
     static const regex rdiff;
 };
-const regex tests::rdiff(R"(<differ>)", syntax_option_type::ECMAScript | syntax_option_type::optimize | syntax_option_type::nosubs);
+const regex tests::rdiff(R"(<differ>)", regex_constants::ECMAScript | regex_constants::optimize | regex_constants::nosubs);
 result tests::gen, tests::exe, tests::tes, tests::std, tests::va;
 path tests::tmpdir;
 void tests::init()
