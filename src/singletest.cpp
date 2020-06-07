@@ -28,6 +28,8 @@ int main(int argc, char* argv[])
             tp.in = argv[++i];
         else if (!strcmp(argv[i], "-out"))
             tp.out = argv[++i];
+        else if (!strcmp(argv[i], "-ans"))
+            tp.ans = argv[++i];
         else if (!strcmp(argv[i], "-test"))
             tp.tres.cmd = argv[++i];
         else if (ReadLimit<tpoint>(i, argv))
