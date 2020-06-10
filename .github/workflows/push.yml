@@ -56,62 +56,66 @@ jobs:
         with:
           path: ./build/debug-tools-${{ matrix.os.type }}-${{ env.version }}-${{ matrix.configs.artifact }}.zip
           name: debug-tools-${{ matrix.os.type }}-${{ env.version }}-${{ matrix.configs.artifact }}
-  # create-release:
-  #   if: contains(github.ref, 'tags/v')
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   steps:
-  #   - run: "echo ::set-env name=version::${GITHUB_REF#refs/*/}"
-  #   - name: Create Release
-  #     id: create_release
-  #     uses: actions/create-release@v1
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     with:
-  #       tag_name: ${{ github.ref }}
-  #       release_name: Release ${{ env.version }}
-  #       body:
-  #       draft: false
-  #       prerelease: false
-  #   - name: Store Release url
-  #     run: |
-  #       echo "${{ steps.create_release.outputs.upload_url }}" > ./upload_url
-  #   - uses: actions/upload-artifact@v1
-  #     with:
-  #       path: ./upload_url
-  #       name: upload_url
-  # publish-release:
-  #   if: contains(github.ref, 'tags/v')
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: [ 'Windows','Linux' ]
-  #       col: [ 'color','nocolor' ]
-  #   needs: create-release
-  #   steps:
-  #   - run: "echo ::set-env name=version::${GITHUB_REF#refs/*/}"
-  #   - name: Download artifact
-  #     uses: actions/download-artifact@v1
-  #     with:
-  #       name: debug-tools-${{ matrix.os }}-${{ env.version }}-${{ matrix.col }}
-  #       path: ./
-  #   - name: Download URL
-  #     uses: actions/download-artifact@v1
-  #     with:
-  #       name: upload_url
-  #       path: ./
-  #   - id: set_upload_url
-  #     run: |
-  #       upload_url=`cat ./upload_url`
-  #       echo ::set-output name=upload_url::$upload_url
-  #   - name: Upload to Release
-  #     id: upload_to_release
-  #     uses: actions/upload-release-asset@v1.0.1
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     with:
-  #       upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
-  #       asset_name: debug-tools-${{ matrix.os }}-${{ env.version }}-${{ matrix.col }}.zip
-  #       asset_path: debug-tools-${{ matrix.os }}-${{ env.version }}-${{ matrix.col }}.zip
-  #       asset_content_type: application/zip
+  
+  create-release:
+    if: contains(github.ref, 'tags/v')
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - run: "echo ::set-env name=version::${GITHUB_REF#refs/*/}"
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ env.version }}
+        body: 
+        draft: false
+        prerelease: ${{contains(env.version,'-')}}
+    - name: Store Release url
+      run: |
+        echo "${{ steps.create_release.outputs.upload_url }}" > ./upload_url
+    - uses: actions/upload-artifact@v1
+      with:
+        path: ./upload_url
+        name: upload_url
+  
+  publish-release:
+    if: contains(github.ref, 'tags/v')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ 'Windows','Linux' ]
+        col: [ 'color','nocolor' ]
+    needs: create-release
+
+    steps:
+    - run: "echo ::set-env name=version::${GITHUB_REF#refs/*/}"
+    - name: Download artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: debug-tools-${{ matrix.os }}-${{ env.version }}-${{ matrix.col }}
+        path: ./
+    - name: Download URL
+      uses: actions/download-artifact@v1
+      with:
+        name: upload_url
+        path: ./
+    - id: set_upload_url
+      run: |
+        upload_url=`cat ./upload_url`
+        echo ::set-output name=upload_url::$upload_url
+    - name: Upload to Release
+      id: upload_to_release
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
+        asset_name: debug-tools-${{ matrix.os }}-${{ env.version }}-${{ matrix.col }}.zip
+        asset_path: debug-tools-${{ matrix.os }}-${{ env.version }}-${{ matrix.col }}.zip
+        asset_content_type: application/zip
