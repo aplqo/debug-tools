@@ -34,6 +34,15 @@ if(GIT_FOUND)
 		ERROR_QUIET
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	)
+	if("${branch}" STREQUAL "")
+		message(STATUS "Using detached head")
+		execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --exact-match HEAD
+			OUTPUT_VARIABLE branch
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+			ERROR_QUIET
+			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		)
+	endif()
 endif()
 
 set(build "unknown")
