@@ -7,6 +7,7 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <condition_variable>
 #include <filesystem>
 #include <iostream>
 #include <mutex>
@@ -23,7 +24,6 @@ using namespace std::filesystem;
 using namespace apdebug::args;
 using namespace apdebug::out;
 using namespace apdebug::utility;
-using regex_constants::syntax_option_type;
 
 const chrono::milliseconds print_duration(100);
 const unsigned int maxStdRetries = 20, maxVaRetries = 20;
@@ -67,6 +67,7 @@ public:
     static result gen, std, exe, tes, va;
 
 private:
+    bool genFail = false;
     string dif;
     result generator, standard, valid;
     inline void getArgs(result& r);
@@ -74,7 +75,7 @@ private:
 
     static const regex rdiff;
 };
-const regex tests::rdiff(R"(<differ>)", syntax_option_type::ECMAScript | syntax_option_type::optimize | syntax_option_type::nosubs);
+const regex tests::rdiff(R"(<differ>)", regex_constants::ECMAScript | regex_constants::optimize | regex_constants::nosubs);
 result tests::gen, tests::exe, tests::tes, tests::std, tests::va;
 path tests::tmpdir;
 void tests::init()
@@ -102,32 +103,27 @@ void tests::generate()
         this->generator.exec();
         return;
     }
-    unsigned int fv = 0, fs = 0;
+    unsigned int fv = maxVaRetries, fs = maxStdRetries;
+    static auto tryRun = [](result& r, unsigned int& i) -> bool {
+        if (r.cmd.empty())
+            return true;
+        r.exec();
+        if (r.ret)
+            --i;
+        return !r.ret;
+    };
     do
     {
         this->generator.exec();
-        if (!valid.cmd.empty())
-        {
-            this->valid.exec();
-            if (valid.ret)
-            {
-                ++fv;
-                continue;
-            }
-        }
-        if (!standard.cmd.empty())
-        {
-            this->standard.exec();
-            if (standard.ret)
-            {
-                ++fs;
-                continue;
-            }
-        }
-    } while (fv < maxVaRetries && fs < maxStdRetries);
+        if (!tryRun(this->valid, fv))
+            continue;
+        if (!tryRun(this->standard, fs))
+            continue;
+        break;
+    } while (fv && fs);
     if (standard.ret || valid.ret)
     {
-        fail = true;
+        genFail = true;
         out = "(Null)";
         dif = "(Null)";
         s = new apdebug::exception::JudgeFail("", "Generate data failed.");
@@ -135,7 +131,7 @@ void tests::generate()
 }
 bool tests::exec()
 {
-    if (fail)
+    if (genFail)
         return false;
     this->run();
     this->parse();
@@ -202,6 +198,12 @@ bool stop = false, create = false, showall = true;
 queue<tests*> pqueue; // print queue
 vector<tests*> fqueue; //failed tests
 
+// for table setup
+atomic_uint thrdCnt = 0;
+mutex mTab;
+condition_variable thrdCnd;
+unsigned int tmpV;
+
 inline bool isRun()
 {
     return cur.load() < times && !(stop && fail.load());
@@ -222,6 +224,13 @@ void PrintThrdFail()
 }
 void PrintThrdAll()
 {
+    if (showall)
+    {
+        unique_lock lk(mTab);
+        thrdCnd.wait(lk, []() { return !thrdCnt; });
+        cout << "Test Results:" << endl;
+        tab.printHeader(cout);
+    }
     while (wait.load() || isRun())
     {
         if (wait.load())
@@ -271,6 +280,18 @@ inline void PrintPass(tests* s)
 }
 void thrd()
 {
+    if (showall)
+    {
+        const unsigned int l = tmpV + GetThreadId().length() + 1;
+        unique_lock lk(mTab);
+        tab.update(In, l + 3);
+        tab.update(Out, l + 4);
+        tab.update(Ans, l + 4);
+        tab.update(Dif, l + 5);
+        lk.unlock();
+        --thrdCnt;
+        thrdCnd.notify_one();
+    }
     for (unsigned long i = 0; isRun() && (!(stop && fail.load())); ++i, ++cur)
     {
         tests* tp = new tests(i);
@@ -369,19 +390,19 @@ int main(int argc, char* argv[])
     cout << col::NONE << endl;
     //Set table width
     {
-        unsigned int len = path(tests::exe.cmd).stem().string().length() + 1 + log10(times) + 1 + tests::tmpdir.string().length() + 2;
-        unsigned int rlen = strlen("(Released)");
-        tab.update(Id, log10(times) + 2);
-        tab.update(MsTim, log10(tpoint::hardlim / 1000) + 2);
-        tab.update(UsTim, log10(tpoint::hardlim) + 2);
+        unsigned int len = path(tests::exe.cmd).stem().string().length() + 1 + log10(times) + 1 + tests::tmpdir.string().length();
+        tab.update(Id, log10(times));
+        tab.update(MsTim, log10(tpoint::hardlim / 1000));
+        tab.update(UsTim, log10(tpoint::hardlim));
         if (showall)
         {
-            tab.update(In, max(len + 3 + 12 + 1, rlen));
-            tab.update(Out, max(len + 4 + 12 + 1, rlen));
-            tab.update(Ans, max(len + 4 + 12 + 1, rlen));
-            tab.update(Dif, max(len + 5 + 12 + 1, rlen));
-            cout << "Test Results:" << endl;
-            tab.printHeader(cout);
+            const unsigned int rlen = strlen("(Released)");
+            tmpV = len;
+            tab.update(In, rlen);
+            tab.update(Out, rlen);
+            tab.update(Ans, rlen);
+            tab.update(Dif, rlen);
+            thrdCnt.store(parallel);
         }
     }
 

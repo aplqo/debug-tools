@@ -3,4 +3,4 @@ param(
     [String]$f
 )
 
-./bin/single "$pro" -in "$f.in" -out "$f.out" -test 'powershell ./scripts/test.ps1' -testargs [ "$f.in" "$f.out" "$f.ans" ]
+./bin/single "$pro" -in "$f.in" -out "$f.out" -ans "$f.ans" -test 'powershell ./scripts/test.ps1' -testargs [ "<input>" "<output>" "<answer>" ]

@@ -44,7 +44,7 @@ namespace apdebug
         timType tpoint::lim = 1000 * 1000;
         timType tpoint::hardlim = 1000 * 10 * 1000;
         const thread_local string tpoint::thrdId = utility::GetThreadId();
-        constexpr syntax_option_type regFlag = syntax_option_type::ECMAScript | syntax_option_type::optimize | syntax_option_type::nosubs;
+        constexpr syntax_option_type regFlag = std::regex_constants::ECMAScript | std::regex_constants::optimize | std::regex_constants::nosubs;
         const std::regex tpoint::rin(R"(<input>)", regFlag),
             tpoint::rout(R"(<output>)", regFlag),
             tpoint::rans(R"(<answer>)", regFlag),

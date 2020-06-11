@@ -1,8 +1,8 @@
 #!/bin/bash
 
-regex='^(.*)\.[^\.]*', # match without extension
-inreg='in$'
-ansreg='ans$'
+regex='^(.*)\.[^\.]*' # match without extension
+inreg='.*\.in$'
+ansreg='.*\.ans$'
 
 if [ -n "$3" ]
 then
