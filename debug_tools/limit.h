@@ -37,7 +37,7 @@ namespace apdebug
         private:
             void wdThrd()
             {
-                std::unique_lock lk(mtx);
+                std::unique_lock<std::mutex> lk(mtx);
                 if (cnd.wait_for(lk, lim, [&]() { return !isStart; }))
                     return;
                 onTimeout();
