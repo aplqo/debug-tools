@@ -227,11 +227,11 @@ void PrintThrdAll()
     if (showall)
     {
         unique_lock lk(mTab);
-        thrdCnd.wait(lk, []() { return !thrdCnt; });
+        thrdCnd.wait(lk, []() { return thrdCnt == parallel; });
         cout << "Test Results:" << endl;
         tab.printHeader(cout);
     }
-    while (wait.load() || isRun())
+    while (wait.load() || isRun() || thrdCnt)
     {
         if (wait.load())
         {
@@ -289,10 +289,10 @@ void thrd()
         tab.update(Ans, l + 4);
         tab.update(Dif, l + 5);
         lk.unlock();
-        --thrdCnt;
+        ++thrdCnt;
         thrdCnd.notify_one();
     }
-    for (unsigned long i = 0; isRun() && (!(stop && fail.load())); ++i, ++cur)
+    for (unsigned long i = 0; isRun(); ++i, ++cur)
     {
         tests* tp = new tests(i);
         bool s;
@@ -303,7 +303,10 @@ void thrd()
         {
             PrintFail(tp);
             if (stop)
+            {
+                --thrdCnt;
                 return;
+            }
         }
         else
         {
@@ -311,6 +314,7 @@ void thrd()
             PrintPass(tp);
         }
     }
+    --thrdCnt;
 }
 int main(int argc, char* argv[])
 {
@@ -402,7 +406,6 @@ int main(int argc, char* argv[])
             tab.update(Out, rlen);
             tab.update(Ans, rlen);
             tab.update(Dif, rlen);
-            thrdCnt.store(parallel);
         }
     }
 
