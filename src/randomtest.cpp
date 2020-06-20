@@ -395,7 +395,7 @@ int main(int argc, char* argv[])
     //Set table width
     {
         unsigned int len = path(tests::exe.cmd).stem().string().length() + 1 + log10(times) + 1 + tests::tmpdir.string().length();
-        tab.update(Id, log10(times));
+        tab.update(Id, log10(times) + 1);
         tab.update(MsTim, log10(tpoint::hardlim / 1000));
         tab.update(UsTim, log10(tpoint::hardlim));
         if (showall)
