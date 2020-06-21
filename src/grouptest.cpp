@@ -139,6 +139,17 @@ struct config
 
 protected:
     void read(int& pos, char* argv[]);
+
+private:
+    template <class T>
+    inline static shared_ptr<T>& create(shared_ptr<T>& p)
+    {
+        if (p.use_count() > 1)
+            p = make_shared<T>(*p);
+        else if (!p)
+            p = make_shared<T>();
+        return p;
+    }
 };
 void config::read(int& pos, char* argv[])
 {
@@ -174,26 +185,11 @@ void config::read(int& pos, char* argv[])
             lim = point::lim;
         }
         else if (!strcmp(argv[pos], "-args"))
-        {
-            exe = make_shared<result>(*exe);
-            ReadArgument(*exe, ++pos, argv);
-        }
+            ReadArgument(*create(exe), ++pos, argv);
         else if (!strcmp(argv[pos], "-test"))
-        {
-            if (tes.use_count() > 1)
-                tes = make_shared<result>(*tes);
-            else if (!tes)
-                tes = make_shared<result>();
-            tes->cmd = argv[++pos];
-        }
+            create(tes)->cmd = argv[++pos];
         else if (!strcmp(argv[pos], "-testargs"))
-        {
-            if (tes.use_count() > 1)
-                tes = make_shared<result>(*tes);
-            else if (!tes)
-                tes = make_shared<result>();
-            ReadArgument(*tes, ++pos, argv);
-        }
+            ReadArgument(*create(tes), ++pos, argv);
         else if (!strcmp(argv[pos], "-verbose"))
             verbose = true;
         else if (!strcmp(argv[pos], ";"))
