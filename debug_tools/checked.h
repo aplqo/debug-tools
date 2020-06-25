@@ -43,7 +43,7 @@ namespace apdebug
                 auto ret = dat + r;
                 if (ret - dat != r || ((r > 0) ^ (ret > this->dat)))
                     err("Add");
-                return ret;
+                return CheckedInteger(ret);
             }
             template <class U>
             constexpr auto operator*(const U a) const
@@ -51,7 +51,7 @@ namespace apdebug
                 auto ret = dat * a;
                 if (this->dat != 0 && a != 0 && (ret == 0 || ret / a != this->dat))
                     err("Multiply");
-                return ret;
+                return CheckedInteger(ret);
             }
             template <class U>
             constexpr auto operator-(const U a) const
@@ -59,7 +59,7 @@ namespace apdebug
                 auto ret = dat - a;
                 if (ret + a != this->dat || (((a > 0) ^ (ret < this->dat)) && a != 0))
                     err("Minus");
-                return ret;
+                return CheckedInteger(ret);
             }
             template <class U>
             constexpr auto operator/(const U r) const
@@ -71,9 +71,20 @@ namespace apdebug
                     WriteString(typeid(T).name());
                     quick_exit(1);
                 }
-                return dat / r;
+                return CheckedInteger(dat / r);
             }
-            operator T() const { return dat; };
+#define checkOp(op)    \
+    template <class U> \
+    constexpr auto operator##op(const CheckedInteger<U> r) const { return *this op r.dat; }
+            checkOp(+);
+            checkOp(-);
+            checkOp(*);
+            checkOp(/);
+#undef checkOP
+            operator T() const
+            {
+                return dat;
+            };
             /*Increment and decrement*/
             inline CheckedInteger<T>& operator++()
             {
@@ -109,7 +120,7 @@ namespace apdebug
             }
 #define oper(op)       \
     template <class U> \
-    constexpr auto operator op(const U r) const { return dat op r; }
+    constexpr auto operator op(const U r) const { return CheckedInteger(dat op r); }
             oper(%);
             /*Bitwise arithmetic operators*/
             oper(&);
@@ -142,7 +153,7 @@ namespace apdebug
 #undef assop
             constexpr auto operator~() const
             {
-                return ~dat;
+                return CheckedInteger(~dat);
             }
             template <class U>
             friend ostream& operator<<(ostream&, const CheckedInteger<U>&);
