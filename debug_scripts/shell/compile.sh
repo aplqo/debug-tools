@@ -6,7 +6,7 @@ readonly args="-std=c++11 -Wall -Wextra -Weffc++ -Wdisabled-optimization"
 
 if [ "$2" = 'test' ]
 then
-	$CXX -DAPTEST -lpthread -I. $args "$fdir/$base.cpp" -o "$fdir/$base"
+	$CXX -DAPTEST -pthread -I. $args "$fdir/$base.cpp" -o "$fdir/$base"
 else
 	$CXX -DAPDEBUG $args "$fdir/$base.cpp" -g  -o "$fdir/$base"
 fi

@@ -9,11 +9,12 @@
                 "${file}",
                 "-DAPTEST",
                 "-std=c++11",
+                "-I${fileDirname}",
+                "-pthread",
                 "-Wall",
                 "-Wextra",
                 "-Weffc++",
                 "-Wdisabled-optimization",
-                "-g",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe"
             ],
