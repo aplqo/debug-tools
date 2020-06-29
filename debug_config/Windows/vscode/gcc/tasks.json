@@ -9,6 +9,10 @@
                 "${file}",
                 "-DAPTEST",
                 "-std=c++11",
+                "-Wall",
+                "-Wextra",
+                "-Weffc++",
+                "-Wdisabled-optimization",
                 "-g",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe"
@@ -29,6 +33,10 @@
                 "${file}",
                 "-std=c++11",
                 "-DAPDEBUG",
+                "-Wall",
+                "-Wextra",
+                "-Weffc++",
+                "-Wdisabled-optimization",
                 "-g",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe"
