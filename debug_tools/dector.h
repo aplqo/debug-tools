@@ -47,7 +47,7 @@ namespace apdebug
         {
             return l |= static_cast<uint32_t>(r);
         }
-        extern "C" void fpe_handler(int sig)
+        extern "C" void fpe_handler(int)
         {
             WriteObj(RStatus::Runtime);
             WriteObj(RtError::Sigfpe);

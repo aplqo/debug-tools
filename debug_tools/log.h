@@ -11,19 +11,19 @@ namespace apdebug
     {
         std::ofstream logf;
 
-        void WriteString(const char* str, std::ofstream& os = logf)
+        static void writeStr(const char* str, const size_t len, std::ofstream& os)
         {
-            uint32_t len = strlen(str);
-            os.write(reinterpret_cast<char*>(&len), sizeof(len));
+            os.write(reinterpret_cast<const char*>(&len), sizeof(len));
             os.write(str, len);
             os.flush();
         }
+        void WriteString(const char* str, std::ofstream& os = logf)
+        {
+            writeStr(str, strlen(str), os);
+        }
         void WriteString(const std::string& str, std::ofstream& os = logf)
         {
-            uint32_t len = str.length();
-            os.write(reinterpret_cast<char*>(&len), sizeof(len));
-            os.write(str.c_str(), len);
-            os.flush();
+            writeStr(str.c_str(), str.length(), os);
         }
         template <class T>
         void WriteObj(const T val, std::ofstream& os = logf)
