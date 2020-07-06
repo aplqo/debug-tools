@@ -10,7 +10,10 @@
                 "-DAPTEST",
                 "-I${workspaceFolder}",
                 "-std=c++11",
-                "-Weverything",
+                "-Wall",
+                "-Wextra",
+                "-Weffc++",
+                "-Wdisabled-optimization",
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
@@ -31,7 +34,10 @@
                 "-g",
                 "-DAPDEBUG",
                 "-std=c++11",
-                "-Weverything",
+                "-Wall",
+                "-Wextra",
+                "-Weffc++",
+                "-Wdisabled-optimization",
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
