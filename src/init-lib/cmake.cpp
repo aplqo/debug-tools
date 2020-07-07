@@ -118,7 +118,7 @@ namespace apdebug::init::cmake
 
     private:
         void initImpl(const path&, const bool) override {}
-        void deinitImpl(const path& dest, const bool upd = false)
+        void deinitImpl(const path& dest, const bool) override
         {
             for (const auto& i : rmList)
             {
