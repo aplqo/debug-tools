@@ -71,9 +71,9 @@ namespace apdebug
         }
         void PrintTest(const testcase::tpoint& tp, ostream& os, bool n)
         {
-            const bool t = print("Answer file", tp.ans, os, false);
-            print("Test command", tp.tres.cmd + tp.tres.args, os, t);
-            if (n && t)
+            const bool t1 = print("Answer file", tp.ans, os, false);
+            const bool t2 = print("Test command", tp.tres.cmd + tp.tres.args, os, t1);
+            if (n && (t1 || t2))
                 os << endl;
         }
     }
