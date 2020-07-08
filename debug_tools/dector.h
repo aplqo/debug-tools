@@ -67,7 +67,7 @@ namespace apdebug
         }
         void regsig()
         {
-#ifdef _MSC_VER
+#ifdef _WIN32
             _controlfp(0, _MCW_EM); //Enable floating point exception
 #else
             feenableexcept(FE_DIVBYZERO | FE_INEXACT | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW);
