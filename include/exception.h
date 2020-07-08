@@ -23,13 +23,15 @@ namespace apdebug
         {
         public:
             Pass() = default;
-            Pass(apdebug::timer::timType t)
-                : tim(t) {};
+            Pass(apdebug::timer::timType t, size_t m)
+                : tim(t)
+                , mem(m) {};
             std::string name();
             std::string verbose();
             std::string color();
 
         private:
+            size_t mem;
             apdebug::timer::timType tim = 0;
         };
         class Accepted : public state
@@ -65,27 +67,48 @@ namespace apdebug
             const char *dmsg, *vmsg;
         };
 
-        class TimeLimit : public state
+        class LimitExceed : public state
         {
         public:
-            TimeLimit(apdebug::timer::timType);
+            enum type
+            {
+                Time = 1,
+                Memory = 2
+            };
+
+            LimitExceed(type typ, apdebug::timer::timType t, size_t m)
+                : typ(typ)
+                , p(t, m) {};
             std::string name();
             std::string verbose();
             std::string color();
 
         private:
+            type typ;
             Pass p;
         };
-        class HardLimit : public state
+        class HardTimeLimit : public state
         {
         public:
-            HardLimit(apdebug::timer::timType);
+            HardTimeLimit(apdebug::timer::timType);
             std::string name();
             std::string verbose();
             std::string color();
 
         private:
             apdebug::timer::timType hardlim;
+        };
+        class HardMemoryLimit : public state
+        {
+        public:
+            HardMemoryLimit(size_t m)
+                : mem(m) {};
+            std::string name();
+            std::string verbose();
+            std::string color();
+
+        private:
+            size_t mem;
         };
 
         class Warn : public state

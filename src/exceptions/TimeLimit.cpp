@@ -14,45 +14,72 @@ namespace apdebug
         using std::string;
         using namespace apdebug::out;
 
-        TimeLimit::TimeLimit(timType t)
+        string LimitExceed::name()
         {
-            p = Pass(t);
+            switch (typ)
+            {
+            case Time:
+                return "TLE";
+            case Memory:
+                return "MLE";
+            case Time | Memory:
+                return "TLE MLE";
+            }
         }
-        string TimeLimit::name()
-        {
-            return "TLE";
-        }
-        string TimeLimit::verbose()
+        string LimitExceed::verbose()
         {
             ostringstream os;
             os << p.verbose();
-            os << color() << "[TLE] Time limit exceed." << endl;
+            os << color();
+            if (typ & Time)
+                os << "[TLE] Time limit exceed." << endl;
+            if (typ & Memory)
+                os << "[MLE] Memory limit exceed." << endl;
             return os.str();
         }
-        string TimeLimit::color()
+        string LimitExceed::color()
         {
-            ostringstream os;
+            std::ostringstream os;
             os << col::YELLOW;
             return os.str();
         }
 
-        HardLimit::HardLimit(timType lim)
+        HardTimeLimit::HardTimeLimit(timType lim)
         {
             hardlim = lim;
         }
-        string HardLimit::verbose()
+        string HardTimeLimit::verbose()
         {
             ostringstream os;
-            os << color() << "[MLE/TLE] Hard time limit exceed. ";
+            os << color() << "[Hard TLE] Hard time limit exceed.";
             PrintTime(hardlim, os);
             os << endl;
             return os.str();
         }
-        string HardLimit::name()
+        string HardTimeLimit::name()
         {
-            return "MLE/TLE";
+            return "Hard TLE";
         }
-        string HardLimit::color()
+        string HardTimeLimit::color()
+        {
+            ostringstream os;
+            os << col::RED;
+            return os.str();
+        }
+
+        string HardMemoryLimit::verbose()
+        {
+            ostringstream os;
+            os << color() << "[Hard MLE] Hard memory limit exceed.";
+            PrintMemory(mem, os);
+            os << endl;
+            return os.str();
+        }
+        string HardMemoryLimit::name()
+        {
+            return "Hard MLE";
+        }
+        string HardMemoryLimit::color()
         {
             ostringstream os;
             os << col::RED;

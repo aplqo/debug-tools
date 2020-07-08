@@ -19,8 +19,10 @@ namespace apdebug
         std::string Pass::verbose()
         {
             ostringstream os;
-            os << color() << "[Pass] Program finished after ";
+            os << color() << "[Pass] Program finished. Time: ";
             PrintTime(tim, os);
+            os << " Memory: ";
+            PrintMemory(mem, os);
             os << endl;
             return os.str();
         }
