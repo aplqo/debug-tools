@@ -2,8 +2,10 @@
 #define CMDARG
 
 #include "include/define.h"
+#include "include/memory.h"
 #include "include/testcase.h"
 #include <cstring>
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -13,18 +15,18 @@ namespace apdebug
     {
         using apdebug::timer::timType;
         void ReadArgument(testcase::result&, int&, char*[]);
+        bool ReadLimit(testcase::limits&, int& pos, char* argv[]);
         template <class T>
-        bool ReadLimit(int& pos, char* argv[])
+        bool readMemoryConf(int& pos, char* argv[])
         {
-            if (!strcmp(argv[pos], "-time"))
+            if (!strcmp(argv[pos], "-cgroup"))
             {
-                T::lim = atoi(argv[++pos]) * timType(1000);
-                T::hardlim = T::lim * 10;
+                T::memLimit.init(argv[++pos]);
                 return true;
             }
-            if (!strcmp(argv[pos], "-hlimit"))
+            if (!strcmp(argv[pos], "-swapaccount"))
             {
-                T::hardlim = atoi(argv[++pos]) * timType(1000);
+                apdebug::memory::swapaccount = true;
                 return true;
             }
             return false;
