@@ -23,7 +23,7 @@ using namespace std::filesystem;
 using namespace apdebug::out;
 using namespace apdebug::args;
 
-using resultTab = table<9>;
+using resultTab = table<11>;
 enum cols
 {
     Id = 0,
@@ -34,7 +34,9 @@ enum cols
     Ans = 5,
     MsTim = 6,
     UsTim = 7,
-    Det = 8
+    MbMem = 8,
+    KbMem = 9,
+    Det = 10
 };
 class point : tpoint
 {
@@ -48,8 +50,9 @@ public:
     void print(resultTab& tab);
     int id;
 
-    using tpoint::hardlim;
+    using tpoint::initMemLimit;
     using tpoint::lim;
+    using tpoint::memLimit;
     using tpoint::release;
 
     static string cmd;
@@ -118,6 +121,8 @@ void point::print(resultTab& tab)
     tab.writeColumn(Ans, ans);
     tab.writeColumn(MsTim, tim / 1000);
     tab.writeColumn(UsTim, tim);
+    tab.writeColumn(KbMem, mem / 1024.0);
+    tab.writeColumn(MbMem, mem / 1024.0 / 1024.0);
     tab.writeColumn(Det, s->details());
 }
 void point::getOut()
@@ -135,7 +140,7 @@ struct config
     bool inrec = false, ansrec = false, verbose = false;
     shared_ptr<RegexSeq> rin, rans, rtest;
     shared_ptr<result> exe, tes;
-    timType hlimit = 10 * 1000 * 1000, lim = 1000 * 1000;
+    apdebug::testcase::limits lim;
 
 protected:
     void read(int& pos, char* argv[]);
@@ -179,11 +184,8 @@ void config::read(int& pos, char* argv[])
         }
         else if (!strcmp(argv[pos], "-ans-regex"))
             rans = make_shared<RegexSeq>(++pos, argv);
-        else if (ReadLimit<point>(pos, argv))
-        {
-            hlimit = point::hardlim;
-            lim = point::lim;
-        }
+        else if (ReadLimit(lim, pos, argv))
+            continue;
         else if (!strcmp(argv[pos], "-args"))
             ReadArgument(*create(exe), ++pos, argv);
         else if (!strcmp(argv[pos], "-test"))
@@ -197,9 +199,10 @@ void config::read(int& pos, char* argv[])
     }
 }
 
-table confTable(std::array<const char*, 8> {
+table confTable(std::array<const char*, 10> {
                     "Id", "Input directory", "Answer directory", "Argument",
-                    "Test command", "Time limit", "Hard time limit", "Verbose" },
+                    "Test command", "Time limit", "Hard time limit",
+                    "Memory limit", "Hard memory limit", "Verbose" },
     col::CYAN);
 enum class confCol
 {
@@ -210,7 +213,9 @@ enum class confCol
     Test = 4,
     Time = 5,
     HardLim = 6,
-    Verbose = 7
+    Memory = 7,
+    HardMem = 8,
+    Verbose = 9
 };
 using confTab = decltype(confTable);
 class group : config
@@ -231,15 +236,15 @@ private:
     template <bool rec>
     pair<bool, size_t> isInclude(const path& p, const RegexSeq& r);
 
-    static const array<const char*, 9> colName;
+    static const array<const char*, 11> colName;
 
     resultTab tab;
     unsigned int id = 0;
     vector<point> tests;
     map<size_t, int> table;
 };
-const array<const char*, 9> group::colName { "Id", "State(Run)", "State(Test)", "Input",
-    "Output", "Answer", "Time(ms)", "Time(us)",
+const array<const char*, 11> group::colName { "Id", "State(Run)", "State(Test)", "Input",
+    "Output", "Answer", "Time(ms)", "Time(us)", "Memory(MiB)", "Memory(KiB)",
     "Details" };
 vector<group> grp;
 group::group(unsigned int i, int& pos, char* argv[])
@@ -258,10 +263,10 @@ group::group(const unsigned int c, unsigned int i, int& pos, char* argv[])
 void group::exec()
 {
     const auto deref = [](shared_ptr<result>& s) { return s ? *s : result(); };
-    point::lim = lim;
-    point::hardlim = hlimit;
+    point::lim = this->lim;
     point::grpId = id;
     point::verbose = verbose;
+    point::initMemLimit();
     cout << col::BLUE << col::Underline << "[Info] Start testing for group #" << id << col::NONE;
     for (auto& i : tests)
     {
@@ -287,7 +292,7 @@ void group::printResult()
 }
 void group::printConfig(confTab& t)
 {
-    const auto col = [](confCol a) { return static_cast<int>(a); };
+    const static auto col = [](confCol a) { return static_cast<int>(a); };
     t.newColumn(col::CYAN);
     t.writeColumn(col(confCol::Id), id);
     t.writeColumn(col(confCol::Input), *indir, inrec ? "(recursive)" : "");
@@ -297,8 +302,18 @@ void group::printConfig(confTab& t)
         t.writeColumn(col(confCol::Arg), exe ? exe->args : "");
     if (tes)
         t.writeColumn(col(confCol::Test), tes->cmd + " " + tes->args);
-    t.writeColumn(col(confCol::Time), lim / 1000.0, "ms (", lim / 1e6, "s)");
-    t.writeColumn(col(confCol::HardLim), hlimit / 1e3, "ms (", hlimit / 1e6, "s)");
+    t.writeColumn(col(confCol::Time), lim.lim / 1000.0, "ms (", lim.lim / 1e6, "s)");
+    t.writeColumn(col(confCol::HardLim), lim.hardlim / 1e3, "ms (", lim.hardlim / 1e6, "s)");
+    {
+        const auto write = [&t](confCol c, const size_t m) {
+            if (m)
+                t.writeColumn(col(c), m / 1024.0, " KiB (", m / 1024.0 / 1024.0, " MiB)");
+            else
+                t.writeColumn(col(c), "unlimited");
+        };
+        write(confCol::Memory, lim.memLimByte);
+        write(confCol::HardMem, lim.hardMemByte);
+    }
     t.writeColumn(col(confCol::Verbose), boolalpha, verbose);
 }
 void group::findFile()
@@ -373,16 +388,23 @@ int main(int argc, char* argv[])
     if (strcmp(argv[2], "-no-version"))
         PrintVersion("group test runner", cout);
     point::cmd = argv[1];
-    for (int i = 2, id = 0; i < argc; ++i)
     {
-        if (strcmp(argv[i], "-use"))
-            grp.emplace_back(id++, i, argv);
-        else
+        int p = 2;
+        for (unsigned int i = 0; i < 2; ++i)
+            if (readMemoryConf<point>(p, argv))
+                ++p;
+        for (int id = 0; p < argc; ++p)
         {
-            const unsigned int u = atoi(argv[++i]);
-            grp.emplace_back(u, id++, ++i, argv);
+            if (strcmp(argv[p], "-use"))
+                grp.emplace_back(id++, p, argv);
+            else
+            {
+                const unsigned int u = atoi(argv[++p]);
+                grp.emplace_back(u, id++, ++p, argv);
+            }
         }
     }
+    printMemConf<point>(cout, true);
     cout << col::CYAN << "[Info] Group config: " << endl;
     for (auto& i : grp)
         i.printConfig(confTable);

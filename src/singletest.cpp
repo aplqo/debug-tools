@@ -1,6 +1,7 @@
 #include "include/cmdarg.h"
 #include "include/define.h"
 #include "include/exception.h"
+#include "include/memory.h"
 #include "include/output.h"
 #include "include/testcase.h"
 #include <chrono>
@@ -32,17 +33,21 @@ int main(int argc, char* argv[])
             tp.ans = argv[++i];
         else if (!strcmp(argv[i], "-test"))
             tp.tres.cmd = argv[++i];
-        else if (ReadLimit<tpoint>(i, argv))
+        else if (ReadLimit(tpoint::lim, i, argv))
+            continue;
+        else if (readMemoryConf<tpoint>(i, argv))
             continue;
         else if (!strcmp(argv[i], "-args"))
             ReadArgument(tp.rres, ++i, argv);
         else if (!strcmp(argv[i], "-testargs"))
             ReadArgument(tp.tres, ++i, argv);
     }
+    tpoint::initMemLimit();
     tp.init();
     PrintRun(tp, cout, true);
     PrintTest(tp, cout, true);
-    PrintLimit<tpoint>(cout, true);
+    PrintLimit(tpoint::lim, cout, true);
+    printMemConf<tpoint>(cout, true);
     cout << col::BLUE << "[Info] Start program" << col::NONE << endl;
     cout.flush();
     tp.run();

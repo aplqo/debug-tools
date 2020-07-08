@@ -1,6 +1,7 @@
 #include "include/cmdarg.h"
 #include "include/define.h"
 #include "include/exception.h"
+#include "include/memory.h"
 #include "include/output.h"
 #include "include/testcase.h"
 #include "include/utility.h"
@@ -27,10 +28,10 @@ using namespace apdebug::utility;
 
 const chrono::milliseconds print_duration(100);
 const unsigned int maxStdRetries = 20, maxVaRetries = 20;
-table tab(std::array<const char*, 10> {
+table tab(std::array<const char*, 12> {
               "Id", "State(Run)", "State(Test)",
               "Input", "Output", "Answer", "Diff",
-              "Time(ms)", "Time(us)", "Details" },
+              "Time(ms)", "Time(us)", "Memory(MiB)", "Memory(KiB)", "Details" },
     col::NONE);
 using resultTab = decltype(tab);
 enum cols
@@ -44,7 +45,9 @@ enum cols
     Dif = 6,
     MsTim = 7,
     UsTim = 8,
-    Det = 9
+    MbMem = 9,
+    KbMem = 10,
+    Det = 11
 };
 class tests : tpoint
 {
@@ -60,8 +63,9 @@ public:
     void release();
 
     int id;
-    using tpoint::hardlim;
+    using tpoint::initMemLimit;
     using tpoint::lim;
+    using tpoint::memLimit;
 
     static path tmpdir;
     static result gen, std, exe, tes, va;
@@ -158,6 +162,8 @@ void tests::print()
     tab.writeColumn(Out, out);
     tab.writeColumn(Ans, ans);
     tab.writeColumn(Dif, dif);
+    tab.writeColumn(MbMem, mem / 1024.0 / 1024.0);
+    tab.writeColumn(KbMem, mem / 1024.0);
     tab.writeColumn(MsTim, tim / 1000);
     tab.writeColumn(UsTim, tim);
     tab.writeColumn(Det, s->details());
@@ -339,7 +345,9 @@ int main(int argc, char* argv[])
         }
         else if (!strcmp(argv[i], "-test"))
             tests::tes.cmd = argv[++i];
-        else if (ReadLimit<tests>(i, argv))
+        else if (ReadLimit(tests::lim, i, argv))
+            continue;
+        else if (readMemoryConf<tests>(i, argv))
             continue;
         else if (!strcmp(argv[i], "-args"))
         {
@@ -385,19 +393,22 @@ int main(int argc, char* argv[])
             ReadArgument(tests::std, ++i, argv);
             cout << tests::std.cmd << " " << tests::std.args << endl;
         }
+        else if (!strcmp(argv[i], "-swapaccount"))
+            apdebug::memory::swapaccount = true;
     }
     cout << col::CYAN << "[Info] Test time: " << times << endl;
     cout << col::CYAN << "[Info] Parallelism: " << parallel << endl;
     cout << col::CYAN << "[Info] Stop on error: " << boolalpha << stop << endl;
     cout << col::CYAN << "[Info] Show all test: " << boolalpha << showall << endl;
-    PrintLimit<tests>(cout, false);
+    printMemConf<tests>(cout, true);
+    PrintLimit(tests::lim, cout, false);
     cout << col::NONE << endl;
     //Set table width
     {
         unsigned int len = path(tests::exe.cmd).stem().string().length() + 1 + log10(times) + 1 + tests::tmpdir.string().length();
         tab.update(Id, log10(times) + 1);
-        tab.update(MsTim, log10(tpoint::hardlim / 1000));
-        tab.update(UsTim, log10(tpoint::hardlim));
+        tab.update(MsTim, log10(tpoint::lim.hardlim / 1000));
+        tab.update(UsTim, log10(tpoint::lim.hardlim));
         if (showall)
         {
             const unsigned int rlen = strlen("(Released)");
@@ -409,6 +420,7 @@ int main(int argc, char* argv[])
         }
     }
 
+    tests::initMemLimit();
     {
         vector<thread> th;
         for (unsigned int i = 1; i < parallel; ++i)
