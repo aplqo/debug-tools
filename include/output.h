@@ -34,7 +34,9 @@ namespace apdebug
         };
         std::ostream& operator<<(std::ostream&, col);
 
-        /*-----Time-----*/
+        /*-----Time and memory-----*/
+        void PrintMemory(const size_t, std::ostream&);
+        void PrintM(const size_t, const char*, std::ostream&);
         void PrintTime(std::chrono::microseconds::rep, std::ostream&);
         void printT(apdebug::timer::timType, const char*, std::ostream&);
 
@@ -123,14 +125,16 @@ namespace apdebug
         table(const std::array<const char*, siz>&, Args... args)->table<siz>;
 
         /*-----Print test point config-----*/
+        void PrintLimit(const testcase::limits&, std::ostream&, bool n); // print time and memory limit
         template <class T>
-        void PrintLimit(std::ostream& os, bool n) // print time limit
+        void printMemConf(std::ostream& os, bool n)
         {
-            static_assert(std::is_base_of_v<testcase::tpoint, T>);
-            os << col::CYAN;
-            printT(T::lim, "Time limit", os);
-            os << col::CYAN << std::endl;
-            printT(T::hardlim, "Hard time limit", os);
+            os << col::CYAN << "[Info] swapaccount: " << std::boolalpha << apdebug::memory::swapaccount;
+            if (T::memLimit.enable)
+            {
+                os << col::CYAN << std::endl;
+                os << "[info] Cgroup path: " << T::memLimit.group;
+            }
             if (n)
                 os << std::endl;
         }

@@ -1,9 +1,6 @@
 #include "include/output.h"
 #include "include/define.h"
-#include <algorithm>
 #include <chrono>
-#include <cstring>
-#include <initializer_list>
 #include <iostream>
 #include <string>
 
@@ -12,13 +9,9 @@ namespace apdebug
     namespace out
     {
         using apdebug::timer::timType;
-        using std::copy;
         using std::endl;
-        using std::initializer_list;
-        using std::max;
         using std::ostream;
         using std::string;
-        using std::strlen;
         using std::chrono::duration_cast;
         using std::chrono::microseconds;
         using std::chrono::milliseconds;
@@ -40,7 +33,18 @@ namespace apdebug
         }
 #endif
 
-        /*---Print time---*/
+        /*---Print time and memory---*/
+        void PrintMemory(const size_t m, ostream& os)
+        {
+            const double k = m / 1024.0;
+            os << k / 1024.0 << " MiB "
+               << " (" << k << " KiB)";
+        }
+        void PrintM(const size_t m, const char* str, ostream& os)
+        {
+            os << "[info] " << str << ": ";
+            PrintMemory(m, os);
+        }
         void PrintTime(microseconds::rep ti, ostream& os)
         {
             milliseconds ms = duration_cast<milliseconds>(microseconds(ti));
@@ -75,6 +79,27 @@ namespace apdebug
             const bool t2 = print("Test command", tp.tres.cmd + tp.tres.args, os, t1);
             if (n && (t1 || t2))
                 os << endl;
+        }
+        void PrintLimit(const testcase::limits& o, ostream& os, bool n)
+        {
+            os << col::CYAN;
+            printT(o.lim, "Time limit", os);
+            os << col::CYAN << std::endl;
+            printT(o.hardlim, "Hard time limit", os);
+            if (o.hardMemByte)
+            {
+                os << col::CYAN << std::endl;
+                PrintM(o.memLimByte, "Memory limit", os);
+                os << col::CYAN << std::endl;
+                PrintM(o.hardMemByte, "Hard memory limit", os);
+            }
+            else if (o.memLimByte)
+            {
+                os << col::CYAN << std::endl;
+                PrintM(o.memLimByte, "Memory limit", os);
+            }
+            if (n)
+                os << std::endl;
         }
     }
 }
