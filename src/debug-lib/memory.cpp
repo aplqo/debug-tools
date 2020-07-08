@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <string>
 #include <utility>
 
@@ -27,6 +28,24 @@ namespace apdebug::memory
         T ret;
         f >> ret;
         return ret;
+    }
+    template <class T = size_t>
+    static T readProperty(const path& p, const string key)
+    {
+        ifstream f(p);
+        while (f)
+        {
+            string k;
+            f >> k;
+            if (k == key)
+            {
+                T val;
+                f >> val;
+                return val;
+            }
+            f.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+        return 0;
     }
     template <class T = size_t>
     static void write(const path& p, T val)
@@ -56,7 +75,8 @@ namespace apdebug::memory
     {
         if (!enable)
             return 0;
-        return swapaccount ? read(group / "memory.memsw.max_usage_in_bytes") : read(group / "memory.max_usage_in_bytes");
+        return read(group / (swapaccount ? "memory.memsw.max_usage_in_bytes" : "memory.max_usage_in_bytes"))
+            - readProperty(group / "memory.stat", "cache");
     }
     bool ProcessMem::isExceed()
     {
