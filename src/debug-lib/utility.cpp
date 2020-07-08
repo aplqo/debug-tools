@@ -16,9 +16,9 @@ namespace apdebug
         }
         string readString(std::istream& is)
         {
-            uint32_t siz;
+            size_t siz;
             is.read(reinterpret_cast<char*>(&siz), sizeof(siz));
-            char* buf = new char[siz+5];
+            char* buf = new char[siz + 5];
             is.read(buf, siz);
             buf[siz] = '\0';
             string ret(buf);
