@@ -68,9 +68,9 @@ namespace apdebug
         void regsig()
         {
 #ifdef _WIN32
-            _controlfp(0, _MCW_EM); //Enable floating point exception
+            _controlfp(EM_INEXACT, _MCW_EM); // Replace EM_INEXACT with 0 to enable all exceptions.
 #else
-            feenableexcept(FE_DIVBYZERO | FE_INEXACT | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW);
+            feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW); // Add FE_INEXACT to enable all exception.
 #endif
             signal(SIGSEGV, sig);
             signal(SIGFPE, fpe_handler);
