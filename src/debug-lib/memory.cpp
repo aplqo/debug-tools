@@ -142,18 +142,20 @@ namespace apdebug::memory
 
 namespace apdebug::memory
 {
-    ProcessMem::ProcessMem(ProcessMem&& o) {}
-    ProcessMem& ProcessMem::operator=(ProcessMem&& o) {}
+    bool swapaccount = false;
+
+    ProcessMem::ProcessMem(ProcessMem&& o) { }
+    ProcessMem& ProcessMem::operator=(ProcessMem&& o) { return *this; }
     bool ProcessMem::isExceed() { return false; }
     size_t ProcessMem::getUsage() { return 0; }
     std::string ProcessMem::getArg() { return ""; }
-    void ProcessMem::release() {}
-    ProcessMem::~ProcessMem() {}
+    void ProcessMem::release() { }
+    ProcessMem::~ProcessMem() { }
 
     void MemoryLimit::init(const std::string&) {};
     ProcessMem MemoryLimit::addProcess(const std::string&) { return ProcessMem(); };
-    void MemoryLimit::setLimit(const size_t) {}
-    MemoryLimit::~MemoryLimit() {}
+    void MemoryLimit::setLimit(const size_t) { }
+    MemoryLimit::~MemoryLimit() { }
 }
 
 #endif

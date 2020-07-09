@@ -21,7 +21,7 @@ namespace apdebug
         struct limits
         {
             timer::timType lim = 1000 * 1000, hardlim = 1000 * 10 * 1000;
-            size_t memLimByte, hardMemByte;
+            size_t memLimByte = 0, hardMemByte = 0;
         };
 
         class tpoint
@@ -29,6 +29,7 @@ namespace apdebug
         public:
             tpoint() = default;
             tpoint(tpoint&& r) = default;
+            tpoint& operator=(tpoint&& r) = default;
             void init();
             void run();
             void parse();

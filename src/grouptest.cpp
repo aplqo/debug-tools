@@ -223,6 +223,7 @@ class group : config
 public:
     group(unsigned int i, int& pos, char* argv[]);
     group(const unsigned int c, unsigned int i, int& pos, char* argv[]);
+    group(group&&) = default;
     void exec();
     void findFile();
     void printResult();
@@ -340,7 +341,7 @@ void group::findInput()
         const auto [suc, hsh] = isInclude<rec>(i.path(), *rin);
         if (!suc)
             continue;
-        tests.push_back(point(cur));
+        tests.emplace_back(cur);
         table[hsh] = cur;
         tests[cur].in = i.path().string();
         ++cur;

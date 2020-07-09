@@ -22,7 +22,7 @@ namespace apdebug
                 return "TLE";
             case Memory:
                 return "MLE";
-            case Time | Memory:
+            default:
                 return "TLE MLE";
             }
         }
