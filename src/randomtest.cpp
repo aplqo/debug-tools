@@ -328,6 +328,7 @@ int main(int argc, char* argv[])
         PrintVersion("random test runner", cout);
 
     tests::exe.cmd = argv[1];
+    readMemoryConf<tests>();
     for (int i = 2; i < argc; ++i)
     {
         if (!strcmp(argv[i], "-tmpdir"))
@@ -346,8 +347,6 @@ int main(int argc, char* argv[])
         else if (!strcmp(argv[i], "-test"))
             tests::tes.cmd = argv[++i];
         else if (ReadLimit(tests::lim, i, argv))
-            continue;
-        else if (readMemoryConf<tests>(i, argv))
             continue;
         else if (!strcmp(argv[i], "-args"))
         {
@@ -393,8 +392,6 @@ int main(int argc, char* argv[])
             ReadArgument(tests::std, ++i, argv);
             cout << tests::std.cmd << " " << tests::std.args << endl;
         }
-        else if (!strcmp(argv[i], "-swapaccount"))
-            apdebug::memory::swapaccount = true;
     }
     cout << col::CYAN << "[Info] Test time: " << times << endl;
     cout << col::CYAN << "[Info] Parallelism: " << parallel << endl;

@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
     if (strcmp(argv[2], "-no-version"))
         PrintVersion("single test runner", cout);
 
+    readMemoryConf<tpoint>();
     for (int i = 2; i < argc; ++i)
     {
         if (!strcmp(argv[i], "-in"))
@@ -34,8 +35,6 @@ int main(int argc, char* argv[])
         else if (!strcmp(argv[i], "-test"))
             tp.tres.cmd = argv[++i];
         else if (ReadLimit(tpoint::lim, i, argv))
-            continue;
-        else if (readMemoryConf<tpoint>(i, argv))
             continue;
         else if (!strcmp(argv[i], "-args"))
             ReadArgument(tp.rres, ++i, argv);

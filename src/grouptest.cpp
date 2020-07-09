@@ -389,20 +389,15 @@ int main(int argc, char* argv[])
     if (strcmp(argv[2], "-no-version"))
         PrintVersion("group test runner", cout);
     point::cmd = argv[1];
+    readMemoryConf<point>();
+    for (int p = 2, id = 0; p < argc; ++p)
     {
-        int p = 2;
-        for (unsigned int i = 0; i < 2; ++i)
-            if (readMemoryConf<point>(p, argv))
-                ++p;
-        for (int id = 0; p < argc; ++p)
+        if (strcmp(argv[p], "-use"))
+            grp.emplace_back(id++, p, argv);
+        else
         {
-            if (strcmp(argv[p], "-use"))
-                grp.emplace_back(id++, p, argv);
-            else
-            {
-                const unsigned int u = atoi(argv[++p]);
-                grp.emplace_back(u, id++, ++p, argv);
-            }
+            const unsigned int u = atoi(argv[++p]);
+            grp.emplace_back(u, id++, ++p, argv);
         }
     }
     printMemConf<point>(cout, true);

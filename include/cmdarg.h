@@ -4,6 +4,7 @@
 #include "include/define.h"
 #include "include/memory.h"
 #include "include/testcase.h"
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <type_traits>
@@ -17,19 +18,12 @@ namespace apdebug
         void ReadArgument(testcase::result&, int&, char*[]);
         bool ReadLimit(testcase::limits&, int& pos, char* argv[]);
         template <class T>
-        bool readMemoryConf(int& pos, char* argv[])
+        void readMemoryConf()
         {
-            if (!strcmp(argv[pos], "-cgroup"))
-            {
-                T::memLimit.init(argv[++pos]);
-                return true;
-            }
-            if (!strcmp(argv[pos], "-swapaccount"))
-            {
+            if (const auto t = std::getenv("cgroup"); t)
+                T::memLimit.init(t);
+            if (const auto t = std::getenv("swapaccount"); t)
                 apdebug::memory::swapaccount = true;
-                return true;
-            }
-            return false;
         }
         template <class T, class... Args>
         std::vector<T> readArray(int& pos, char* argv[], Args... args)
