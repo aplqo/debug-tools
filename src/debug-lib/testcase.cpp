@@ -99,7 +99,7 @@ namespace apdebug
                     unsigned int t = 0;
                     if (tim >= lim.lim)
                         t |= exception::LimitExceed::Time;
-                    if (mem >= lim.memLimByte)
+                    if (lim.memLimByte && mem >= lim.memLimByte)
                         t |= exception::LimitExceed::Memory;
                     s = new exception::LimitExceed(exception::LimitExceed::type(t), tim, mem);
                 }
