@@ -2,6 +2,7 @@
 #include "include/define.h"
 #include "include/exception.h"
 #include "include/logfile.h"
+#include "include/memory.h"
 #include "include/utility.h"
 #include <csignal>
 #include <cstdlib>
@@ -18,6 +19,7 @@ namespace apdebug
 {
     namespace testcase
     {
+        using apdebug::memory::MemoryLimit;
         using apdebug::timer::timType;
         using std::getline;
         using std::ifstream;
@@ -40,10 +42,20 @@ namespace apdebug
             cmd += args;
             ret = system(cmd.c_str());
         }
+        result& result::concat(const std::string& s)
+        {
+            cmd += " ";
+            if (s.empty())
+                cmd += "\"*\"";
+            else
+                cmd += "\"" + s + "\"";
+            return *this;
+        }
 
-        timType tpoint::lim = 1000 * 1000;
-        timType tpoint::hardlim = 1000 * 10 * 1000;
         const thread_local string tpoint::thrdId = utility::GetThreadId();
+        limits tpoint::lim;
+        MemoryLimit tpoint::memLimit;
+
         constexpr syntax_option_type regFlag = std::regex_constants::ECMAScript | std::regex_constants::optimize | std::regex_constants::nosubs;
         const std::regex tpoint::rin(R"(<input>)", regFlag),
             tpoint::rout(R"(<output>)", regFlag),
@@ -58,15 +70,22 @@ namespace apdebug
         }
         void tpoint::run()
         {
-            concat(in);
-            concat(out);
-            concat(log);
-            rres.cmd += " " + to_string(lim);
-            rres.cmd += " " + to_string(hardlim);
+            m = memLimit.addProcess(thrdId);
+            rres.concat(in).concat(out).concat(log).concat(m.getArg());
+            rres.cmd += " " + to_string(lim.hardlim);
             rres.exec();
+            mem = m.getUsage();
+            if (m.isExceed())
+            {
+                tim = 0;
+                s = new exception::HardMemoryLimit(lim.hardMemByte);
+                return;
+            }
         }
         void tpoint::parse()
         {
+            if (s)
+                return;
             using logfile::RStatus;
             ifstream lo(log, std::ios::binary | std::ios::in);
             RStatus st = RStatus::Unknown;
@@ -75,17 +94,24 @@ namespace apdebug
             {
             case RStatus::Time:
                 lo.read(reinterpret_cast<char*>(&tim), sizeof(tim));
-                if (tim >= lim)
-                    s = new exception::TimeLimit(tim);
+                if (tim >= lim.lim || (lim.memLimByte && mem > lim.memLimByte))
+                {
+                    unsigned int t = 0;
+                    if (tim >= lim.lim)
+                        t |= exception::LimitExceed::Time;
+                    if (lim.memLimByte && mem >= lim.memLimByte)
+                        t |= exception::LimitExceed::Memory;
+                    s = new exception::LimitExceed(exception::LimitExceed::type(t), tim, mem);
+                }
                 else
                 {
                     fail = false;
-                    s = new exception::Pass(tim);
+                    s = new exception::Pass(tim, mem);
                 }
                 return;
             case RStatus::HardLimit:
-                s = new exception::HardLimit(hardlim);
-                tim = hardlim;
+                s = new exception::HardTimeLimit(lim.hardlim);
+                tim = lim.hardlim;
                 return;
             case RStatus::Return:
                 return;
@@ -119,6 +145,7 @@ namespace apdebug
                 remove(out);
                 out = "(Released)";
             }
+            m.release();
         }
         void tpoint::getLog()
         {
@@ -129,23 +156,20 @@ namespace apdebug
         }
         void tpoint::getArgs(result& r)
         {
-            r.args = regex_replace(r.args,rin, in);
+            r.args = regex_replace(r.args, rin, in);
             r.args = regex_replace(r.args, rout, out);
             r.args = regex_replace(r.args, rans, ans);
             r.args = regex_replace(r.args, rthr, thrdId);
-        }
-        void tpoint::concat(string& s)
-        {
-            rres.cmd += " ";
-            if (s.empty())
-                rres.cmd += "\"\"";
-            else
-                rres.cmd += "\"" + s + "\"";
         }
         tpoint::~tpoint()
         {
             delete s;
             delete ts;
+        }
+        void tpoint::initMemLimit()
+        {
+            if (lim.hardMemByte)
+                memLimit.setLimit(lim.hardMemByte);
         }
     }
 }

@@ -39,11 +39,6 @@ namespace apdebug
         class timer
         {
         public:
-            timer(timType& l, timType& hlim)
-                : lim(l)
-                , hardlim(hlim)
-            {
-            }
             inline void start()
             {
                 stat = true;
@@ -74,10 +69,11 @@ namespace apdebug
                 WriteObj(static_cast<timType>(d1.count()));
             }
 
+            timType hardlim;
+
         private:
             bool pr = false;
             typename tim::time_point beg, aft;
-            timType &lim, &hardlim;
 
             /*-thread support-*/
             condition_variable cv;

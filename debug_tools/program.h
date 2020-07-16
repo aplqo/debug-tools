@@ -11,6 +11,11 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <string>
+#ifdef __linux__
+#include <sys/types.h>
+#include <unistd.h>
+#endif
 
 namespace ns_run
 {
@@ -20,14 +25,24 @@ namespace program
 {
     using namespace apdebug;
     using namespace std::chrono;
-    apdebug::timer::timType li, hli;
-    timer::timer<steady_clock, microseconds::rep, microseconds::period> t(li, hli);
+    timer::timer<steady_clock, microseconds::rep, microseconds::period> t;
 
     void atex() noexcept
     {
         t.stop();
         t.print();
     }
+#ifdef __linux__
+    void addMemLimit(const char* p)
+    {
+        std::ofstream f(p);
+        f << ::getpid();
+    }
+#else
+    void addMemLimit(const char*)
+    {
+    }
+#endif
 }
 int main(int argc, char* argv[])
 {
@@ -41,8 +56,9 @@ int main(int argc, char* argv[])
         std::freopen(argv[2], "w", stdout);
     if (strcmp(argv[3], "*") != 0)
         apdebug::log::logf.open(argv[3], std::ios::binary);
-    li = atoi(argv[4]);
-    hli = atoi(argv[5]);
+    if (strcmp(argv[4], "*") != 0)
+        addMemLimit(argv[4]);
+    t.hardlim = std::stoull(argv[5]);
     dector::regsig();
     std::atexit(atex);
     int ret;
