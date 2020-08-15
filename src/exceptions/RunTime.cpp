@@ -69,7 +69,7 @@ namespace apdebug
                 os << "INT  external interrupt, usually initiated by the user" << endl;
                 break;
             case Signal::Sigill:
-                os << "IGN  invalid program image, such as invalid instruction" << endl;
+                os << "ILL  invalid program image, such as invalid instruction" << endl;
                 break;
             case Signal::Sigterm:
                 os << "TERM  termination request, sent to the program" << endl;
@@ -115,7 +115,7 @@ namespace apdebug
             if (stat == FPE::Normal)
                 return os.str();
             if (stat & FPE::FE_Divbyzero)
-                os << "\tFE_DIVBYZREO: pole error occurred in an earlier floating-point operation." << endl;
+                os << "\tFE_DIVBYZERO: pole error occurred in an earlier floating-point operation." << endl;
             if (stat & FPE::FE_Inexact)
                 os << "\tFE_INEXACT: inexact result: rounding was necessary to store the result of an earlier floating-point operation." << endl;
             if (stat & FPE::FE_Invavid)
@@ -135,7 +135,7 @@ namespace apdebug
                 return os.str();
             os << " ( Float point exception: ";
             if (stat & FPE::FE_Divbyzero)
-                os << "FE_DIVBYZREO ";
+                os << "FE_DIVBYZERO ";
             if (stat & FPE::FE_Inexact)
                 os << "FE_INEXACT ";
             if (stat & FPE::FE_Invavid)
