@@ -130,7 +130,7 @@ void point::getOut()
     path p(rres.cmd);
     p.replace_extension("");
     p.replace_filename(p.filename().string() + "-" + path(in).stem().string());
-    p.replace_extension(".out");
+    p.concat(".out");
     this->out = p.string();
 }
 

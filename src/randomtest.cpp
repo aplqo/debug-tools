@@ -188,10 +188,10 @@ void tests::getFiles()
 {
     string i = to_string(id);
     path p = tmpdir / (path(rres.cmd).stem().concat("-" + GetThreadId() + "-" + to_string(id)));
-    this->in = p.replace_extension(".in").string();
-    this->out = p.replace_extension(".out").string();
-    this->ans = p.replace_extension(".ans").string();
-    this->dif = p.replace_extension(".diff").string();
+    this->in = p.concat(".in").string();
+    this->out = p.concat(".out").string();
+    this->ans = p.concat(".ans").string();
+    this->dif = p.concat(".diff").string();
 }
 
 mutex mqueue; // mutex for queue, tab
