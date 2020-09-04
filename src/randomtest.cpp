@@ -187,11 +187,11 @@ void tests::getArgs(result& r)
 void tests::getFiles()
 {
     string i = to_string(id);
-    path p = tmpdir / (path(rres.cmd).stem().concat("-" + GetThreadId() + "-" + to_string(id)));
-    this->in = p.concat(".in").string();
-    this->out = p.concat(".out").string();
-    this->ans = p.concat(".ans").string();
-    this->dif = p.concat(".diff").string();
+    const string p = (tmpdir / (path(rres.cmd).stem())).string() + "-" + GetThreadId() + "-" + to_string(id);
+    this->in = p + ".in";
+    this->out = p + ".out";
+    this->ans = p + ".ans";
+    this->dif = p + ".diff";
 }
 
 mutex mqueue; // mutex for queue, tab
