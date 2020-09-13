@@ -17,8 +17,8 @@ namespace apdebug
         using std::chrono::milliseconds;
 
         /*-----Color-----*/
-        const char* colors[] = { "\033[0m", "\033[31m", "\033[1m\033[32m", "\033[33m",
-            "\033[1m\033[34m", "\033[1m\033[35m", "\033[36m", "\033[1m", "\033[4m" };
+        const char* colors[] = { "\033[0m", "\033[31m", "\033[92m", "\033[33m",
+            "\033[94m", "\033[95m", "\033[36m", "\033[1m", "\033[4m" };
 
 #ifdef COLOR
         ostream& operator<<(ostream& os, col c)

@@ -29,7 +29,7 @@ namespace apdebug
             BLUE = 4,
             PURPLE = 5,
             CYAN = 6,
-            Highlight = 7,
+            Bold = 7,
             Underline = 8
         };
         std::ostream& operator<<(std::ostream&, col);
@@ -122,7 +122,7 @@ namespace apdebug
             std::deque<row> q;
         };
         template <size_t siz, class... Args>
-        table(const std::array<const char*, siz>&, Args... args)->table<siz>;
+        table(const std::array<const char*, siz>&, Args... args) -> table<siz>;
 
         /*-----Print test point config-----*/
         void PrintLimit(const testcase::limits&, std::ostream&, bool n); // print time and memory limit
