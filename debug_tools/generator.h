@@ -1,7 +1,10 @@
 #ifndef GENERATOR_H
 #define GENERATOR_H
 
+#include <algorithm>
+#include <functional>
 #include <map>
+#include <numeric>
 #include <random>
 
 namespace apdebug
@@ -31,6 +34,22 @@ namespace apdebug
         T MayBe(const T val, const T def)
         {
             return val ? val : def;
+        }
+
+        template <class T, class OutIt, class Rnd = decltype(default_rnd)>
+        void createPermutation(const T n, const T ini, OutIt buf, Rnd& rd = default_rnd)
+        {
+            T* tp = new T[n];
+            std::iota(tp, tp + n, ini);
+            std::shuffle(tp, tp + n, rd);
+            std::copy(tp, tp + n, buf);
+            delete[] tp;
+        }
+        template <class T, class OutIt, class Rnd = decltype(default_rnd)>
+        void createArray(const T mn, const T mx, const size_t len, OutIt buf, Rnd& rd = default_rnd)
+        {
+            std::uniform_int_distribution<T> dis(mn, mx);
+            std::generate_n(buf, len, std::bind(dis, std::ref(rd)));
         }
     }
 } // namespace apdebug
