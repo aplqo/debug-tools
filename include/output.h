@@ -17,22 +17,28 @@
 
 namespace apdebug
 {
-    namespace out
+    namespace Output
     {
-        /*-----Color-----*/
-        enum class col
+        /*-----ecma-48 SGR(Select Graphic Rendition)-----*/
+        namespace SGR
         {
-            NONE = 0,
-            RED = 1,
-            GREEN = 2,
-            YELLOW = 3,
-            BLUE = 4,
-            PURPLE = 5,
-            CYAN = 6,
-            Bold = 7,
-            Underline = 8
-        };
-        std::ostream& operator<<(std::ostream&, col);
+#ifdef COLOR
+#define defSGR(name, code) const static inline char name[] = "\033[" #code "m"
+#else
+#define defSGR(name, code) const static inline char name[] = "";
+#endif
+            defSGR(None, 0);
+            defSGR(TextRed, 31);
+            defSGR(TextGreen, 92);
+            defSGR(TextYellow, 33);
+            defSGR(TextBlue, 94);
+            defSGR(TextPurple, 95);
+            defSGR(TextCyan, 36);
+            defSGR(Bold, 1);
+            defSGR(Underline, 4);
+            defSGR(CrossOut, 9);
+#undef defColor
+        }
 
         /*-----Time and memory-----*/
         void PrintMemory(const size_t, std::ostream&);
@@ -106,7 +112,7 @@ namespace apdebug
                     os.width(width[i]);
                     os << r[i] << "  ";
                 }
-                os << col::NONE << std::endl;
+                os << SGR::None << std::endl;
             }
             template <class... Args>
             static std::string writeToString(const Args&... args)
