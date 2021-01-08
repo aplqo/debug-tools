@@ -1,12 +1,10 @@
-aux_source_directory(./debug-lib libsrc)
+aux_source_directory(./testcase-lib libsrc)
 aux_source_directory(./exceptions libex)
 
 include(Utility)
 
-add_library(debug-lib STATIC ${libsrc})
-set_standard(debug-lib)
-add_library(exceptions STATIC ${libex})
-set_standard(exceptions)
+add_library(testcase-lib STATIC ${libsrc})
+set_standard(testcase-lib)
 
 function(add_target target_name src)
 	add_executable(${target_name} ${src})
