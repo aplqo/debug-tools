@@ -1,17 +1,20 @@
 #ifndef LOGFILE_H
 #define LOGFILE_H
 
+#include "include/testcase.h"
+#include "process.h"
+
 namespace apdebug
 {
-    namespace logfile
+    namespace Logfile
     {
+        static const unsigned int maxDumpDepth = 30;
+
         enum class RStatus : uint32_t
         {
-            Return = 0x00,
-            Time = 0x01,
-            HardLimit = 0x02,
+            Return = 0x01,
             Warn = 0x03,
-            Runtime = 0x04,
+            RuntimeError = 0x04,
             Unknown = 0xffffffff
         };
         enum class Warning : uint32_t
@@ -26,7 +29,7 @@ namespace apdebug
             DivByZero = 0x04,
             Signal = 0x05
         };
-        enum class FPE : uint32_t
+        enum FPE : uint32_t
         {
             Normal = 0,
             FE_Divbyzero = 1,
@@ -35,10 +38,6 @@ namespace apdebug
             FE_Overflow = 1 << 3,
             FE_Underflow = 1 << 4
         };
-        inline uint32_t operator&(FPE f1, FPE f2)
-        {
-            return static_cast<uint32_t>(f1) & static_cast<uint32_t>(f2);
-        }
         enum class Signal : uint32_t
         {
             Sigterm = 0x01,
@@ -46,6 +45,9 @@ namespace apdebug
             Sigill = 0x03,
             Sigsegv = 0x04
         };
+
+        const Testcase::Result* parseRE(Process::MemoryStream& ms, Testcase::Result*& cur);
+        const Testcase::Result* parseWarn(Process::MemoryStream& ms, Testcase::Result*& cur);
     }
 }
 

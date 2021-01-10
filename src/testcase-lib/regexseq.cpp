@@ -1,5 +1,4 @@
 #include "include/regexseq.h"
-#include "include/cmdarg.h"
 #include <cstring>
 #include <regex>
 #include <string>
@@ -22,7 +21,7 @@ namespace apdebug::regex_seq
     static constexpr auto regexFlag = std::regex_constants::ECMAScript | std::regex_constants::optimize;
     namespace operation
     {
-        match::match(int& pos, char* argv[])
+        match::match(int& pos, const char* const argv[])
             : algo(argv[pos][2] == 'm' ? Match : Search)
         {
         }
@@ -31,7 +30,7 @@ namespace apdebug::regex_seq
             return algo == Match ? regex_match(s, r) : regex_search(s, r);
         }
 
-        extract::extract(int& pos, char* argv[])
+        extract::extract(int& pos, const char* const argv[])
         {
             algo = argv[pos++][2] == 'm' ? Match : Search;
             if (strcmp(argv[pos], "["))
@@ -52,7 +51,7 @@ namespace apdebug::regex_seq
             return ret;
         }
 
-        replace::replace(int& pos, char* argv[])
+        replace::replace(int& pos, const char* const argv[])
         {
             num = std::atoi(argv[++pos]);
             fmt = argv[++pos];
@@ -71,7 +70,7 @@ namespace apdebug::regex_seq
         }
     }
 
-    OperateSeq::OperateSeq(int& pos, char* argv[])
+    OperateSeq::OperateSeq(int& pos, const char* const argv[])
     {
         reg = regex(argv[pos++], regexFlag);
         for (; true; ++pos)
@@ -113,7 +112,7 @@ namespace apdebug::regex_seq
         return make_pair(true, ret);
     }
 
-    RegexSeq::RegexSeq(int& pos, char* argv[])
+    RegexSeq::RegexSeq(int& pos, const char* const argv[])
     {
         ++pos;
         for (; strcmp(argv[pos], "]"); ++pos)

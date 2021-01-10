@@ -1,15 +1,3 @@
-#ifndef DEFINE_H
-#define DEFINE_H
-
-#include <chrono>
-namespace apdebug
-{
-    namespace timer
-    {
-        typedef std::chrono::microseconds::rep timType;
-    }
-}
-
 #ifndef INFO
 #define INFO
 
@@ -22,8 +10,7 @@ namespace apdebug
         static const char* version = "@ver@";
         static const char* builder = "@build@";
         static const char* compier = "@CMAKE_CXX_COMPILER_ID@ @CMAKE_CXX_COMPILER_VERSION@";
+        static const char* buildArgs = "@buildArgs@";
     }
 }
-#endif
-
 #endif

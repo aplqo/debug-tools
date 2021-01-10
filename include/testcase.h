@@ -2,68 +2,105 @@
 #define TESTCASE_H
 
 #include "include/define.h"
-#include "include/exception.h"
-#include "include/memory.h"
+#include "include/output.h"
+#include "include/testtools.h"
+#include "process.h"
 #include <regex>
 #include <string>
+#include <string_view>
 
 namespace apdebug
 {
-    namespace testcase
+    namespace Testcase
     {
-        struct result
+        static const inline Process::MemoryUsage defaultMemory = Process::MemoryUsage(1024) * 1024 * 3;
+        static const inline unsigned long long defaultTime = 1000000;
+
+        struct Result
         {
-            void exec();
-            result& concat(const std::string& s);
-            int ret = 0;
-            std::string cmd, args;
+            enum class Type
+            {
+                Pass,
+                HardTLE,
+                HardMLE,
+                TLE,
+                MLE,
+                Unknown,
+                Skip,
+                AC,
+                WA,
+                Warn,
+                RE
+            } type;
+            const char *name, *color;
+            std::string verbose, details;
         };
-        struct limits
+        /*-----Result constants-----*/
+        extern const Result hardTLE;
+        extern const Result hardMLE;
+        extern const Result TLE;
+        extern const Result MLE;
+        extern const Result Skip;
+        extern const Result Accept;
+
+        struct LimitInfo
         {
-            timer::timType lim = 1000 * 1000, hardlim = 1000 * 10 * 1000;
-            size_t memLimByte = 0, hardMemByte = 0;
+            unsigned long long timeLimit = defaultTime, hardTimeLimit = defaultTime * 10;
+            Process::MemoryUsage memoryLimit = defaultMemory, hardMemoryLimit = 1024 * 1024 * 3;
+
+            bool parseArgument(int& argc, const char* const argv[]);
+            friend std::ostream& operator<<(std::ostream& os, const LimitInfo& lim);
+        };
+        struct Platform
+        {
+            std::string threadId;
+            Process::TimeLimit timeProtect;
+            Process::MemoryLimit memoryProtect;
+            Process::SharedMemory sharedMemory;
+
+            void init();
         };
 
-        class tpoint
+        struct TraditionalTemplate : public LimitInfo
+        {
+            Process::Command program, tester;
+            TestTools::AutoDiff autodiff;
+            TestTools::TemporaryFile tmpfiles;
+            Platform* platform;
+
+            void init();
+            bool parseArgument(int& argc, const char* const argv[]);
+        };
+        class TraditionalTest
         {
         public:
-            tpoint() = default;
-            tpoint(tpoint&& r) = default;
-            tpoint& operator=(tpoint&& r) = default;
-            void init();
+            TraditionalTest(std::string&& input, std::string&& answer, const TraditionalTemplate& tmpl);
+            TraditionalTest(TraditionalTest&&) = default;
+            TraditionalTest(const TraditionalTest&) = delete;
+            TraditionalTest& operator=(const TraditionalTest&) = delete;
             void run();
             void parse();
             void test();
             void release();
-            bool success();
-            ~tpoint();
+            void printRunInfo(std::ostream& os);
+            void printTestInfo(std::ostream& os);
 
-            static void initMemLimit();
-
-            std::string in, out, ans;
-            result rres, tres;
-            /*--run result---*/
-            exception::state* s = nullptr; //run state
-            exception::state* ts = nullptr;
-            timer::timType tim = 0;
-            size_t mem = 0;
-            bool fail = true;
-
-            /*---static config---*/
-            static limits lim;
-            static apdebug::memory::MemoryLimit memLimit;
+            std::string input, output, answer;
+            bool runPass, testPass, accept;
+            const Result *runResult[3], *testResult;
+            Process::TimeUsage runTime;
+            Process::MemoryUsage runMemory;
+            TestTools::AutoDiff diff;
 
         protected:
-            void getArgs(result& r);
-            static const thread_local std::string thrdId;
+            Process::Command program, tester;
 
         private:
-            apdebug::memory::ProcessMem m;
-            std::string log;
-            void getLog();
-
-            // regex for argument placeholders
-            static const std::regex rin, rout, rans, rthr;
+            TestTools::TemporaryFile tmpfile;
+            int exitStatus;
+            Platform& platform;
+            LimitInfo limit;
+            Result mem[4], *cur;
         };
     }
 }

@@ -13,7 +13,7 @@ namespace apdebug::regex_seq
     {
         struct match
         {
-            match(int& pos, char* argv[]);
+            match(int& pos, const char* const argv[]);
             bool eval(const std::string& s, const std::regex& r) const;
 
             enum
@@ -24,7 +24,7 @@ namespace apdebug::regex_seq
         };
         struct extract
         {
-            extract(int& pos, char* argv[]);
+            extract(int& pos, const char* const argv[]);
             std::pair<bool, std::string> eval(const std::string& s, const std::regex& r) const;
 
             enum
@@ -36,7 +36,7 @@ namespace apdebug::regex_seq
         };
         struct replace
         {
-            replace(int& pos, char* argv[]);
+            replace(int& pos, const char* const argv[]);
             void eval(std::string& s, const std::regex& r) const;
 
             const char* fmt;
@@ -55,7 +55,7 @@ namespace apdebug::regex_seq
     };
     struct OperateSeq
     {
-        OperateSeq(int& pos, char* argv[]);
+        OperateSeq(int& pos, const char* const argv[]);
         std::pair<bool, std::string> eval(std::string& s) const;
 
         std::regex reg;
@@ -63,7 +63,7 @@ namespace apdebug::regex_seq
     };
     struct RegexSeq
     {
-        RegexSeq(int& pos, char* argv[]);
+        RegexSeq(int&, const char* const argv[]);
         std::pair<bool, std::string> eval(std::string& s) const;
 
         std::vector<OperateSeq> reg;

@@ -12,21 +12,6 @@
 namespace apdebug::init
 {
     // simple file operations
-    template <class T>
-    void writeFile(const std::filesystem::path& p, const T& dat)
-    {
-        std::ofstream f(p);
-        f << dat;
-        f.close();
-    }
-    template <class T>
-    T readFileVal(const std::filesystem::path& p)
-    {
-        std::ifstream f(p);
-        T ret;
-        f >> ret;
-        return ret;
-    }
     std::string readFileLn(const std::filesystem::path& p);
 
     template <class T>
@@ -34,7 +19,7 @@ namespace apdebug::init
     {
     public:
         list(const char* typ)
-            : tab(std::array<const char*, 3> { "Id", typ, "Description" }, out::col::NONE)
+            : tab(std::array<const char*, 3> { "Id", typ, "Description" }, Output::SGR::None)
         {
         }
         void append(T c)
@@ -46,8 +31,8 @@ namespace apdebug::init
         {
             for (auto i : lst)
             {
-                tab.newColumn();
-                tab.writeColumn(0, beg);
+                tab.newColumn("");
+                tab.writeColumn(0, std::to_string(beg));
                 tab.writeColumn(1, i->name);
                 tab.writeColumn(2, i->description);
                 ++beg;
@@ -84,7 +69,7 @@ namespace apdebug::init
 
     private:
         std::map<std::string, size_t> m;
-        mutable out::table<3> tab;
+        mutable Output::Table<3> tab;
     };
 
     class compiler
@@ -98,8 +83,8 @@ namespace apdebug::init
         virtual void init(const std::filesystem::path& dest);
         virtual void update(const std::filesystem::path& dest);
         virtual void deinit(const std::filesystem::path& dest);
-        virtual void read() {}
-        virtual ~compiler() {}
+        virtual void read() { }
+        virtual ~compiler() { }
 
         const std::string name, description;
 
@@ -125,7 +110,7 @@ namespace apdebug::init
         virtual void init(const std::filesystem::path& dest, compiler* c);
         virtual void update(const std::filesystem::path& dest);
         virtual void deinit(const std::filesystem::path& dest);
-        virtual ~editor() {}
+        virtual ~editor() { }
 
         const std::string name, description;
 
