@@ -1,4 +1,5 @@
 #include "include/init.h"
+#include "include/utility.h"
 #include <array>
 #include <cstdlib>
 #include <filesystem>
@@ -7,23 +8,10 @@
 #include <regex>
 #include <string>
 
+namespace fs = std::filesystem;
+using apdebug::Utility::writeFile;
 namespace apdebug::init::cmake
 {
-    using std::array;
-    using std::endl;
-    using std::getline;
-    using std::regex;
-    using std::regex_match;
-    using std::smatch;
-    using std::string;
-    using std::system;
-    using std::unique_ptr;
-    using std::filesystem::copy;
-    using std::filesystem::copy_options;
-    using std::filesystem::create_directory;
-    using std::filesystem::directory_iterator;
-    using std::filesystem::path;
-    using std::filesystem::remove_all;
 
     class cmake : public editor
     {
@@ -36,16 +24,16 @@ namespace apdebug::init::cmake
 
         static cmake* instance()
         {
-            static unique_ptr<cmake> obj(new cmake);
+            static std::unique_ptr<cmake> obj(new cmake);
             return obj.get();
         }
 
     private:
-        void initImpl(const path& dest, const bool)
+        void initImpl(const fs::path& dest, const bool)
         {
-            copy("./config/cmake/CMakeLists.txt", dest, copy_options::overwrite_existing);
+            fs::copy("./config/cmake/CMakeLists.txt", dest, fs::copy_options::overwrite_existing);
         }
-        void deinitImpl(const path& dest, const bool)
+        void deinitImpl(const fs::path& dest, const bool)
         {
             remove(dest / "CMakeLists.txt");
         }
@@ -62,45 +50,45 @@ namespace apdebug::init::cmake
         {
             using std::cin;
             using std::cout;
-            cout << "Available generators:" << endl;
-            system("cmake --help");
+            cout << "Available generators:" << std::endl;
+            std::system("cmake --help");
             cout << "Enter selection(. for empty):";
             cout.flush();
             cin.ignore(10, '\n');
-            getline(cin, gen);
+            std::getline(cin, gen);
         }
-        void init(const path& dest)
+        void init(const fs::path& dest)
         {
             writeFile(dest / ".config" / "cmake_gen", gen);
             initImpl(dest);
         }
-        void update(const path& dest)
+        void update(const fs::path& dest)
         {
             gen = readFileLn(dest / ".config" / "cmake_gen");
             deinitImpl(dest);
             initImpl(dest);
         }
-        void deinit(const path& dest)
+        void deinit(const fs::path& dest)
         {
             deinitImpl(dest);
         }
 
     private:
-        void initImpl(const path& dest, const bool upd = false)
+        void initImpl(const fs::path& dest, const bool upd = false)
         {
-            create_directory(dest / "build");
-            string cmd = "cmake ";
+            fs::create_directory(dest / "build");
+            std::string cmd = "cmake ";
             if (gen != ".")
                 cmd += "-G \"" + gen + "\" ";
             cmd += "-S \"" + dest.string() + "\" -B \"" + (dest / "build").string() + "\"";
-            system(cmd.c_str());
+            std::system(cmd.c_str());
         }
-        void deinitImpl(const path& dest, const bool upd = false)
+        void deinitImpl(const fs::path& dest, const bool upd = false)
         {
-            remove_all(dest / "build");
+            fs::remove_all(dest / "build");
         }
 
-        string gen;
+        std::string gen;
     };
     Generator gen;
 
@@ -108,7 +96,7 @@ namespace apdebug::init::cmake
     class DirectOpen : public compiler
     {
     public:
-        DirectOpen(const char* name, const char* description, const array<regex, siz> rmList)
+        DirectOpen(const char* name, const char* description, const std::array<std::regex, siz> rmList)
             : compiler(name, description)
             , rmList(rmList)
         {
@@ -117,12 +105,12 @@ namespace apdebug::init::cmake
         }
 
     private:
-        void initImpl(const path&, const bool) override {}
-        void deinitImpl(const path& dest, const bool) override
+        void initImpl(const fs::path&, const bool) override { }
+        void deinitImpl(const fs::path& dest, const bool) override
         {
             for (const auto& i : rmList)
             {
-                directory_iterator it(dest);
+                fs::directory_iterator it(dest);
                 for (auto& j : it)
                 {
                     if (regex_match(j.path().filename().string(), i))
@@ -131,15 +119,15 @@ namespace apdebug::init::cmake
             }
         }
 
-        const array<regex, siz> rmList;
+        const std::array<std::regex, siz> rmList;
     };
     template <size_t i>
-    DirectOpen(const char*, const char*, const array<regex, i>)->DirectOpen<i>;
+    DirectOpen(const char*, const char*, const std::array<std::regex, i>) -> DirectOpen<i>;
 
 #ifdef Windows
-    DirectOpen vs("VS", "Visual Studio CMake project", array<regex, 3> { regex(R"(\.vs$)"), regex("out"), regex("CMakeSettings.json") });
+    DirectOpen vs("VS", "Visual Studio CMake project", std::array<std::regex, 3> { std::regex(R"(\.vs$)"), std::regex("out"), std::regex("CMakeSettings.json") });
 #endif
 #ifdef Linux
-    DirectOpen kdevelop("kdevelop", "KDevelop cmake project", array<regex, 2> { regex(R"(.*\.kdev4$)"), regex("build") });
+    DirectOpen kdevelop("kdevelop", "KDevelop cmake project", std::array<std::regex, 2> { std::regex(R"(.*\.kdev4$)"), std::regex("build") });
 #endif
 }

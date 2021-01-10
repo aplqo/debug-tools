@@ -1,16 +1,18 @@
 #include "include/init.h"
+#include "include/utility.h"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
-
+using apdebug::Utility::readFileVal;
+using apdebug::Utility::writeFile;
+using std::cout;
+using std::string;
+using std::unique_ptr;
+using std::filesystem::path;
 namespace apdebug::init
 {
-    using std::cout;
-    using std::string;
-    using std::unique_ptr;
-    using std::filesystem::path;
 
     list<compiler*>* shared()
     {

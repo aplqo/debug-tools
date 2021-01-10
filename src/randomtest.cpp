@@ -1,457 +1,404 @@
-#include "include/cmdarg.h"
 #include "include/define.h"
-#include "include/exception.h"
-#include "include/memory.h"
 #include "include/output.h"
 #include "include/testcase.h"
 #include "include/utility.h"
+
 #include <atomic>
 #include <chrono>
 #include <cmath>
-#include <condition_variable>
 #include <filesystem>
 #include <iostream>
 #include <mutex>
 #include <queue>
-#include <regex>
-#include <string>
 #include <thread>
-#include <vector>
-using apdebug::testcase::result;
-using apdebug::testcase::tpoint;
-using apdebug::timer::timType;
-using namespace std;
-using namespace std::filesystem;
-using namespace apdebug::args;
-using namespace apdebug::out;
-using namespace apdebug::utility;
 
-const chrono::milliseconds print_duration(100);
+#include <fmt/compile.h>
+#include <fmt/format.h>
+
+#include <boost/thread/latch.hpp>
+
+using namespace apdebug;
+namespace fs = std::filesystem;
+namespace SGR = Output::SGR;
+
+typedef Testcase::TraditionalTemplate TestTemplateBase;
+typedef Testcase::TraditionalTest TestcaseType;
+
+const std::chrono::milliseconds print_duration(100);
 const unsigned int maxStdRetries = 20, maxVaRetries = 20;
-table tab(std::array<const char*, 12> {
-              "Id", "State(Run)", "State(Test)",
-              "Input", "Output", "Answer", "Diff",
-              "Time(ms)", "Time(us)", "Memory(MiB)", "Memory(KiB)", "Details" },
-    col::NONE);
-using resultTab = decltype(tab);
-enum cols
+typedef Output::Table<12> ResultTable;
+ResultTable results(std::array<const char*, 12> {
+                        "Id", "State(Run)", "State(Test)",
+                        "Input", "Output", "Answer", "Diff",
+                        "Time(ms)", "Time(us)", "Memory(MiB)", "Memory(KiB)", "Details" },
+    SGR::None);
+enum class ResultColumn
 {
-    Id = 0,
-    RState = 1,
-    TState = 2,
-    In = 3,
-    Out = 4,
-    Ans = 5,
-    Dif = 6,
-    MsTim = 7,
-    UsTim = 8,
-    MbMem = 9,
-    KbMem = 10,
-    Det = 11
+    id,
+    runState,
+    testState,
+    input,
+    output,
+    answer,
+    differ,
+    msTime,
+    usTime,
+    mbMemory,
+    kbMemory,
+    detail
 };
-class tests : tpoint
+struct TestPointTemplate : public TestTemplateBase
+{
+    Process::Command generator, validor, standard;
+    fs::path tmpdir;
+    bool created;
+
+    void globalInit();
+    void threadInit();
+    bool parseArgument(int& argc, const char* const argv[]);
+    void print(std::ostream& os) const;
+} global;
+class TestPoint : private TestcaseType
 {
 public:
-    tests(int id)
-        : id(id)
-    {
-    }
-    void init();
-    void generate();
-    bool exec();
-    void print();
+    TestPoint(const unsigned int tid, const unsigned int id, TestPointTemplate& tp);
+    bool generate();
+    bool run();
+    void printTable(ResultTable& dest);
+
+    using TestcaseType::accept;
+
+protected:
     void release();
-
-    int id;
-    using tpoint::initMemLimit;
-    using tpoint::lim;
-    using tpoint::memLimit;
-
-    static path tmpdir;
-    static result gen, std, exe, tes, va;
-
-private:
-    bool genFail = false;
-    string dif;
-    result generator, standard, valid;
-    inline void getArgs(result& r);
-    void getFiles();
-
-    static const regex rdiff;
+    unsigned int tid, id;
+    Process::Command generator, validor, standard;
 };
-const regex tests::rdiff(R"(<differ>)", regex_constants::ECMAScript | regex_constants::optimize | regex_constants::nosubs);
-result tests::gen, tests::exe, tests::tes, tests::std, tests::va;
-path tests::tmpdir;
-void tests::init()
+static const Testcase::Result judgeFail {
+    .name = "Fail",
+    .color = SGR::None,
+    .details = "Generate data failed"
+};
+
+void TestPointTemplate::globalInit()
 {
-    this->generator = gen;
-    this->rres = exe;
-    this->tres = tes;
-    this->standard = std;
-    this->valid = va;
-    getFiles();
-    getArgs(this->generator);
-    getArgs(this->standard);
-    getArgs(this->rres);
-    getArgs(this->tres);
-    getArgs(this->valid);
-    this->tpoint::getArgs(this->generator);
-    this->tpoint::getArgs(this->standard);
-    this->tpoint::getArgs(this->valid);
-    this->tpoint::init();
-}
-void tests::generate()
-{
-    if (standard.cmd.empty() && valid.cmd.empty())
+    if (!fs::exists(tmpdir))
     {
-        this->generator.exec();
-        return;
+        fs::create_directory(tmpdir);
+        created = true;
+    }
+    else
+        created = false;
+    autodiff.enable = true;
+    autodiff.size = 0;
+    autodiff.differ = "{input}.diff";
+}
+void TestPointTemplate::threadInit()
+{
+    using namespace fmt::literals;
+    platform->init();
+    TestTemplateBase::init();
+}
+bool TestPointTemplate::parseArgument(int& argc, const char* const argv[])
+{
+    if (TestTemplateBase::parseArgument(argc, argv))
+        return true;
+    else if (!strcmp(argv[argc], "-tmpdir"))
+        tmpdir = argv[++argc];
+    else if (!strcmp(argv[argc], "-generator"))
+        generator.path = argv[++argc];
+    else if (!strcmp(argv[argc], "-gen-args"))
+        generator.parseArgument(++argc, argv);
+    else if (!strcmp(argv[argc], "-standard"))
+        standard.path = argv[++argc];
+    else if (!strcmp(argv[argc], "-std-args"))
+        standard.parseArgument(++argc, argv);
+    else if (!strcmp(argv[argc], "-validator"))
+        validor.path = argv[++argc];
+    else if (!strcmp(argv[argc], "-valargs"))
+        validor.parseArgument(++argc, argv);
+    else
+        return false;
+    return true;
+}
+void TestPointTemplate::print(std::ostream& os) const
+{
+    os << SGR::None << SGR::TextCyan;
+    os << "[Info] Temporary directory: " << tmpdir;
+    if (created)
+        os << "(created)";
+    os.put('\n');
+    os << "[info] Generator command line: " << generator << "\n";
+    if (!validor.path.empty())
+        os << "[info] Validator command line: " << validor << "\n";
+    if (!standard.path.empty())
+        os << "[info] Standard command line: " << standard << "\n";
+    os << "[info] Program command line: " << program << "\n";
+    if (!tester.path.empty())
+        os << "[info] Test comman line: " << tester << "\n";
+    os << static_cast<const Testcase::LimitInfo&>(*this) << "\n";
+    os << SGR::None;
+}
+
+TestPoint::TestPoint(const unsigned int tid, const unsigned int id, TestPointTemplate& tp)
+    : TestcaseType(
+        tp.tmpdir / fmt::format(FMT_COMPILE("{}-{}.in"), tp.platform->threadId, id),
+        tp.tmpdir / fmt::format(FMT_COMPILE("{}-{}.ans"), tp.platform->threadId, id),
+        tp)
+    , tid(tid)
+    , id(id)
+    , generator(tp.generator)
+    , validor(tp.validor)
+    , standard(tp.standard)
+{
+    using namespace fmt::literals;
+    this->id = id;
+    multiReplace3(
+        fmt::make_format_args("input"_a = input, "output"_a = output, "answer"_a = answer, "thread"_a = tp.platform->threadId),
+        generator, validor, standard);
+    generator.finalizeForExec();
+    validor.finalizeForExec();
+    standard.finalizeForExec();
+}
+bool TestPoint::generate()
+{
+    if (standard.path.empty() && validor.path.empty())
+    {
+        generator.execute().wait();
+        return true;
     }
     unsigned int fv = maxVaRetries, fs = maxStdRetries;
-    static auto tryRun = [](result& r, unsigned int& i) -> bool {
-        if (r.cmd.empty())
+    static auto tryRun = [](Process::Command& r, unsigned int& i) -> bool {
+        if (r.path.empty())
             return true;
-        r.exec();
-        if (r.ret)
+        if (r.execute().wait())
+        {
             --i;
-        return !r.ret;
+            return false;
+        }
+        return true;
     };
     do
     {
-        this->generator.exec();
-        if (!tryRun(this->valid, fv))
+        generator.execute().wait();
+        if (!tryRun(validor, fv))
             continue;
-        if (!tryRun(this->standard, fs))
+        if (!tryRun(standard, fs))
             continue;
-        break;
+        return true;
     } while (fv && fs);
-    if (standard.ret || valid.ret)
+    runResult[0] = &judgeFail;
+    testResult = &Testcase::Skip;
+    runPass = accept = false;
+    output = "<null>";
+    return false;
+}
+bool TestPoint::run()
+{
+    TestcaseType::run();
+    parse();
+    test();
+    release();
+    return accept;
+}
+void TestPoint::release()
+{
+    TestcaseType::release();
+    if (accept)
     {
-        genFail = true;
-        out = "(Null)";
-        dif = "(Null)";
-        s = new apdebug::exception::JudgeFail("", "Generate data failed.");
+        Utility::removeFile(input);
+        Utility::removeFile(answer);
     }
 }
-bool tests::exec()
+void TestPoint::printTable(ResultTable& dest)
 {
-    if (genFail)
-        return false;
-    this->run();
-    this->parse();
-    if (success() && !tres.cmd.empty())
-        this->test();
-    this->tpoint::release();
-    return success() && !this->fail;
-}
-void tests::print()
-{
-    if (rres.ret || fail)
-        tab.newColumn(s->color());
-    else if (ts != nullptr)
-        tab.newColumn(ts->color());
+    if (!runPass || (testPass && !accept) || tester.path.empty())
+        dest.newColumn(runResult[0]->color);
     else
-        tab.newColumn(s->color());
-    tab.writeColumn(Id, id);
-    tab.writeColumn(RState, s->name());
-    if (ts != nullptr)
-        tab.writeColumn(TState, ts->name());
-    else
-        tab.writeColumn(TState, "skip");
-    tab.writeColumn(In, in);
-    tab.writeColumn(Out, out);
-    tab.writeColumn(Ans, ans);
-    tab.writeColumn(Dif, dif);
-    tab.writeColumn(MbMem, mem / 1024.0 / 1024.0);
-    tab.writeColumn(KbMem, mem / 1024.0);
-    tab.writeColumn(MsTim, tim / 1000);
-    tab.writeColumn(UsTim, tim);
-    tab.writeColumn(Det, s->details());
+        dest.newColumn(testResult->color);
+    dest.writeColumnList<ResultColumn, std::string&&>({ { ResultColumn::id, fmt::format("{}.{}", tid, id) },
+        { ResultColumn::runState, std::string(runResult[0]->name) + (runResult[1] ? runResult[1]->name : "") },
+        { ResultColumn::testState, std::string(testResult->name) },
+        { ResultColumn::input, std::move(const_cast<std::string&>(input)) },
+        { ResultColumn::output, std::move(output) },
+        { ResultColumn::answer, std::move(const_cast<std::string&>(answer)) },
+        { ResultColumn::differ, std::move(diff.differ) },
+        { ResultColumn::mbMemory, std::to_string(runMemory / 1024.0) },
+        { ResultColumn::kbMemory, std::to_string(runMemory) },
+        { ResultColumn::msTime, fmt::format("{} / {} / {}", runTime.real / 1e3, runTime.user / 1e3, runTime.sys / 1e3) },
+        { ResultColumn::usTime, fmt::format("{} / {} / {}", runTime.real, runTime.user, runTime.sys) },
+        { ResultColumn::detail, std::string(runResult[0]->details) } });
 }
-void tests::release()
-{
-    static const auto rm = [](string& p) {
-        if (exists(p))
-            remove(p);
-        p = "(Released)";
-    };
-    rm(in);
-    rm(out);
-    rm(ans);
-    rm(dif);
-}
-void tests::getArgs(result& r)
-{
-    r.args = regex_replace(r.args, rdiff, dif);
-}
-void tests::getFiles()
-{
-    string i = to_string(id);
-    const string p = (tmpdir / (path(rres.cmd).stem())).string() + "-" + GetThreadId() + "-" + to_string(id);
-    this->in = p + ".in";
-    this->out = p + ".out";
-    this->ans = p + ".ans";
-    this->dif = p + ".diff";
-}
+std::mutex tableLock;
+std::atomic_flag empty;
 
-mutex mqueue; // mutex for queue, tab
-unsigned long id = 0; // id for print
-atomic_ulong cur = 0, wait = 0; // test count
-atomic_bool fail = false;
+boost::latch* lat;
+std::atomic_ulong testedCount; // test count
+std::atomic_bool fail = false;
 unsigned long times;
-unsigned int parallel = thread::hardware_concurrency();
-bool stop = false, create = false, showall = true;
-queue<tests*> pqueue; // print queue
-vector<tests*> fqueue; //failed tests
-
-// for table setup
-atomic_uint thrdCnt = 0;
-mutex mTab;
-condition_variable thrdCnd;
-unsigned int tmpV;
+bool stop = false, showall = true, realTime = false;
 
 inline bool isRun()
 {
-    return cur.load() < times && !(stop && fail.load());
+    return testedCount.load() < times && !(stop && fail.load());
 }
-void PrintThrdFail()
+template <bool realTime>
+void PrintThread()
+{
+    {
+        lat->wait();
+        {
+            std::cout << "Test Results:\n";
+            std::lock_guard lk(tableLock);
+            results.printHeader(std::cout);
+        }
+        std::cout.flush();
+    }
+    ResultTable local;
+    while (isRun())
+    {
+        if (!empty.test_and_set())
+        {
+            std::lock_guard lk(tableLock);
+            local.mergeData(std::move(results));
+        }
+        local.printAll(std::cout);
+        std::cout.flush();
+        std::this_thread::sleep_for(print_duration);
+    }
+}
+template <>
+void PrintThread<false>()
 {
     unsigned long lst = 0;
     while (isRun())
     {
-        if (cur.load() != lst)
+        if (testedCount != lst)
         {
-            cout << "\r" << col::BLUE << "[Info] Testing " << cur.load() << " data...";
-            cout.flush();
+            lst = testedCount;
+            std::cout << SGR::TextBlue << "\rTesting " << lst << " data..." << std::flush;
         }
-        lst = cur.load();
         std::this_thread::sleep_for(print_duration);
     }
+    std::cout.put('\n');
 }
-void PrintThrdAll()
+template <bool realTime>
+void threadMain(const unsigned int tid)
 {
-    if (showall)
+    Testcase::Platform plat;
+    TestPointTemplate tmpl = global;
+    tmpl.platform = &plat;
+    tmpl.threadInit();
+    if constexpr (realTime)
     {
-        unique_lock lk(mTab);
-        thrdCnd.wait(lk, []() { return thrdCnt == parallel; });
-        cout << "Test Results:" << endl;
-        tab.printHeader(cout);
-    }
-    while (wait.load() || isRun() || thrdCnt)
-    {
-        if (wait.load())
+        const unsigned int tp = log10(times + 1) + 2, len = log10(tid + 1), idl = plat.threadId.length();
         {
-            while (wait.load())
+            std::lock_guard lk(tableLock);
+            results.update(ResultColumn::id, tp + len + 1);
+            results.update(ResultColumn::input, idl + tp + 1 + 3);
+            results.update(ResultColumn::output, idl + tp + 1 + 4);
+            results.update(ResultColumn::answer, idl + tp + 1 + 4);
+        }
+        lat->count_down_and_wait();
+    }
+    ResultTable local;
+    for (unsigned int i = 0; isRun(); ++i)
+    {
+        ++testedCount;
+        TestPoint tst(tid, i, tmpl);
+        if (tst.generate())
+            tst.run();
+        if (!tst.accept)
+            fail = true;
+        if (!tst.accept || showall)
+            tst.printTable(local);
+        if constexpr (realTime)
+        {
+            if (tableLock.try_lock())
             {
-                unique_lock lk(mqueue);
-                tests* i = pqueue.front();
-                pqueue.pop();
-                lk.unlock();
+                results.mergeData(std::move(local));
+                tableLock.unlock();
+                empty.clear();
+            }
+        }
+    }
+    {
+        std::lock_guard lk(tableLock);
+        results.mergeData(std::move(local));
+    }
+}
+void setMinWidth()
+{
+    constexpr unsigned int rlen = sizeof("(Released)");
+    results.update(ResultColumn::msTime, log10(global.hardTimeLimit / 1000 + 1));
+    results.update(ResultColumn::usTime, log10(global.hardTimeLimit));
+    results.update(ResultColumn::mbMemory, log10(global.hardMemoryLimit / 1024.0 + 1));
+    results.update(ResultColumn::kbMemory, log10(global.hardMemoryLimit + 1));
+    results.update(ResultColumn::input, rlen);
+    results.update(ResultColumn::output, rlen);
+    results.update(ResultColumn::answer, rlen);
+    results.update(ResultColumn::differ, rlen);
+}
+template <bool realTime>
+void runTest(const unsigned int parallel)
+{
+    std::thread* th = new std::thread[parallel];
+    if constexpr (realTime)
+    {
+        setMinWidth();
+        lat = new boost::latch(parallel);
+    }
+    for (unsigned int i = 0; i < parallel; ++i)
+        th[i] = std::thread(threadMain<realTime>, i);
+    PrintThread<realTime>();
+    for (unsigned int i = 0; i < parallel; ++i)
+        th[i].join();
+    delete[] th;
+    if constexpr (!realTime)
+    {
+        std::cout << "Test results:\n";
+        results.printHeader(std::cout);
+    }
+    results.printAll(std::cout);
+}
 
-                i->id = ++id;
-                i->print();
-                delete i;
-                --wait;
-            }
-            tab.printAll(cout);
-        }
-        std::this_thread::sleep_for(print_duration);
-    }
-}
-inline void PrintFail(tests* s)
-{
-    fail = true;
-    if (showall)
-    {
-        ++wait;
-        lock_guard lk(mqueue);
-        pqueue.push(s);
-    }
-    else
-    {
-        lock_guard lk(mqueue);
-        fqueue.push_back(s);
-    }
-}
-inline void PrintPass(tests* s)
-{
-    if (showall)
-    {
-        ++wait;
-        lock_guard lk(mqueue);
-        pqueue.push(s);
-    }
-    else
-        delete s;
-}
-void thrd()
-{
-    if (showall)
-    {
-        const unsigned int l = tmpV + GetThreadId().length() + 1;
-        unique_lock lk(mTab);
-        tab.update(In, l + 3);
-        tab.update(Out, l + 4);
-        tab.update(Ans, l + 4);
-        tab.update(Dif, l + 5);
-        lk.unlock();
-        ++thrdCnt;
-        thrdCnd.notify_one();
-    }
-    for (unsigned long i = 0; isRun(); ++i, ++cur)
-    {
-        tests* tp = new tests(i);
-        bool s;
-        tp->init();
-        tp->generate();
-        s = tp->exec();
-        if (!s)
-        {
-            PrintFail(tp);
-            if (stop)
-            {
-                --thrdCnt;
-                return;
-            }
-        }
-        else
-        {
-            tp->release();
-            PrintPass(tp);
-        }
-    }
-    --thrdCnt;
-}
 int main(int argc, char* argv[])
 {
-    if (strcmp(argv[2], "-no-version"))
-        PrintVersion("random test runner", cout);
-
-    tests::exe.cmd = argv[1];
-    readMemoryConf<tests>();
-    for (int i = 2; i < argc; ++i)
+    if (strcmp(argv[1], "-no-version"))
+        Output::PrintVersion("random test runner", std::cout);
+    unsigned int parallel = std::thread::hardware_concurrency();
+    for (int i = 1; i < argc; ++i)
     {
-        if (!strcmp(argv[i], "-tmpdir"))
-        {
-            tests::tmpdir = argv[++i];
-            cout << col::CYAN << "[Info] Temporary directory: " << tests::tmpdir;
-            if (!exists(tests::tmpdir))
-            {
-                create_directory(tests::tmpdir);
-                create = true;
-                cout << " ( created )";
-            }
-            cout << endl;
+        if (global.parseArgument(i, argv))
             continue;
-        }
-        else if (!strcmp(argv[i], "-test"))
-            tests::tes.cmd = argv[++i];
-        else if (ReadLimit(tests::lim, i, argv))
-            continue;
-        else if (!strcmp(argv[i], "-args"))
-        {
-            cout << col::CYAN << "[Info] Arguments: ";
-            ReadArgument(tests::exe, ++i, argv);
-            cout << tests::exe.args << endl;
-        }
-        else if (!strcmp(argv[i], "-testargs"))
-        {
-            cout << col::CYAN << "[Info] Test command: ";
-            ReadArgument(tests::tes, ++i, argv);
-            cout << tests::tes.cmd << " " << tests::tes.args << endl;
-        }
-        else if (!strcmp(argv[i], "-generator"))
-            tests::gen.cmd = argv[++i];
-        else if (!strcmp(argv[i], "-genargs"))
-        {
-            cout << col::CYAN << "[Info] Generator command: ";
-            ReadArgument(tests::gen, ++i, argv);
-            cout << tests::gen.cmd << " " << tests::gen.args << endl;
-        }
-        else if (!strcmp(argv[i], "-validator"))
-            tests::va.cmd = argv[++i];
-        else if (!strcmp(argv[i], "-valargs"))
-        {
-            cout << col::CYAN << "[Info] Validator command: ";
-            ReadArgument(tests::va, ++i, argv);
-            cout << tests::va.cmd << " " << tests::va.args << endl;
-        }
         else if (!strcmp(argv[i], "-times"))
-            times = stoul(argv[++i]);
+            times = atoll(argv[++i]);
         else if (!strcmp(argv[i], "-stop-on-error"))
             stop = true;
         else if (!strcmp(argv[i], "-parallelism"))
-            parallel = stoi(argv[++i]);
+            parallel = atoi(argv[++i]);
         else if (!strcmp(argv[i], "-fail-only"))
             showall = false;
-        else if (!strcmp(argv[i], "-standard"))
-            tests::std.cmd = argv[++i];
-        else if (!strcmp(argv[i], "-stdargs"))
-        {
-            cout << col::CYAN << "[Info] Answer command: ";
-            ReadArgument(tests::std, ++i, argv);
-            cout << tests::std.cmd << " " << tests::std.args << endl;
-        }
+        else if (!strcmp(argv[i], "-real-time"))
+            realTime = true;
     }
-    cout << col::CYAN << "[Info] Test time: " << times << endl;
-    cout << col::CYAN << "[Info] Parallelism: " << parallel << endl;
-    cout << col::CYAN << "[Info] Stop on error: " << boolalpha << stop << endl;
-    cout << col::CYAN << "[Info] Show all test: " << boolalpha << showall << endl;
-    printMemConf<tests>(cout, true);
-    PrintLimit(tests::lim, cout, false);
-    cout << col::NONE << endl;
-    //Set table width
+    std::cout << SGR::TextCyan;
+    std::cout << "[Info] Test time: " << times << "\n";
+    std::cout << "[Info] Parallelism: " << parallel << "\n";
+    std::cout << "[Info] Stop on error: " << std::boolalpha << stop << "\n";
+    std::cout << "[Info] Show all test: " << std::boolalpha << showall << "\n";
+    std::cout << "[info] Real time update table: " << std::boolalpha << realTime << "\n";
+    global.globalInit();
+    global.print(std::cout);
+    std::cout.flush();
+    if (realTime)
+        runTest<true>(parallel);
+    else
+        runTest<false>(parallel);
+    if (global.created && !fail)
     {
-        unsigned int len = path(tests::exe.cmd).stem().string().length() + 1 + log10(times) + 1 + tests::tmpdir.string().length();
-        tab.update(Id, log10(times) + 1);
-        tab.update(MsTim, log10(tpoint::lim.hardlim / 1000));
-        tab.update(UsTim, log10(tpoint::lim.hardlim));
-        if (showall)
-        {
-            const unsigned int rlen = strlen("(Released)");
-            tmpV = len;
-            tab.update(In, rlen);
-            tab.update(Out, rlen);
-            tab.update(Ans, rlen);
-            tab.update(Dif, rlen);
-        }
+        std::cout << SGR::TextCyan << "\n[Info] Test passed removed temporary directory.";
+        remove_all(global.tmpdir);
     }
-
-    tests::initMemLimit();
-    {
-        vector<thread> th;
-        for (unsigned int i = 1; i < parallel; ++i)
-            th.push_back(thread(thrd));
-        if (showall)
-            th.push_back(thread(PrintThrdAll));
-        else
-            th.push_back(thread(PrintThrdFail));
-        thrd();
-        for (auto& i : th)
-            i.join();
-    }
-    if (!showall)
-    {
-        cout << col::NONE << endl;
-        cout << "Test results:" << endl;
-        for (auto i : fqueue)
-            i->id = id++;
-        for (auto i : fqueue)
-        {
-            i->print();
-            delete i;
-        }
-        tab.printHeader(cout);
-        tab.printAll(cout);
-    }
-
-    if (create && !fail)
-    {
-        cout << col::CYAN << endl
-             << "[Info] Test passed removed temporary directory." << endl;
-        remove_all(tests::tmpdir);
-    }
-    cout << col::NONE;
-    cout.flush();
+    std::cout << SGR::None << "\n";
     return 0;
 }

@@ -3,16 +3,10 @@
 #include <fstream>
 #include <memory>
 
+namespace fs = std::filesystem;
+
 namespace apdebug::init::vscode
 {
-    using std::ofstream;
-    using std::unique_ptr;
-    using std::filesystem::copy;
-    using std::filesystem::copy_options;
-    using std::filesystem::create_directory;
-    using std::filesystem::path;
-    using std::filesystem::remove;
-    using std::filesystem::remove_all;
 
     class vscode : public editor
     {
@@ -25,24 +19,24 @@ namespace apdebug::init::vscode
 
         static vscode* instance()
         {
-            static unique_ptr<vscode> obj(new vscode);
+            static std::unique_ptr<vscode> obj(new vscode);
             return obj.get();
         }
 
     private:
-        void initImpl(const path& p, const bool upd = false)
+        void initImpl(const fs::path& p, const bool upd = false)
         {
-            create_directory(p / ".vscode");
+            fs::create_directory(p / ".vscode");
         }
-        void deinitImpl(const path& dest, const bool)
+        void deinitImpl(const fs::path& dest, const bool)
         {
-            remove_all(dest / ".vscode");
+            fs::remove_all(dest / ".vscode");
         }
     };
     class DirectCopy : public compiler
     {
     public:
-        DirectCopy(const char* name, const char* descript, const path confPath)
+        DirectCopy(const char* name, const char* descript, const fs::path confPath)
             : compiler(name, descript)
             , confPath(confPath)
         {
@@ -50,15 +44,15 @@ namespace apdebug::init::vscode
         }
 
     private:
-        void initImpl(const path& dest, const bool)
+        void initImpl(const fs::path& dest, const bool)
         {
-            std::filesystem::directory_iterator it(confPath);
+            fs::directory_iterator it(confPath);
             for (auto& i : it)
-                copy(i.path(), dest / ".vscode", copy_options::overwrite_existing | copy_options::recursive);
+                fs::copy(i.path(), dest / ".vscode", fs::copy_options::overwrite_existing | fs::copy_options::recursive);
         }
-        void deinitImpl(const path&, const bool) {}
+        void deinitImpl(const fs::path&, const bool) { }
 
-        const path confPath;
+        const fs::path confPath;
     };
 
 // config for windows
@@ -68,7 +62,7 @@ namespace apdebug::init::vscode
     inline static DirectCopy devc("Dev c++", "Dev-c++ (Header path only)", "./config/vscode/devc");
 #endif
 #ifdef Linux
-    inline static DirectCopy gcc("gcc","GCC for linux","./config/vscode/gcc");
-    inline static DirectCopy clang("Clang","Clang for linux","./config/vscode/clang");
+    inline static DirectCopy gcc("gcc", "GCC for linux", "./config/vscode/gcc");
+    inline static DirectCopy clang("Clang", "Clang for linux", "./config/vscode/clang");
 #endif
 }

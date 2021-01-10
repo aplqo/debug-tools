@@ -3,10 +3,10 @@
 #include <iostream>
 #include <string>
 
+using std::string;
+using std::filesystem::path;
 namespace apdebug::init::none
 {
-    using std::string;
-    using std::filesystem::path;
     class noeditor : public editor
     {
     public:
@@ -23,14 +23,14 @@ namespace apdebug::init::none
         {
             return nullptr;
         }
-        void print() const {  }
-        void init(const path&, compiler*) {}
-        void update(const path&) {}
-        void deinit(const path&) {}
+        void print() const { }
+        void init(const path&, compiler*) { }
+        void update(const path&) { }
+        void deinit(const path&) { }
 
     private:
-        void initImpl(const path&, bool) {}
-        void deinitImpl(const path&, bool) {}
+        void initImpl(const path&, bool) { }
+        void deinitImpl(const path&, bool) { }
     } noedit;
 
     class nocompiler : public compiler
@@ -41,12 +41,12 @@ namespace apdebug::init::none
         {
             shared()->append(this);
         }
-        void init(const path&) {}
-        void update(const path&) {}
-        void deinit(const path&) {}
+        void init(const path&) { }
+        void update(const path&) { }
+        void deinit(const path&) { }
 
     private:
-        void initImpl(const path&, bool) {}
-        void deinitImpl(const path&, bool) {}
+        void initImpl(const path&, bool) { }
+        void deinitImpl(const path&, bool) { }
     } nocompile;
 }

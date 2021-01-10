@@ -1,323 +1,237 @@
-#include "include/cmdarg.h"
 #include "include/define.h"
 #include "include/output.h"
 #include "include/regexseq.h"
 #include "include/testcase.h"
 #include <algorithm>
-#include <cmath>
 #include <cstring>
 #include <filesystem>
-#include <functional>
 #include <iostream>
-#include <map>
-#include <memory>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
+
+#include <fmt/format.h>
 using apdebug::regex_seq::RegexSeq;
-using apdebug::testcase::result;
-using apdebug::testcase::tpoint;
-using apdebug::timer::timType;
-using namespace std;
-using namespace std::filesystem;
-using namespace apdebug::out;
-using namespace apdebug::args;
+using namespace apdebug;
+namespace fs = std::filesystem;
+namespace SGR = Output::SGR;
+using Output::Table;
 
-using resultTab = table<11>;
-enum cols
+typedef Testcase::TraditionalTemplate TestTemplate;
+typedef Testcase::TraditionalTest TestcaseType;
+
+Testcase::Platform platform;
+
+typedef Table<12> ResultTable;
+enum class ResultColumn
 {
-    Id = 0,
-    RState = 1,
-    TState = 2,
-    In = 3,
-    Out = 4,
-    Ans = 5,
-    MsTim = 6,
-    UsTim = 7,
-    MbMem = 8,
-    KbMem = 9,
-    Det = 10
+    id,
+    runState,
+    testState,
+    input,
+    output,
+    answer,
+    differ,
+    msTime,
+    usTime,
+    mbMemory,
+    kbMemory,
+    detail
 };
-class point : tpoint
+const std::array<const char*, 12> ResultHeader {
+    "Id", "State(Run)", "State(Test)", "Input",
+    "Output", "Answer", "Differ", "Time(ms)",
+    "Time(us)", "Memory(MiB)", "Memory(KiB)", "Details"
+};
+
+typedef Table<10> GroupTable;
+enum class GroupColumn
+{
+    id,
+    inDir,
+    ansDir,
+    arg,
+    test,
+    timeLimit,
+    hardTimeLimit,
+    memoryLimit,
+    hardMemoryLimit,
+    verbose
+};
+const std::array<const char*, 10> GroupHeader {
+    "Id", "InDir", "AnsDir", "Argument",
+    "Test command", "Time", "Hard time",
+    "Memory", "Hard memory", "Verbose"
+};
+
+class TestPoint : private TestcaseType
 {
 public:
-    point(int i)
-        : id(i)
+    TestPoint(const unsigned int id, const unsigned int gid, TestcaseType&& tst)
+        : TestcaseType(std::move(tst))
     {
+        this->id = id;
+        this->gid = gid;
     }
-    void init(const result& exe, const result& tes);
-    void exec();
-    void print(resultTab& tab);
-    int id;
-
-    using tpoint::initMemLimit;
-    using tpoint::lim;
-    using tpoint::memLimit;
-    using tpoint::release;
-
-    static string cmd;
-    static unsigned int grpId;
-    static bool verbose;
-
-    friend class group;
+    void execute(const bool verbose);
+    void writeToTable(ResultTable& dest);
 
 private:
-    void getOut();
+    unsigned int id, gid;
 };
-bool point::verbose = false;
-unsigned int point::grpId = 0;
-string point::cmd;
-void point::init(const result& exe, const result& tes)
+void TestPoint::execute(const bool verbose)
 {
-    this->rres = exe;
-    this->rres.cmd = cmd;
-    this->tres = tes;
-    getOut();
-    this->tpoint::init();
-}
-void point::exec()
-{
-    cout << endl;
-    cout << col::Underline << col::BLUE << "[Info] Start program for test #" << grpId << "." << id << col::NONE;
+    std::cout << SGR::Underline << SGR::TextBlue << "[Info] Start program for test #" << gid << "." << id << SGR::None << "\n";
     if (verbose)
+        printRunInfo(std::cout);
+    std::cout.flush();
+    run();
+    parse();
+    for (unsigned int i = 0; runResult[i]; ++i)
+        std::cout << runResult[i]->color << runResult[i]->verbose << SGR::None << "\n";
+    if (runPass && !tester.path.empty())
     {
-        cout << col::CYAN << endl;
-        PrintRun(*this, cout, false);
-    }
-    cout << col::NONE << endl;
-    this->run();
-    this->parse();
-    cout << s->verbose();
-    if (success() && !tres.cmd.empty() && !ans.empty())
-    {
-        cout << col::BLUE << "[Info] Start testing for test #" << grpId << "." << id << col::NONE;
+        std::cout << SGR::TextBlue << "[Info] Start testing for test #" << gid << "." << id << SGR::None << "\n";
         if (verbose)
-        {
-            cout << col::CYAN << endl;
-            PrintTest(*this, cout, false);
-        }
-        cout << col::NONE << endl;
-        this->test();
-        cout << ts->verbose();
+            printTestInfo(std::cout);
+        std::cout.flush();
+        test();
+        std::cout << testResult->color << testResult->verbose << SGR::None << "\n";
     }
-    cout << col::Underline << col::BLUE << "[Info] Test #" << grpId << "." << id << " finished." << col::NONE << endl;
-}
-void point::print(resultTab& tab)
-{
-    if (rres.ret || fail)
-        tab.newColumn(s->color());
-    else if (ts != nullptr)
-        tab.newColumn(ts->color());
     else
-        tab.newColumn(s->color());
-    tab.writeColumn(cols::Id, id);
-    tab.writeColumn(cols::RState, s->name());
-    if (ts != nullptr)
-        tab.writeColumn(cols::TState, ts->name());
+        testResult = &Testcase::Skip;
+    release();
+    std::cout << SGR::Underline << SGR::TextBlue << "[Info] Test #" << gid << "." << id << " finished.\n";
+}
+void TestPoint::writeToTable(ResultTable& dest)
+{
+    if (!runPass || (testPass && !accept) || tester.path.empty())
+        dest.newColumn(runResult[0]->color);
     else
-        tab.writeColumn(cols::TState, "skip");
-    tab.writeColumn(cols::In, in);
-    tab.writeColumn(cols::Out, out);
-    tab.writeColumn(Ans, ans);
-    tab.writeColumn(MsTim, tim / 1000);
-    tab.writeColumn(UsTim, tim);
-    tab.writeColumn(KbMem, mem / 1024.0);
-    tab.writeColumn(MbMem, mem / 1024.0 / 1024.0);
-    tab.writeColumn(Det, s->details());
-}
-void point::getOut()
-{
-    path p(rres.cmd);
-    p.replace_extension("");
-    p.replace_filename(p.filename().string() + "-" + path(in).stem().string());
-    p.concat(".out");
-    this->out = p.string();
+        dest.newColumn(testResult->color);
+    dest.writeColumnList<ResultColumn, std::string&&>({ { ResultColumn::id, std::to_string(id) },
+        { ResultColumn::runState, std::string(runResult[0]->name) + (runResult[1] ? runResult[1]->name : "") },
+        { ResultColumn::testState, std::string(testResult->name) },
+        { ResultColumn::input, std::move(input) },
+        { ResultColumn::output, std::move(output) },
+        { ResultColumn::answer, std::move(answer) },
+        { ResultColumn::differ, std::move(diff.differ) },
+        { ResultColumn::msTime, fmt::format("{}/{}/{}", runTime.real / 1000.0, runTime.user / 1000.0, runTime.sys / 1000.0) },
+        { ResultColumn::usTime, fmt::format("{}/{}/{}", runTime.real, runTime.user, runTime.sys) },
+        { ResultColumn::mbMemory, std::to_string(runMemory / 1024.0) },
+        { ResultColumn::kbMemory, std::to_string(runMemory) },
+        { ResultColumn::detail, std::string(runResult[0]->details) } });
 }
 
-struct config
-{
-    shared_ptr<path> indir, ansdir;
-    bool inrec = false, ansrec = false, verbose = false;
-    shared_ptr<RegexSeq> rin, rans, rtest;
-    shared_ptr<result> exe, tes;
-    apdebug::testcase::limits lim;
-
-protected:
-    void read(int& pos, char* argv[]);
-
-private:
-    template <class T>
-    inline static shared_ptr<T>& create(shared_ptr<T>& p)
-    {
-        if (p.use_count() > 1)
-            p = make_shared<T>(*p);
-        else if (!p)
-            p = make_shared<T>();
-        return p;
-    }
-};
-void config::read(int& pos, char* argv[])
-{
-    for (; true; ++pos)
-    {
-        if (!strcmp(argv[pos], "-test-regex"))
-            rtest = make_shared<RegexSeq>(++pos, argv);
-        else if (!strcmp(argv[pos], "-indir"))
-        {
-            if (!strcmp(argv[pos + 1], "-R"))
-            {
-                ++pos;
-                inrec = true;
-            }
-            indir = make_shared<path>(argv[++pos]);
-        }
-        else if (!strcmp(argv[pos], "-in-regex"))
-            rin = make_shared<RegexSeq>(++pos, argv);
-        else if (!strcmp(argv[pos], "-ansdir"))
-        {
-            if (!strcmp(argv[pos + 1], "-R"))
-            {
-                ++pos;
-                ansrec = true;
-            }
-            ansdir = make_shared<path>(argv[++pos]);
-        }
-        else if (!strcmp(argv[pos], "-ans-regex"))
-            rans = make_shared<RegexSeq>(++pos, argv);
-        else if (ReadLimit(lim, pos, argv))
-            continue;
-        else if (!strcmp(argv[pos], "-args"))
-            ReadArgument(*create(exe), ++pos, argv);
-        else if (!strcmp(argv[pos], "-test"))
-            create(tes)->cmd = argv[++pos];
-        else if (!strcmp(argv[pos], "-testargs"))
-            ReadArgument(*create(tes), ++pos, argv);
-        else if (!strcmp(argv[pos], "-verbose"))
-            verbose = true;
-        else if (!strcmp(argv[pos], ";"))
-            break;
-    }
-}
-
-table confTable(std::array<const char*, 10> {
-                    "Id", "Input directory", "Answer directory", "Argument",
-                    "Test command", "Time limit", "Hard time limit",
-                    "Memory limit", "Hard memory limit", "Verbose" },
-    col::CYAN);
-enum class confCol
-{
-    Id = 0,
-    Input = 1,
-    Answer = 2,
-    Arg = 3,
-    Test = 4,
-    Time = 5,
-    HardLim = 6,
-    Memory = 7,
-    HardMem = 8,
-    Verbose = 9
-};
-using confTab = decltype(confTable);
-class group : config
+class TestGroup
 {
 public:
-    group(unsigned int i, int& pos, char* argv[]);
-    group(const unsigned int c, unsigned int i, int& pos, char* argv[]);
-    group(group&&) = default;
-    void exec();
+    TestGroup(const unsigned int id, int& argc, const char* const argv[]);
+    TestGroup(const TestGroup& p, const unsigned int id, int& argc, const char* const argv[]);
     void findFile();
+    void execute();
+    void printConfig(GroupTable& t);
     void printResult();
-    void printConfig(confTab& t);
 
 private:
+    static const std::array<const char*, 12> colName;
+
+    void parseArgument(int& argc, const char* const argv[]);
     template <bool rec>
     void findInput();
     template <bool rec>
     void findAnswer();
     template <bool rec>
-    pair<bool, size_t> isInclude(const path& p, const RegexSeq& r);
+    std::pair<bool, std::string> isInclude(const fs::path& p, const RegexSeq* r);
 
-    static const array<const char*, 11> colName;
-
-    resultTab tab;
-    unsigned int id = 0;
-    vector<point> tests;
-    map<size_t, int> table;
+    unsigned int gid;
+    fs::path indir, ansdir;
+    bool inrec = false, ansrec = false, verbose = false;
+    RegexSeq *inputPattern, *answerPattern, *testPattern;
+    TestTemplate tmpl;
+    ResultTable results;
+    std::vector<std::pair<fs::path, fs::path>> tests;
+    std::unordered_map<std::string, int> table;
 };
-const array<const char*, 11> group::colName { "Id", "State(Run)", "State(Test)", "Input",
-    "Output", "Answer", "Time(ms)", "Time(us)", "Memory(MiB)", "Memory(KiB)",
-    "Details" };
-vector<group> grp;
-group::group(unsigned int i, int& pos, char* argv[])
-    : id(i)
-    , tab(colName, col::NONE)
+
+TestGroup::TestGroup(const unsigned int id, int& argc, const char* const argv[])
+    : gid(id)
+    , results(ResultHeader, SGR::None)
 {
-    read(pos, argv);
+    parseArgument(argc, argv);
 }
-group::group(const unsigned int c, unsigned int i, int& pos, char* argv[])
-    : config::config(grp[c])
-    , id(i)
-    , tab(colName, col::NONE)
+TestGroup::TestGroup(const TestGroup& p, const unsigned int id, int& argc, const char* const argv[])
+    : TestGroup(p)
 {
-    read(pos, argv);
+    gid = id;
+    parseArgument(argc, argv);
 }
-void group::exec()
+void TestGroup::parseArgument(int& argc, const char* const argv[])
 {
-    const auto deref = [](shared_ptr<result>& s) { return s ? *s : result(); };
-    point::lim = this->lim;
-    point::grpId = id;
-    point::verbose = verbose;
-    point::initMemLimit();
-    cout << col::BLUE << col::Underline << "[Info] Start testing for group #" << id << col::NONE;
-    for (auto& i : tests)
+    for (; strcmp(argv[argc], ";"); ++argc)
     {
-        i.init(deref(exe), deref(tes));
-        i.exec();
-        i.release();
+        if (!strcmp(argv[argc], "-test-regex"))
+            testPattern = new RegexSeq(++argc, argv);
+        else if (!strcmp(argv[argc], "-indir"))
+        {
+            if (!strcmp(argv[argc + 1], "-R"))
+            {
+                ++argc;
+                inrec = true;
+            }
+            else
+                inrec = false;
+            indir = argv[++argc];
+        }
+        else if (!strcmp(argv[argc], "-in-regex"))
+            inputPattern = new RegexSeq(++argc, argv);
+        else if (!strcmp(argv[argc], "-ansdir"))
+        {
+            if (!strcmp(argv[argc + 1], "-R"))
+            {
+                ++argc;
+                ansrec = true;
+            }
+            else
+                ansrec = false;
+            ansdir = argv[++argc];
+        }
+        else if (!strcmp(argv[argc], "-ans-regex"))
+            answerPattern = new RegexSeq(++argc, argv);
+        else if (!strcmp(argv[argc], "-verbose"))
+            verbose = true;
+        else if (!strcmp(argv[argc], "-silent"))
+            verbose = false;
+        else if (tmpl.parseArgument(argc, argv))
+            continue;
     }
-    cout << col::BLUE << col::Underline << "[Info] Group #" << id << " finished." << col::NONE << endl;
-    cout << endl;
 }
-void group::printResult()
+void TestGroup::execute()
 {
-    cout << col::NONE << "Test result for group #" << id << endl;
+    tmpl.platform = &platform;
+    tmpl.init();
+    std::cout << SGR::TextBlue << SGR::Underline << "[Info] Start testing for group #" << gid << "\n";
+    for (unsigned int i = 0; i < tests.size(); ++i)
+    {
+        TestPoint tst(i, gid, TestcaseType(tests[i].first, tests[i].second, tmpl));
+        tst.execute(verbose);
+        tst.writeToTable(results);
+    }
+    std::cout << SGR::TextBlue << SGR::Underline << "[Info] Group #" << gid << " finished." << SGR::None << "\n\n";
+}
+void TestGroup::printResult()
+{
+    std::cout << SGR::None << "Test result for group #" << gid << "\n";
     if (!tests.size())
     {
-        cout << col::RED << "[Err] Can't find any test data." << col::NONE << endl;
+        std::cout << SGR::TextRed << "[Err] Can't find any test data." << SGR::None << "\n";
         return;
     }
-    for (auto& i : tests)
-        i.print(tab);
-    tab.printHeader(cout);
-    tab.printAll(cout);
+    results.printHeader(std::cout);
+    results.printAll(std::cout);
 }
-void group::printConfig(confTab& t)
-{
-    const static auto col = [](confCol a) { return static_cast<int>(a); };
-    t.newColumn(col::CYAN);
-    t.writeColumn(col(confCol::Id), id);
-    t.writeColumn(col(confCol::Input), *indir, inrec ? "(recursive)" : "");
-    if (ansdir)
-        t.writeColumn(col(confCol::Answer), *ansdir, ansrec ? "(recursive)" : "");
-    if (exe)
-        t.writeColumn(col(confCol::Arg), exe ? exe->args : "");
-    if (tes)
-        t.writeColumn(col(confCol::Test), tes->cmd + " " + tes->args);
-    t.writeColumn(col(confCol::Time), lim.lim / 1000.0, "ms (", lim.lim / 1e6, "s)");
-    t.writeColumn(col(confCol::HardLim), lim.hardlim / 1e3, "ms (", lim.hardlim / 1e6, "s)");
-    {
-        const auto write = [&t](confCol c, const size_t m) {
-            if (m)
-                t.writeColumn(col(c), m / 1024.0, " KiB (", m / 1024.0 / 1024.0, " MiB)");
-            else
-                t.writeColumn(col(c), "unlimited");
-        };
-        write(confCol::Memory, lim.memLimByte);
-        write(confCol::HardMem, lim.hardMemByte);
-    }
-    t.writeColumn(col(confCol::Verbose), boolalpha, verbose);
-}
-void group::findFile()
+void TestGroup::findFile()
 {
     if (inrec)
         findInput<true>();
@@ -330,88 +244,95 @@ void group::findFile()
     table.clear();
 }
 template <bool rec>
-void group::findInput()
+void TestGroup::findInput()
 {
     unsigned int cur = 0;
-    conditional_t<rec, recursive_directory_iterator, directory_iterator> init(*indir);
+    std::conditional_t<rec, fs::recursive_directory_iterator, fs::directory_iterator> init(indir);
     for (auto& i : init)
-    {
-        if (!i.is_regular_file())
-            continue;
-        const auto [suc, hsh] = isInclude<rec>(i.path(), *rin);
-        if (!suc)
-            continue;
-        tests.emplace_back(cur);
-        table[hsh] = cur;
-        tests[cur].in = i.path().string();
-        ++cur;
-    }
+        if (i.is_regular_file())
+        {
+            if (const auto [suc, hsh] = isInclude<rec>(i.path(), inputPattern); suc)
+            {
+                tests.emplace_back(i.path(), "");
+                table[hsh] = cur;
+                ++cur;
+            }
+        }
 }
 template <bool rec>
-void group::findAnswer()
+void TestGroup::findAnswer()
 {
-    if (!ansdir || !exists(*ansdir))
+    if (!exists(ansdir))
         return;
-    conditional_t<rec, recursive_directory_iterator, directory_iterator> ansit(*ansdir);
+    std::conditional_t<rec, fs::recursive_directory_iterator, fs::directory_iterator> ansit(ansdir);
     for (auto& i : ansit)
-    {
-        if (!i.is_regular_file())
-            continue;
-        const auto [suc, hsh] = isInclude<rec>(i.path(), *rans);
-        if (!suc)
-            continue;
-        auto it = table.find(hsh);
-        if (it == table.end())
-            continue;
-        tests[it->second].ans = i.path().string();
-        table.erase(it);
-    }
+        if (i.is_regular_file())
+            if (const auto [suc, hsh] = isInclude<rec>(i.path(), answerPattern); suc)
+                if (auto it = table.find(hsh); it != table.end())
+                    tests[it->second].second = i.path();
 }
 template <bool rec>
-pair<bool, size_t> group::isInclude(const path& p, const RegexSeq& r)
+std::pair<bool, std::string> TestGroup::isInclude(const fs::path& p, const RegexSeq* r)
 {
-    string s;
+    std::string s;
     if constexpr (rec)
         s = p.string();
     else
         s = p.filename().string();
-    const auto [suc1, val1] = rtest->eval(s);
+    const auto [suc1, val1] = r->eval(s);
     if (!suc1)
-        return make_pair(false, 0);
-    const auto [suc2, val2] = r.eval(s);
+        return std::make_pair(false, "");
+    const auto [suc2, val2] = r->eval(s);
     if (!suc2)
-        return make_pair(false, 0);
-    return make_pair(true, hash<string>()(val1 + val2));
+        return std::make_pair(false, "");
+    return std::make_pair(true, val1 + val2);
 }
+void TestGroup::printConfig(GroupTable& dest)
+{
+    static constexpr double ms = 1e3, sec = 1e6, mb = 1024.0, gb = mb * 1024;
+    using namespace std::string_literals;
+    dest.newColumn(SGR::TextCyan);
+    dest.writeColumnList<GroupColumn, std::string&&>({ { GroupColumn::id, std::to_string(gid) },
+        { GroupColumn::inDir, inrec ? indir.string() + "(recursive)" : indir.string() },
+        { GroupColumn::ansDir, ansrec ? ansdir.string() + "(recursive)" : ansdir.string() },
+        { GroupColumn::arg, Output::writeToString(tmpl.program) },
+        { GroupColumn::test, Output::writeToString(tmpl.tester) },
+        { GroupColumn::timeLimit, fmt::format("{} ms ({} s)", tmpl.timeLimit / ms, tmpl.timeLimit / sec) },
+        { GroupColumn::hardTimeLimit, fmt::format("{} ms ({} s)", tmpl.hardTimeLimit / ms, tmpl.hardTimeLimit / sec) },
+        { GroupColumn::memoryLimit, fmt::format("{} MiB ({} GiB)", tmpl.memoryLimit / mb, tmpl.memoryLimit / gb) },
+        { GroupColumn::hardMemoryLimit, fmt::format("{} MiB ({} GiB)", tmpl.hardMemoryLimit / mb, tmpl.hardMemoryLimit / gb) },
+        { GroupColumn::verbose, verbose ? "True"s : "False"s } });
+}
+std::vector<TestGroup> grp;
 
 int main(int argc, char* argv[])
 {
-    if (strcmp(argv[2], "-no-version"))
-        PrintVersion("group test runner", cout);
-    point::cmd = argv[1];
-    readMemoryConf<point>();
-    for (int p = 2, id = 0; p < argc; ++p)
+    if (strcmp(argv[1], "-no-version"))
+        Output::PrintVersion("group test runner", std::cout);
+    for (int p = 1, id = 0; p < argc; ++p)
     {
         if (strcmp(argv[p], "-use"))
             grp.emplace_back(id++, p, argv);
         else
         {
             const unsigned int u = atoi(argv[++p]);
-            grp.emplace_back(u, id++, ++p, argv);
+            grp.emplace_back(grp[u], id++, ++p, argv);
         }
     }
-    printMemConf<point>(cout, true);
-    cout << col::CYAN << "[Info] Group config: " << endl;
-    for (auto& i : grp)
-        i.printConfig(confTable);
-    confTable.printHeader(cout);
-    confTable.printAll(cout);
-    cout << endl;
-
+    std::cout << SGR::TextCyan << "[Info] Group config: \n";
+    {
+        GroupTable gtable(GroupHeader, SGR::TextCyan);
+        for (auto& i : grp)
+            i.printConfig(gtable);
+        gtable.printHeader(std::cout);
+        gtable.printAll(std::cout);
+        std::cout.put('\n');
+    }
+    platform.init();
     for (auto& i : grp)
     {
         i.findFile();
-        i.exec();
+        i.execute();
     }
     for (auto& i : grp)
         i.printResult();

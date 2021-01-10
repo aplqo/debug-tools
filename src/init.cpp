@@ -1,5 +1,6 @@
 #include "include/init.h"
 #include "include/output.h"
+#include "include/utility.h"
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -8,6 +9,8 @@
 using namespace apdebug::init;
 using namespace std;
 using namespace std::filesystem;
+using apdebug::Utility::readFileVal;
+using apdebug::Utility::writeFile;
 const auto copyOpt = copy_options::recursive | copy_options::overwrite_existing;
 
 enum class Script
@@ -99,7 +102,7 @@ void uninatll(const path& dest)
 
 int main(int argc, char* argv[])
 {
-    apdebug::out::PrintVersion("Config installer", cout);
+    apdebug::Output::PrintVersion("Config installer", cout);
     const auto cd = [&argv](const path& dest) -> path {
         path ret = canonical(dest);
         current_path(path(argv[0]).parent_path());

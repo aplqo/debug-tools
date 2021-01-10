@@ -1,66 +1,53 @@
-#include "include/cmdarg.h"
 #include "include/define.h"
-#include "include/exception.h"
-#include "include/memory.h"
 #include "include/output.h"
 #include "include/testcase.h"
-#include <chrono>
 #include <cstring>
 #include <filesystem>
 #include <iostream>
-using namespace std;
-using namespace std::chrono;
-using namespace apdebug::out;
-using namespace apdebug::testcase;
-using namespace apdebug::args;
-using apdebug::timer::timType;
-using std::filesystem::path;
+using namespace apdebug;
+using std::cout;
+using std::strcmp;
+namespace SGR = Output::SGR;
 
-tpoint tp;
+typedef Testcase::TraditionalTemplate TestTemplate;
+typedef Testcase::TraditionalTest TestcaseType;
+
+Testcase::Platform plat;
+
 int main(int argc, char* argv[])
 {
-    tp.rres.cmd = argv[1];
-    if (strcmp(argv[2], "-no-version"))
-        PrintVersion("single test runner", cout);
-
-    readMemoryConf<tpoint>();
-    for (int i = 2; i < argc; ++i)
+    if (strcmp(argv[1], "-no-version"))
+        Output::PrintVersion("Single test runner", cout);
+    TestTemplate tmpl;
+    std::string input, answer;
+    for (int i = 1; i < argc; ++i)
     {
         if (!strcmp(argv[i], "-in"))
-            tp.in = argv[++i];
-        else if (!strcmp(argv[i], "-out"))
-            tp.out = argv[++i];
+            input = argv[++i];
         else if (!strcmp(argv[i], "-ans"))
-            tp.ans = argv[++i];
-        else if (!strcmp(argv[i], "-test"))
-            tp.tres.cmd = argv[++i];
-        else if (ReadLimit(tpoint::lim, i, argv))
+            answer = argv[++i];
+        else if (tmpl.parseArgument(i, argv))
             continue;
-        else if (!strcmp(argv[i], "-args"))
-            ReadArgument(tp.rres, ++i, argv);
-        else if (!strcmp(argv[i], "-testargs"))
-            ReadArgument(tp.tres, ++i, argv);
     }
-    tpoint::initMemLimit();
-    tp.init();
-    PrintRun(tp, cout, true);
-    PrintTest(tp, cout, true);
-    PrintLimit(tpoint::lim, cout, true);
-    printMemConf<tpoint>(cout, true);
-    cout << col::BLUE << "[Info] Start program" << col::NONE << endl;
-    cout.flush();
-    tp.run();
-    tp.parse();
-    cout << tp.s->verbose();
-    if (tp.success() && !tp.tres.cmd.empty())
+    tmpl.platform = &plat;
+    plat.init();
+    tmpl.init();
+    TestcaseType test(std::move(input), std::move(answer), tmpl);
+    test.printRunInfo(cout);
+    test.printTestInfo(cout);
+    cout << SGR::TextCyan << static_cast<Testcase::LimitInfo&>(tmpl) << SGR::TextBlue << "\n";
+    cout << "[info] Start program" << SGR::None << std::endl;
+    test.run();
+    test.parse();
+    for (unsigned int i = 0; test.runResult[i]; ++i)
+        std::cout << test.runResult[i]->color << test.runResult[i]->verbose << "\n";
+    if (test.runPass && !tmpl.tester.path.empty())
     {
-        cout << col::BLUE << "[Info] Start testing" << col::NONE << endl;
-        cout.flush();
-        tp.test();
-        cout << tp.ts->verbose();
+        cout << SGR::TextBlue << "[info] Start testing" << SGR::None << std::endl;
+        test.test();
+        std::cout << test.testResult->color << test.testResult->verbose << "\n";
     }
-    tp.release();
-    cout << col::NONE;
-    cout.flush();
+    test.release();
+    std::cout << SGR::None << "\n";
     return 0;
 }
