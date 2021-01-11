@@ -76,9 +76,7 @@ namespace apdebug
             Process::TimeLimit timeProtect;
             Process::MemoryLimit memoryProtect;
             Process::SharedMemory sharedMemory;
-#ifdef Interact
-            Process::SharedMemory interArgs;
-#endif
+            unsigned int count = 0;
 
             void init();
         };
