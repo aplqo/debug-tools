@@ -9,8 +9,8 @@ using std::cout;
 using std::strcmp;
 namespace SGR = Output::SGR;
 
-typedef Testcase::TraditionalTemplate TestTemplate;
-typedef Testcase::TraditionalTest TestcaseType;
+typedef Testcase::BasicTemplate TestTemplate;
+typedef Testcase::BasicTest TestcaseType;
 
 Testcase::Platform plat;
 
@@ -38,7 +38,6 @@ int main(int argc, char* argv[])
     cout << SGR::TextCyan << static_cast<Testcase::LimitInfo&>(tmpl) << SGR::TextBlue << "\n";
     cout << "[info] Start program" << SGR::None << std::endl;
     test.run();
-    test.parse();
     for (unsigned int i = 0; test.runResult[i]; ++i)
         std::cout << test.runResult[i]->color << test.runResult[i]->verbose << "\n";
     if (test.runPass && !tmpl.tester.path.empty())

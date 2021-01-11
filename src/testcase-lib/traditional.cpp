@@ -8,6 +8,7 @@
 #include <initializer_list>
 #include <regex>
 #include <string>
+#include <type_traits>
 
 #include <fmt/compile.h>
 #include <fmt/format.h>
@@ -23,14 +24,13 @@ namespace apdebug
 {
     namespace Testcase
     {
-        void TraditionalTemplate::init()
+        void BasicTemplate::init()
         {
             using namespace fmt::literals;
             platform->memoryProtect.setLimit(hardMemoryLimit);
             platform->timeProtect.setExpire(hardTimeLimit);
-            multiReplace2(fmt::make_format_args("thread"_a = platform->threadId), program, tester);
         }
-        bool TraditionalTemplate::parseArgument(int& argc, const char* const argv[])
+        bool BasicTemplate::parseArgument(int& argc, const char* const argv[])
         {
             if (LimitInfo::parseArgument(argc, argv))
                 return true;
@@ -43,89 +43,123 @@ namespace apdebug
             else if (!strcmp(argv[argc], "-test-args"))
                 tester.parseArgument(++argc, argv);
             else if (!strcmp(argv[argc], "-autodiff"))
-                autodiff.parseArgument(argc, argv);
+                diff.parseArgument(++argc, argv);
             else if (!strcmp(argv[argc], "-tmpfile"))
-                tmpfiles.parseArgument(argc, argv);
+                tmpfiles.parseArgument(++argc, argv);
+#ifdef Interact
+            else if (!strcmp(argv[argc], "-interact"))
+                interactor.path = argv[++argc];
+            else if (!strcmp(argv[argc], "-interact-args"))
+                interactor.parseArgument(++argc, argv);
+#endif
             else
                 return false;
             return true;
         }
 
-        TraditionalTest::TraditionalTest(std::string&& input, std::string&& answer, const TraditionalTemplate& te)
-            : input(input)
+        BasicTest::BasicTest(std::string&& input, std::string&& answer, const BasicTemplate& te)
+            : BasicTemplate(te)
+            , input(input)
             , answer(answer)
-            , runPass(true)
-            , testPass(true)
-            , accept(true)
-            , runResult {}
-            , diff(te.autodiff)
-            , program(te.program)
-            , tester(te.tester)
-            , tmpfile(te.tmpfiles)
-            , platform(*te.platform)
-            , limit(te)
-            , cur(mem)
         {
             using namespace fmt::literals;
-            output = input + "-" + platform.threadId + ".out";
-            multiReplace4(
-                fmt::make_format_args("input"_a = input, "output"_a = output, "answer"_a = answer, "thread"_a = te.platform->threadId),
-                diff, tmpfile, program, tester);
+            output = input + "-" + platform->threadId + ".out";
+            Utility::ReplaceStrict(
+                fmt::make_format_args("input"_a = this->input, "output"_a = output, "answer"_a = this->answer, "thread"_a = platform->threadId),
+#ifdef Interact
+                diff, tmpfiles, program, tester, interactor
+#else
+                diff, tmpfiles, program, tester
+#endif
+            );
             program
-                .appendArgument(platform.sharedMemory.name)
-                .setRedirect(Process::RedirectType::StdOut, output.c_str())
+                .appendArgument(platform->sharedMemory.name)
                 .finalizeForExec();
             if (!tester.path.empty())
                 tester.finalizeForExec();
+#ifdef Interact
+            interactor
+                .appendArgument(platform->interArgs.name)
+                .finalizeForExec();
+#endif
+            platform->memoryProtect.clear();
         }
-        void TraditionalTest::run()
+#ifdef Interact
+        void BasicTest::run()
         {
-            platform.memoryProtect.clear();
+            using Process::RedirectType;
+            Process::Pipe pigo, pogi; // program in grader out, program out grader in
+            program
+                .setRedirect(RedirectType::StdIn, pigo.read)
+                .setRedirect(RedirectType::StdOut, pogi.write);
+            interactor
+                .setRedirect(RedirectType::StdIn, pogi.read)
+                .setRedirect(RedirectType::StdOut, pigo.write);
             const auto p = program.execute();
-            platform.memoryProtect.addProcess(p);
-            const auto [exp, ret] = platform.timeProtect.waitFor(p);
-            if (exp)
             {
-                accept = runPass = false;
-                runResult[0] = &hardTLE;
-                runMemory = 0;
-                runTime.real = runTime.sys = runTime.user = limit.hardTimeLimit;
+                Process::MemoryStream ms { platform->interArgs.ptr };
+                ms.write(p.nativeHandle);
+                ms.write(platform->sharedMemory.name, Process::shmNameLength);
             }
-            else if (platform.memoryProtect.isExceed())
-            {
-                accept = runPass = false;
-                runResult[0] = &hardMLE;
-                runMemory = limit.hardMemoryLimit;
-                runTime = Process::TimeUsage {};
-            }
+            const auto i = interactor.execute();
+            platform->memoryProtect.addProcess(p);
+            exitStatus = platform->timeProtect.waitFor(p).second;
+            if (platform->timeProtect.isExceed() || exitStatus)
+                i.terminate();
             else
-                exitStatus = ret;
+                platform->timeProtect.waitFor(i);
+            parse();
         }
-        void TraditionalTest::parse()
+#else
+        void BasicTest::run()
         {
-            if (!runPass)
+            program
+                .setRedirect(Process::RedirectType::StdIn, input.c_str())
+                .setRedirect(Process::RedirectType::StdOut, output.c_str());
+            const auto p = program.execute();
+            platform->memoryProtect.addProcess(p);
+            exitStatus = platform->timeProtect.waitFor(p).second;
+            parse();
+        }
+#endif
+        void BasicTest::parse()
+        {
+            if (platform->timeProtect.isExceed())
             {
-                tmpfile.release(TemporaryFile::Run, false, false);
+                accept = runPass = false;
+                finalResult = runResult[0] = &ResultConstant::hardTLE;
+                runMemory = 0;
+                runTime.real = runTime.sys = runTime.user = hardTimeLimit;
                 return;
             }
-            Process::MemoryStream ms { reinterpret_cast<char*>(platform.sharedMemory.ptr) };
+            else if (platform->memoryProtect.isExceed())
+            {
+                accept = runPass = false;
+                finalResult = runResult[0] = &ResultConstant::hardMLE;
+                runMemory = hardMemoryLimit;
+                runTime = Process::TimeUsage {};
+                return;
+            }
+            Process::MemoryStream ms { platform->sharedMemory.ptr };
             using Logfile::RStatus;
             RStatus stat;
             ms.read(stat);
+            ms.read(runTime);
+            ms.read(runMemory);
             unsigned int runPtr = 0;
             switch (stat)
             {
+            case RStatus::Accept:
+                testPass = true;
             case RStatus::Return:
-                ms.read(runTime);
-                ms.read(runMemory);
-                if (runTime.real > limit.timeLimit)
+                if (runTime.real > timeLimit)
                 {
-                    runResult[runPtr++] = &TLE;
+                    runResult[runPtr++] = &ResultConstant::TLE;
                     accept = false;
                 }
-                if (runMemory > limit.memoryLimit)
+                if (runMemory > memoryLimit)
                 {
-                    runResult[runPtr++] = &MLE;
+                    runResult[runPtr++] = &ResultConstant::MLE;
                     accept = false;
                 }
                 *cur = Result {
@@ -142,11 +176,27 @@ namespace apdebug
             case RStatus::RuntimeError:
                 runResult[0] = Logfile::parseRE(ms, cur);
                 goto err;
-                break;
             case RStatus::Warn:
                 runResult[0] = Logfile::parseWarn(ms, cur);
                 goto err;
-                break;
+            case RStatus::Protocol:
+                *cur = Result {
+                    .type = Result::Type::Protocol,
+                    .name = "PV",
+                    .color = SGR::TextRed,
+                    .verbose = "[PV] Protocol Violation. Mssage: " + Logfile::readString(ms)
+                };
+                runResult[0] = cur++;
+                goto err;
+            case RStatus::WrongAnswer:
+                *cur = Result {
+                    .type = Result::Type::WA,
+                    .name = "WA",
+                    .color = SGR::TextRed,
+                    .verbose = "[WA] Wrong answer. Message: " + Logfile::readString(ms)
+                };
+                runResult[0] = cur++;
+                goto err;
             default:
                 *cur = Result {
                     .type = Result::Type::Unknown,
@@ -154,23 +204,27 @@ namespace apdebug
                     .color = SGR::None,
                     .verbose = fmt::format(FMT_COMPILE("[UKE] Program return code {}"), exitStatus)
                 };
-                runResult[0] = cur++;
-            err:
                 runMemory = 0;
                 runTime = Process::TimeUsage {};
+                runResult[0] = cur++;
+            err:
                 accept = runPass = false;
                 break;
             }
-            tmpfile.release(TemporaryFile::Run, runPass, accept);
+            tmpfiles.release(TemporaryFile::Run, runPass, accept);
+            finalResult = runResult[0];
         }
-        void TraditionalTest::test()
+        void BasicTest::test()
         {
+            if (testResult)
+                return;
             if (!runPass || tester.path.empty())
             {
-                testResult = &Skip;
+                testResult = &ResultConstant::Skip;
                 return;
             }
             diff.check(tester);
+            const bool old = accept;
             if (const int ret = tester.execute().wait(); ret)
             {
                 *cur = Result {
@@ -183,10 +237,12 @@ namespace apdebug
                 testPass = accept = false;
             }
             else
-                testResult = &Accept;
-            tmpfile.release(TemporaryFile::Test, testPass, accept);
+                testResult = &ResultConstant::Accept;
+            tmpfiles.release(TemporaryFile::Test, testPass, accept);
+            if (old)
+                finalResult = testResult;
         }
-        void TraditionalTest::release()
+        void BasicTest::release()
         {
             using namespace std::filesystem;
             if (accept)
@@ -195,18 +251,22 @@ namespace apdebug
                 diff.release();
             }
         }
-        void TraditionalTest::printRunInfo(std::ostream& os)
+        void BasicTest::printRunInfo(std::ostream& os)
         {
             os << SGR::None << SGR::TextCyan << "[info] Input file: " << input << "\n";
             os << "[info] Output file: " << output << "\n";
-            os << SGR::TextBlue << "[info] Run command line: " << program << SGR::None << "\n";
+            os << "[info] Program command line: " << program;
+#ifdef Interact
+            os << "\n[info] Interactor command line: " << interactor;
+#endif
+            os << SGR::None << "\n";
         }
-        void TraditionalTest::printTestInfo(std::ostream& os)
+        void BasicTest::printTestInfo(std::ostream& os)
         {
-            os << SGR::None;
+            os << SGR::None << SGR::TextCyan;
             if (!answer.empty())
-                os << SGR::TextCyan << "[info] Answer file: " << answer << "\n";
-            os << SGR::TextBlue << "[info] Test command line: " << tester << SGR::None << "\n";
+                os << "[info] Answer file: " << answer << "\n";
+            os << "[info] Test command line: " << tester << SGR::None << "\n";
         }
     }
 }

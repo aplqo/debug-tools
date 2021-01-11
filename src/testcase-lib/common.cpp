@@ -1,47 +1,62 @@
+#include "include/output.h"
 #include "include/testcase.h"
 #include <cstring>
 #include <ostream>
 
+namespace SGR = apdebug::Output::SGR;
 using std::strcmp;
 
 namespace apdebug::Testcase
 {
     /*----- Result constants-----*/
-    const Result hardTLE {
-        .type = Result::Type::HardTLE,
-        .name = "Hard TLE",
-        .color = Output::SGR::TextRed,
-        .verbose = "[Hard TLE] Hard time limit exceed"
-    };
-    const Result hardMLE {
-        .type = Result::Type::HardMLE,
-        .name = "Hard MLE",
-        .color = Output::SGR::TextRed,
-        .verbose = "[Hard MLE] Hard memory limit exceed"
-    };
-    const Result TLE {
-        .type = Result::Type::TLE,
-        .name = "TLE",
-        .color = Output::SGR::TextYellow,
-        .verbose = "[TLE] Time limit exceed"
-    };
-    const Result MLE {
-        .type = Result::Type::MLE,
-        .name = "MLE",
-        .color = Output::SGR::TextYellow,
-        .verbose = "[MLE] Memory limit exceed"
-    };
-    const Result Skip {
-        .type = Result::Type::Skip,
-        .name = "skip",
-        .color = ""
-    };
-    const Result Accept {
-        .type = Result::Type::AC,
-        .name = "AC",
-        .color = Output::SGR::TextGreen,
-        .verbose = "[AC] Test program return code 0"
-    };
+    namespace ResultConstant
+    {
+        const char* name[13] = {
+            "AC", "WA", "Pass", "TLE", "RE",
+            "MLE", "Warn", "UKE", "Hard MLE", "Hard TLE",
+            "Skip", "PV", "Other"
+        };
+        const char* color[13] = {
+            SGR::TextGreen, SGR::TextRed, SGR::TextGreen, SGR::TextYellow, SGR::TextPurple,
+            SGR::TextYellow, SGR::TextYellow, SGR::None, SGR::TextRed, SGR::TextRed,
+            SGR::None, SGR::TextRed, SGR::None
+        };
+        const Result hardTLE {
+            .type = Result::Type::HardTLE,
+            .name = "Hard TLE",
+            .color = Output::SGR::TextRed,
+            .verbose = "[Hard TLE] Hard time limit exceed"
+        };
+        const Result hardMLE {
+            .type = Result::Type::HardMLE,
+            .name = "Hard MLE",
+            .color = Output::SGR::TextRed,
+            .verbose = "[Hard MLE] Hard memory limit exceed"
+        };
+        const Result TLE {
+            .type = Result::Type::TLE,
+            .name = "TLE",
+            .color = Output::SGR::TextYellow,
+            .verbose = "[TLE] Time limit exceed"
+        };
+        const Result MLE {
+            .type = Result::Type::MLE,
+            .name = "MLE",
+            .color = Output::SGR::TextYellow,
+            .verbose = "[MLE] Memory limit exceed"
+        };
+        const Result Skip {
+            .type = Result::Type::Skip,
+            .name = "skip",
+            .color = ""
+        };
+        const Result Accept {
+            .type = Result::Type::AC,
+            .name = "AC",
+            .color = Output::SGR::TextGreen,
+            .verbose = "[AC] Test program return code 0"
+        };
+    }
 
     bool LimitInfo::parseArgument(int& argc, const char* const argv[])
     {

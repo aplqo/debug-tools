@@ -15,6 +15,9 @@ namespace apdebug
             Return = 0x01,
             Warn = 0x03,
             RuntimeError = 0x04,
+            WrongAnswer = 0x05,
+            Protocol = 0x06,
+            Accept = 0x07,
             Unknown = 0xffffffff
         };
         enum class Warning : uint32_t
@@ -48,6 +51,7 @@ namespace apdebug
 
         const Testcase::Result* parseRE(Process::MemoryStream& ms, Testcase::Result*& cur);
         const Testcase::Result* parseWarn(Process::MemoryStream& ms, Testcase::Result*& cur);
+        std::string readString(Process::MemoryStream& ms);
     }
 }
 

@@ -83,9 +83,11 @@ namespace apdebug::Logfile
         Warning w;
         ms.read(w);
         const std::string type = readString(ms), operate = readString(ms);
-        *cur = Result { .type = Result::Type::Warn,
+        *cur = Result {
+            .type = Result::Type::Warn,
             .name = "Warn",
-            .color = Output::SGR::TextYellow };
+            .color = Output::SGR::TextYellow
+        };
         Stacktrace st;
         st.parse(ms);
         cur->verbose.reserve(st.formatLength + 60);
@@ -98,6 +100,7 @@ namespace apdebug::Logfile
     }
 
     const static Result UnknownExcept {
+        .type = Result::Type::RE,
         .name = "RE",
         .color = Output::SGR::TextPurple,
         .verbose = "[RE] Throw an unknown exception",
@@ -214,6 +217,7 @@ namespace apdebug::Logfile
         {
             const std::string name = readString(ms), what = readString(ms);
             *cur = Result {
+                .type = Result::Type::RE,
                 .name = "RE",
                 .color = Output::SGR::TextPurple,
                 .verbose = fmt::format("[RE] Throw an exception of {} \n\t what(): {}", name, what),

@@ -53,23 +53,26 @@ namespace apdebug
                 s = "<unused>";
             return false;
         }
-
-#define multiReplace1(fmt, dat1) (dat1).replace(fmt)
-#define multiReplace2(fmt, dat1, dat2) \
-    {                                  \
-        multiReplace1(fmt, dat1);      \
-        multiReplace1(fmt, dat2);      \
-    }
-#define multiReplace3(fmt, dat1, ...)    \
-    {                                    \
-        multiReplace1(fmt, dat1);        \
-        multiReplace2(fmt, __VA_ARGS__); \
-    }
-#define multiReplace4(fmt, dat1, ...)    \
-    {                                    \
-        multiReplace1(fmt, dat1);        \
-        multiReplace3(fmt, __VA_ARGS__); \
-    }
+        template <class T>
+        concept Replaceable = requires(fmt::format_args pat, T&& a) { { a.replace(pat) }; };
+        template <Replaceable T>
+        inline void ReplaceMaybe(fmt::format_args pat, T&& a)
+        {
+            a.replace(pat);
+        }
+        template <class T>
+        inline void ReplaceMaybe(fmt::format_args, T&&) { }
+        template <class T, class... Args>
+        inline void ReplaceMaybe(fmt::format_args pat, T&& one, Args&&... other)
+        {
+            ReplaceMaybe(pat, one);
+            ReplaceMaybe(pat, other...);
+        }
+        template <Replaceable... Args>
+        inline void ReplaceStrict(fmt::format_args pat, Args&&... other)
+        {
+            ReplaceMaybe(pat, other...);
+        }
     } // namespace utility
 } // namespace apdebug
 

@@ -3,8 +3,12 @@
 My debug tools for oi problem
 
 ### TODOs
-- [ ] Add summary(max/min/average time/memory...) output in grouptest and random test.
-- [ ] Add interactive problem support
-- [ ] Auto remove tmpfile created by user problem after test.
-- [ ] Use named pipe for log output
+- [x] Add summary(max/min/average time/memory...) output in grouptest and random test.
+- [x] Add interactive problem support
+- [x] Auto remove tmpfile created by user problem after test.
+- [x] Use ipc for log output
 - [ ] Provide run log api
+- [x] Improve color output (Change enum into const variables)
+- [x] Cleanup cmake config
+- [ ] use tcmalloc/jemalloc
+- [ ] Add windows support

@@ -22,16 +22,19 @@ namespace apdebug::Process
 
     struct Process
     {
+        typedef pid_t NativeHandle;
         Process() = default;
+        Process(const NativeHandle v);
         Process(const Process&) = delete;
         Process(Process&&) = default;
         Process& operator=(const Process&) = delete;
 
         int wait() const;
-        inline void terminate() const;
+        void terminate() const;
 
-        typedef pid_t NativeHandle;
         NativeHandle nativeHandle;
+
+    private:
     };
 
     class SharedMemory
@@ -45,7 +48,7 @@ namespace apdebug::Process
 
         char name[shmNameLength + 1];
 
-        void* ptr;
+        char* ptr;
 
     private:
         bool created;
@@ -87,6 +90,7 @@ namespace apdebug::Process
         void create();
         void setExpire(const unsigned long long us);
         std::pair<bool, int> waitFor(const Process& p);
+        bool isExceed();
         ~TimeLimit();
 
     private:
@@ -111,10 +115,17 @@ namespace apdebug::Process
 
     private:
         std::filesystem::path cgroup;
-        // #if cgroupVersion==1
+#if cgroupVersion == 1
         bool swapAccount;
-        // #endif
+#endif
         unsigned int count;
+    };
+    class Pipe
+    {
+    public:
+        Pipe();
+
+        int read, write;
     };
     TimeUsage getTimeUsage();
     MemoryUsage getMemoryUsage();

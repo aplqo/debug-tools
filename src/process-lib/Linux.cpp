@@ -19,6 +19,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <err.h>
+
 #include <fmt/format.h>
 
 namespace fs = std::filesystem;
@@ -28,13 +30,15 @@ namespace apdebug::Process
     static const size_t SharedMemorySize = 1 * 1024 * 1024; // 1 MiB
     static const size_t cgroupNamelength = 20;
 
+    Process::Process(NativeHandle v)
+        : nativeHandle(v) {};
     int Process::wait() const
     {
         int status;
         waitpid(nativeHandle, &status, 0);
         return WEXITSTATUS(status);
     }
-    inline void Process::terminate() const
+    void Process::terminate() const
     {
         kill(nativeHandle, SIGKILL);
     }
@@ -47,13 +51,13 @@ namespace apdebug::Process
         name[shmNameLength] = '\0';
         fd = shm_open(name, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
         ftruncate(fd, SharedMemorySize);
-        ptr = mmap(nullptr, SharedMemorySize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+        ptr = reinterpret_cast<char*>(mmap(nullptr, SharedMemorySize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
     }
     SharedMemory::SharedMemory(const char* name)
         : created(false)
     {
         fd = shm_open(name, O_RDWR, S_IWGRP | S_IWOTH);
-        ptr = mmap(nullptr, SharedMemorySize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+        ptr = reinterpret_cast<char*>(mmap(nullptr, SharedMemorySize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
     }
     SharedMemory::~SharedMemory()
     {
@@ -105,10 +109,9 @@ namespace apdebug::Process
             if (fd[2] != -1)
                 dup2(fd[2], STDERR_FILENO);
             execvp(pointers[0], const_cast<char** const>(pointers));
+            exit(1);
         }
-        Process ret;
-        ret.nativeHandle = p;
-        return ret;
+        return Process(p);
     }
     Command& Command::setRedirect(const RedirectType which, const int fd)
     {
@@ -184,12 +187,16 @@ namespace apdebug::Process
     }
     std::pair<bool, int> TimeLimit::waitFor(const Process& p)
     {
+        static const itimerspec stop {};
         cntrl = killParam { .pid = p.nativeHandle, .killed = false };
-        timer_settime(timer, 0, &spec, nullptr);
+        // timer_settime(timer, 0, &spec, nullptr);
         int stat;
         waitpid(p.nativeHandle, &stat, 0);
+        if (!cntrl.killed)
+            timer_settime(timer, 0, &stop, nullptr);
         return std::make_pair(cntrl.killed, WEXITSTATUS(stat));
     }
+    bool TimeLimit::isExceed() { return cntrl.killed; }
     TimeLimit::~TimeLimit()
     {
         timer_delete(timer);
@@ -275,5 +282,13 @@ namespace apdebug::Process
             .user = ru.ru_utime.tv_usec,
             .sys = ru.ru_stime.tv_usec
         };
+    }
+
+    Pipe::Pipe()
+    {
+        int fd[2];
+        pipe(fd);
+        read = fd[0];
+        write = fd[1];
     }
 }

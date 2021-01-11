@@ -35,114 +35,157 @@ extern "C" void writeName(const char* name)
 {
     writeString(boost::core::demangle(name));
 }
-extern "C" void abortProgram(const unsigned int dep)
-{
-    using namespace boost::stacktrace;
-    const auto st = boost::stacktrace::stacktrace();
-    const size_t dumpDepth = std::min<size_t>(st.size(), maxStackDumpDepth + dep);
-    ms.write(dumpDepth);
-    ms.write(st.size());
-    ms.write(dep);
-    for (unsigned int i = 0; i < dumpDepth; ++i)
-    {
-        ms.write<const void*>(st[i].address());
-        writeString(st[i].source_file());
-        writeString(st[i].name());
-        ms.write(st[i].source_line());
-    }
-    shm->~SharedMemory();
-    quick_exit(1);
-}
-void finishProgram()
-{
-    const TimeUsage t = getTimeUsage() - startTime;
-    const MemoryUsage m = getMemoryUsage();
-    ms.write(RStatus::Return);
-    ms.write(t);
-    ms.write(m);
-    delete shm;
-}
 
-void signalHandler(int sig)
+namespace Judger
 {
-    ms.write(RStatus::RuntimeError);
-    ms.write(RtError::Signal);
-    switch (sig)
+    extern "C" void abortProgram(const unsigned int dep)
     {
-    case SIGSEGV:
-        ms.write(Signal::Sigsegv);
-        break;
-    case SIGINT:
-        ms.write(Signal::Sigint);
-        break;
-    case SIGILL:
-        ms.write(Signal::Sigill);
-        break;
-    case SIGTERM:
-        ms.write(Signal::Sigterm);
-        break;
+        using namespace boost::stacktrace;
+        const auto st = boost::stacktrace::stacktrace();
+        const size_t dumpDepth = std::min<size_t>(st.size(), maxStackDumpDepth + dep);
+        ms.write(dumpDepth);
+        ms.write(st.size());
+        ms.write(dep);
+        for (unsigned int i = 0; i < dumpDepth; ++i)
+        {
+            ms.write<const void*>(st[i].address());
+            writeString(st[i].source_file());
+            writeString(st[i].name());
+            ms.write(st[i].source_line());
+        }
+        quick_exit(1);
     }
-    abortProgram(2);
-}
-void fpeHandler(int)
-{
-    ms.write(RStatus::RuntimeError);
-    ms.write(RtError::Sigfpe);
-    uint32_t v = 0;
-    if (fetestexcept(FE_DIVBYZERO))
-        v |= FPE::FE_Divbyzero;
-    if (fetestexcept(FE_INEXACT))
-        v |= FPE::FE_Inexact;
-    if (fetestexcept(FE_INVALID))
-        v |= FPE::FE_Invavid;
-    if (fetestexcept(FE_OVERFLOW))
-        v |= FPE::FE_Overflow;
-    if (fetestexcept(FE_UNDERFLOW))
-        v |= FPE::FE_Underflow;
-    ms.write(v);
-    abortProgram(2);
-}
-void registerHandler()
-{
+    extern "C" void stopWatch()
+    {
+        const TimeUsage t = getTimeUsage() - startTime;
+        const MemoryUsage m = getMemoryUsage();
+        ms.write(t);
+        ms.write(m);
+    }
+    void finishProgram()
+    {
+        ms.write(RStatus::Return);
+        stopWatch();
+    }
+
+    void signalHandler(int sig)
+    {
+        ms.write(RStatus::RuntimeError);
+        stopWatch();
+        ms.write(RtError::Signal);
+        switch (sig)
+        {
+        case SIGSEGV:
+            ms.write(Signal::Sigsegv);
+            break;
+        case SIGINT:
+            ms.write(Signal::Sigint);
+            break;
+        case SIGILL:
+            ms.write(Signal::Sigill);
+            break;
+        case SIGTERM:
+            ms.write(Signal::Sigterm);
+            break;
+        }
+        abortProgram(2);
+    }
+    void fpeHandler(int)
+    {
+        ms.write(RStatus::RuntimeError);
+        stopWatch();
+        ms.write(RtError::Sigfpe);
+        uint32_t v = 0;
+        if (fetestexcept(FE_DIVBYZERO))
+            v |= FPE::FE_Divbyzero;
+        if (fetestexcept(FE_INEXACT))
+            v |= FPE::FE_Inexact;
+        if (fetestexcept(FE_INVALID))
+            v |= FPE::FE_Invavid;
+        if (fetestexcept(FE_OVERFLOW))
+            v |= FPE::FE_Overflow;
+        if (fetestexcept(FE_UNDERFLOW))
+            v |= FPE::FE_Underflow;
+        ms.write(v);
+        abortProgram(2);
+    }
+    void registerHandler()
+    {
 #ifdef _WIN32
-    _controlfp(EM_INEXACT, _MCW_EM); // Replace EM_INEXACT with 0 to enable all exceptions.
+        _controlfp(EM_INEXACT, _MCW_EM); // Replace EM_INEXACT with 0 to enable all exceptions.
 #else
-    feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW); // Add FE_INEXACT to enable all exception.
+        feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW); // Add FE_INEXACT to enable all exception.
 #endif
-    signal(SIGSEGV, signalHandler);
-    signal(SIGFPE, fpeHandler);
-    signal(SIGILL, signalHandler);
-    signal(SIGINT, signalHandler);
-    signal(SIGTERM, signalHandler);
+        signal(SIGSEGV, signalHandler);
+        signal(SIGFPE, fpeHandler);
+        signal(SIGILL, signalHandler);
+        signal(SIGINT, signalHandler);
+        signal(SIGTERM, signalHandler);
+    }
+    extern "C" int judgeMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[])
+    {
+        shm = new SharedMemory(argv[argc - 1]);
+        ms.ptr = reinterpret_cast<char*>(shm->ptr);
+        registerHandler();
+        std::atexit(finishProgram);
+        try
+        {
+            startTime = getTimeUsage();
+            userMain(argc - 1, argv);
+            finishProgram();
+        }
+        catch (const std::exception& e)
+        {
+            ms.write(RStatus::RuntimeError);
+            stopWatch();
+            ms.write(RtError::STDExcept);
+            writeName(typeid(e).name());
+            writeString(e.what());
+            quick_exit(1);
+        }
+        catch (...)
+        {
+            ms.write(RStatus::RuntimeError);
+            stopWatch();
+            ms.write(RtError::UnknownExcept);
+            quick_exit(1);
+        }
+        return 0;
+    }
 }
-
-extern "C" int judgeMain(int*(userMain)(int, const char* const[]), int argc, const char* const argv[])
+namespace Interactor
 {
-    shm = new SharedMemory(argv[argc - 1]);
-    ms.ptr = reinterpret_cast<char*>(shm->ptr);
-    registerHandler();
-    std::atexit(finishProgram);
-    try
+    Process judged;
+
+    extern "C" void beginReportFail(const uint32_t id)
     {
-        startTime = getTimeUsage();
-        userMain(argc - 1, argv);
-        finishProgram();
+        judged.terminate();
+        ms.write(id);
+        Judger::stopWatch();
     }
-    catch (const std::exception& e)
+    extern "C" void endReportFail()
     {
-        ms.write(RStatus::RuntimeError);
-        ms.write(RtError::STDExcept);
-        writeName(typeid(e).name());
-        writeString(e.what());
-        delete shm;
-        quick_exit(1);
+        std::exit(1);
     }
-    catch (...)
+    extern "C" void reportAccept()
     {
-        ms.write(RStatus::RuntimeError);
-        ms.write(RtError::UnknownExcept);
-        delete shm;
-        quick_exit(1);
+        judged.wait();
+        ms.write(apdebug::Logfile::RStatus::Accept);
+        exit(0);
     }
-    return 0;
+    extern "C" int interactorMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[])
+    {
+        {
+            using namespace apdebug::Process;
+            SharedMemory args(argv[argc - 1]);
+            char tp[shmNameLength + 1];
+            MemoryStream ms { args.ptr };
+            ms.read(judged.nativeHandle);
+            ms.read(tp, shmNameLength);
+            tp[shmNameLength] = '\0';
+            shm = new SharedMemory(tp);
+        }
+        ms.ptr = shm->ptr;
+        return userMain(argc - 1, argv);
+    }
 }

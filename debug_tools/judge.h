@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace ns_run
+namespace _interal
 {
     int run(int, const char* const[]);
 }
@@ -14,15 +14,30 @@ extern "C"
     extern void writeName(const char* name); // write demangled name
     extern void writeLog(const char* obj, const size_t size);
     extern void writeString(const char* str);
-    extern void abortProgram(const unsigned int dep);
-    extern int judgeMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[]);
+    namespace Judger
+    {
+        extern void stopWatch();
+        extern void abortProgram(const unsigned int dep);
+        extern int judgeMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[]);
+    }
+    namespace Interactor
+    {
+        extern void beginReportFail(const uint32_t id);
+        extern void endReportFail();
+        extern void reportAccept();
+        extern int interactorMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[]);
+    }
 }
 
 int main(int argc, const char* const argv[])
 {
-    return judgeMain(ns_run::run, argc, argv);
+#ifndef Interactive
+    return Judger::judgeMain(_interal::run, argc, argv);
+#else
+    return Interactor::interactorMain(_interal::run, argc, argv);
+#endif
 }
 
-#define main(...) ns_run::run(int argc, const char* const argv[])
+#define main(...) _interal::run(int argc, const char* const argv[])
 
 #endif

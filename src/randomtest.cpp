@@ -21,8 +21,8 @@ using namespace apdebug;
 namespace fs = std::filesystem;
 namespace SGR = Output::SGR;
 
-typedef Testcase::TraditionalTemplate TestTemplateBase;
-typedef Testcase::TraditionalTest TestcaseType;
+typedef Testcase::BasicTemplate TestTemplateBase;
+typedef Testcase::BasicTest TestcaseType;
 
 const std::chrono::milliseconds print_duration(100);
 const unsigned int maxStdRetries = 20, maxVaRetries = 20;
@@ -32,6 +32,8 @@ ResultTable results(std::array<const char*, 12> {
                         "Input", "Output", "Answer", "Diff",
                         "Time(ms)", "Time(us)", "Memory(MiB)", "Memory(KiB)", "Details" },
     SGR::None);
+Testcase::Summary summary;
+
 enum class ResultColumn
 {
     id,
@@ -58,7 +60,7 @@ struct TestPointTemplate : public TestTemplateBase
     bool parseArgument(int& argc, const char* const argv[]);
     void print(std::ostream& os) const;
 } global;
-class TestPoint : private TestcaseType
+class TestPoint : public TestcaseType
 {
 public:
     TestPoint(const unsigned int tid, const unsigned int id, TestPointTemplate& tp);
@@ -74,6 +76,7 @@ protected:
     Process::Command generator, validor, standard;
 };
 static const Testcase::Result judgeFail {
+    .type = Testcase::Result::Type::Other,
     .name = "Fail",
     .color = SGR::None,
     .details = "Generate data failed"
@@ -88,9 +91,9 @@ void TestPointTemplate::globalInit()
     }
     else
         created = false;
-    autodiff.enable = true;
-    autodiff.size = 0;
-    autodiff.differ = "{input}.diff";
+    diff.enable = true;
+    diff.size = 0;
+    diff.differ = "{input}.diff";
 }
 void TestPointTemplate::threadInit()
 {
@@ -152,7 +155,7 @@ TestPoint::TestPoint(const unsigned int tid, const unsigned int id, TestPointTem
 {
     using namespace fmt::literals;
     this->id = id;
-    multiReplace3(
+    Utility::ReplaceStrict(
         fmt::make_format_args("input"_a = input, "output"_a = output, "answer"_a = answer, "thread"_a = tp.platform->threadId),
         generator, validor, standard);
     generator.finalizeForExec();
@@ -186,8 +189,8 @@ bool TestPoint::generate()
             continue;
         return true;
     } while (fv && fs);
-    runResult[0] = &judgeFail;
-    testResult = &Testcase::Skip;
+    runResult[0] = finalResult = &judgeFail;
+    testResult = &Testcase::ResultConstant::Skip;
     runPass = accept = false;
     output = "<null>";
     return false;
@@ -195,7 +198,6 @@ bool TestPoint::generate()
 bool TestPoint::run()
 {
     TestcaseType::run();
-    parse();
     test();
     release();
     return accept;
@@ -211,10 +213,7 @@ void TestPoint::release()
 }
 void TestPoint::printTable(ResultTable& dest)
 {
-    if (!runPass || (testPass && !accept) || tester.path.empty())
-        dest.newColumn(runResult[0]->color);
-    else
-        dest.newColumn(testResult->color);
+    dest.newColumn(finalResult->color);
     dest.writeColumnList<ResultColumn, std::string&&>({ { ResultColumn::id, fmt::format("{}.{}", tid, id) },
         { ResultColumn::runState, std::string(runResult[0]->name) + (runResult[1] ? runResult[1]->name : "") },
         { ResultColumn::testState, std::string(testResult->name) },
@@ -301,6 +300,7 @@ void threadMain(const unsigned int tid)
         lat->count_down_and_wait();
     }
     ResultTable local;
+    Testcase::Summary localSummary;
     for (unsigned int i = 0; isRun(); ++i)
     {
         ++testedCount;
@@ -311,6 +311,7 @@ void threadMain(const unsigned int tid)
             fail = true;
         if (!tst.accept || showall)
             tst.printTable(local);
+        localSummary.insert(fmt::format(FMT_COMPILE("{}.{}"), tid, i), tst);
         if constexpr (realTime)
         {
             if (tableLock.try_lock())
@@ -324,6 +325,7 @@ void threadMain(const unsigned int tid)
     {
         std::lock_guard lk(tableLock);
         results.mergeData(std::move(local));
+        summary.mergeData(localSummary);
     }
 }
 void setMinWidth()
@@ -359,6 +361,8 @@ void runTest(const unsigned int parallel)
         results.printHeader(std::cout);
     }
     results.printAll(std::cout);
+    std::cout << "Summary: \n";
+    summary.print(std::cout);
 }
 
 int main(int argc, char* argv[])
@@ -399,6 +403,5 @@ int main(int argc, char* argv[])
         std::cout << SGR::TextCyan << "\n[Info] Test passed removed temporary directory.";
         remove_all(global.tmpdir);
     }
-    std::cout << SGR::None << "\n";
     return 0;
 }

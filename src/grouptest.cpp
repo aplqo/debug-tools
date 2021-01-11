@@ -18,8 +18,8 @@ namespace fs = std::filesystem;
 namespace SGR = Output::SGR;
 using Output::Table;
 
-typedef Testcase::TraditionalTemplate TestTemplate;
-typedef Testcase::TraditionalTest TestcaseType;
+typedef Testcase::BasicTemplate TestTemplate;
+typedef Testcase::BasicTest TestcaseType;
 
 Testcase::Platform platform;
 
@@ -45,13 +45,15 @@ const std::array<const char*, 12> ResultHeader {
     "Time(us)", "Memory(MiB)", "Memory(KiB)", "Details"
 };
 
-typedef Table<10> GroupTable;
 enum class GroupColumn
 {
     id,
     inDir,
     ansDir,
     arg,
+#ifdef Interact
+    interact,
+#endif
     test,
     timeLimit,
     hardTimeLimit,
@@ -59,13 +61,23 @@ enum class GroupColumn
     hardMemoryLimit,
     verbose
 };
-const std::array<const char*, 10> GroupHeader {
-    "Id", "InDir", "AnsDir", "Argument",
+#ifdef Interact
+const std::array<const char*, 11> GroupHeader {
+    "Id", "InDir", "AnsDir", "Argument", "Interactor",
     "Test command", "Time", "Hard time",
     "Memory", "Hard memory", "Verbose"
 };
+typedef Table<11> GroupTable;
+#else
+const std::array<const char*, 10> GroupHeader {
+    "Id", "InDir", "AnsDir", "Argument",
+    "Test command", "Time", "Hard time",
+    "Mmory", "Hard memory", "Verbose"
+};
+typedef Table<10> GroupTable;
+#endif
 
-class TestPoint : private TestcaseType
+class TestPoint : public TestcaseType
 {
 public:
     TestPoint(const unsigned int id, const unsigned int gid, TestcaseType&& tst)
@@ -87,7 +99,6 @@ void TestPoint::execute(const bool verbose)
         printRunInfo(std::cout);
     std::cout.flush();
     run();
-    parse();
     for (unsigned int i = 0; runResult[i]; ++i)
         std::cout << runResult[i]->color << runResult[i]->verbose << SGR::None << "\n";
     if (runPass && !tester.path.empty())
@@ -100,16 +111,13 @@ void TestPoint::execute(const bool verbose)
         std::cout << testResult->color << testResult->verbose << SGR::None << "\n";
     }
     else
-        testResult = &Testcase::Skip;
+        testResult = &Testcase::ResultConstant::Skip;
     release();
     std::cout << SGR::Underline << SGR::TextBlue << "[Info] Test #" << gid << "." << id << " finished.\n";
 }
 void TestPoint::writeToTable(ResultTable& dest)
 {
-    if (!runPass || (testPass && !accept) || tester.path.empty())
-        dest.newColumn(runResult[0]->color);
-    else
-        dest.newColumn(testResult->color);
+    dest.newColumn(finalResult->color);
     dest.writeColumnList<ResultColumn, std::string&&>({ { ResultColumn::id, std::to_string(id) },
         { ResultColumn::runState, std::string(runResult[0]->name) + (runResult[1] ? runResult[1]->name : "") },
         { ResultColumn::testState, std::string(testResult->name) },
@@ -132,7 +140,7 @@ public:
     void findFile();
     void execute();
     void printConfig(GroupTable& t);
-    void printResult();
+    void printResult(Testcase::Summary& totalSummary);
 
 private:
     static const std::array<const char*, 12> colName;
@@ -153,6 +161,7 @@ private:
     ResultTable results;
     std::vector<std::pair<fs::path, fs::path>> tests;
     std::unordered_map<std::string, int> table;
+    Testcase::Summary summary;
 };
 
 TestGroup::TestGroup(const unsigned int id, int& argc, const char* const argv[])
@@ -217,10 +226,11 @@ void TestGroup::execute()
         TestPoint tst(i, gid, TestcaseType(tests[i].first, tests[i].second, tmpl));
         tst.execute(verbose);
         tst.writeToTable(results);
+        summary.insert(fmt::format(FMT_STRING("{}.{}"), gid, i), tst);
     }
     std::cout << SGR::TextBlue << SGR::Underline << "[Info] Group #" << gid << " finished." << SGR::None << "\n\n";
 }
-void TestGroup::printResult()
+void TestGroup::printResult(Testcase::Summary& totalSummary)
 {
     std::cout << SGR::None << "Test result for group #" << gid << "\n";
     if (!tests.size())
@@ -230,6 +240,9 @@ void TestGroup::printResult()
     }
     results.printHeader(std::cout);
     results.printAll(std::cout);
+    std::cout << "Summary: \n";
+    summary.print(std::cout);
+    totalSummary.mergeData(summary);
 }
 void TestGroup::findFile()
 {
@@ -296,6 +309,9 @@ void TestGroup::printConfig(GroupTable& dest)
         { GroupColumn::inDir, inrec ? indir.string() + "(recursive)" : indir.string() },
         { GroupColumn::ansDir, ansrec ? ansdir.string() + "(recursive)" : ansdir.string() },
         { GroupColumn::arg, Output::writeToString(tmpl.program) },
+#ifdef Interact
+        { GroupColumn::interact, Output::writeToString(tmpl.interactor) },
+#endif
         { GroupColumn::test, Output::writeToString(tmpl.tester) },
         { GroupColumn::timeLimit, fmt::format("{} ms ({} s)", tmpl.timeLimit / ms, tmpl.timeLimit / sec) },
         { GroupColumn::hardTimeLimit, fmt::format("{} ms ({} s)", tmpl.hardTimeLimit / ms, tmpl.hardTimeLimit / sec) },
@@ -334,7 +350,10 @@ int main(int argc, char* argv[])
         i.findFile();
         i.execute();
     }
+    Testcase::Summary total;
     for (auto& i : grp)
-        i.printResult();
+        i.printResult(total);
+    std::cout << "Summary for all group: \n";
+    total.print(std::cout);
     return 0;
 }
