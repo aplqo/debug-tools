@@ -267,21 +267,23 @@ namespace apdebug::Process
         fs::remove(cgroup);
     }
 
-    MemoryUsage getMemoryUsage()
+    std::pair<TimeUsage, MemoryUsage> getUsage()
     {
+        timespec tm;
         rusage ru;
         getrusage(RUSAGE_SELF, &ru);
-        return ru.ru_maxrss;
+        clock_gettime(CLOCK_MONOTONIC, &tm);
+        return {
+            TimeUsage {
+                .real = tm.tv_sec * 1000000ull + tm.tv_nsec / 1000,
+                .user = ru.ru_utime.tv_sec * 1000000ull + ru.ru_utime.tv_usec,
+                .sys = ru.ru_stime.tv_sec * 1000000ull + ru.ru_stime.tv_usec },
+            MemoryUsage { ru.ru_maxrss }
+        };
     }
     TimeUsage getTimeUsage()
     {
-        rusage ru;
-        getrusage(RUSAGE_SELF, &ru);
-        return TimeUsage {
-            .real = ru.ru_utime.tv_usec + ru.ru_stime.tv_usec,
-            .user = ru.ru_utime.tv_usec,
-            .sys = ru.ru_stime.tv_usec
-        };
+        return getUsage().first;
     }
 
     Pipe::Pipe()

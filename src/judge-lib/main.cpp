@@ -60,10 +60,10 @@ namespace Judger
     }
     extern "C" void stopWatch()
     {
-        const TimeUsage t = getTimeUsage() - startTime;
-        const MemoryUsage m = getMemoryUsage();
+        const auto [ct, cm] = getUsage();
+        const TimeUsage t = ct - startTime;
         ms.write(t);
-        ms.write(m);
+        ms.write(cm);
     }
     inline void checkGuard()
     {
@@ -101,7 +101,7 @@ namespace Judger
             ms.write(Signal::Sigterm);
             break;
         }
-        abortProgram(2);
+        abortProgram(3);
     }
     void fpeHandler(int)
     {
@@ -121,7 +121,7 @@ namespace Judger
         if (fetestexcept(FE_UNDERFLOW))
             v |= FPE::FE_Underflow;
         ms.write(v);
-        abortProgram(2);
+        abortProgram(3);
     }
     void registerHandler()
     {

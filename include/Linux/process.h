@@ -128,7 +128,7 @@ namespace apdebug::Process
         int read, write;
     };
     TimeUsage getTimeUsage();
-    MemoryUsage getMemoryUsage();
+    std::pair<TimeUsage, MemoryUsage> getUsage();
 
     static const unsigned int interactArgsSize = sizeof(Process::NativeHandle);
 }
