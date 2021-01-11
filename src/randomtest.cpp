@@ -30,7 +30,7 @@ typedef Output::Table<12> ResultTable;
 ResultTable results(std::array<const char*, 12> {
                         "Id", "State(Run)", "State(Test)",
                         "Input", "Output", "Answer", "Diff",
-                        "Time(ms)", "Time(us)", "Memory(MiB)", "Memory(KiB)", "Details" },
+                        "Real", "User", "System", "Memory", "Details" },
     SGR::None);
 Testcase::Summary summary;
 
@@ -43,10 +43,10 @@ enum class ResultColumn
     output,
     answer,
     differ,
-    msTime,
-    usTime,
+    realTime,
+    userTime,
+    sysTime,
     mbMemory,
-    kbMemory,
     detail
 };
 struct TestPointTemplate : public TestTemplateBase
@@ -221,10 +221,10 @@ void TestPoint::printTable(ResultTable& dest)
         { ResultColumn::output, std::move(output) },
         { ResultColumn::answer, std::move(const_cast<std::string&>(answer)) },
         { ResultColumn::differ, std::move(diff.differ) },
-        { ResultColumn::mbMemory, std::to_string(runMemory / 1024.0) },
-        { ResultColumn::kbMemory, std::to_string(runMemory) },
-        { ResultColumn::msTime, fmt::format("{} / {} / {}", runTime.real / 1e3, runTime.user / 1e3, runTime.sys / 1e3) },
-        { ResultColumn::usTime, fmt::format("{} / {} / {}", runTime.real, runTime.user, runTime.sys) },
+        { ResultColumn::realTime, fmt::format(FMT_COMPILE("{}"), runTime.real / 1000.0) },
+        { ResultColumn::userTime, fmt::format(FMT_COMPILE("{}"), runTime.user / 1000.0) },
+        { ResultColumn::sysTime, fmt::format(FMT_COMPILE("{}"), runTime.sys / 1000.0) },
+        { ResultColumn::mbMemory, fmt::format(FMT_COMPILE("{}"), runMemory / 1024.0) },
         { ResultColumn::detail, std::string(runResult[0]->details) } });
 }
 std::mutex tableLock;
@@ -331,10 +331,11 @@ void threadMain(const unsigned int tid)
 void setMinWidth()
 {
     constexpr unsigned int rlen = sizeof("(Released)");
-    results.update(ResultColumn::msTime, log10(global.hardTimeLimit / 1000 + 1));
-    results.update(ResultColumn::usTime, log10(global.hardTimeLimit));
+    const unsigned int tlen = log10(global.hardTimeLimit / 1000.0 + 1);
+    results.update(ResultColumn::realTime, tlen);
+    results.update(ResultColumn::userTime, tlen);
+    results.update(ResultColumn::sysTime, tlen);
     results.update(ResultColumn::mbMemory, log10(global.hardMemoryLimit / 1024.0 + 1));
-    results.update(ResultColumn::kbMemory, log10(global.hardMemoryLimit + 1));
     results.update(ResultColumn::input, rlen);
     results.update(ResultColumn::output, rlen);
     results.update(ResultColumn::answer, rlen);

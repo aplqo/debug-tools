@@ -22,19 +22,19 @@ namespace apdebug
         {
             enum class Type
             {
+                TLE,
+                MLE,
                 AC,
                 WA,
                 Pass,
-                TLE,
                 RE,
-                MLE,
                 Warn,
-                Unknown,
                 HardMLE,
                 HardTLE,
-                Skip,
                 Protocol,
-                Other
+                Other,
+                Unknown,
+                Skip
             } type;
             const char *name, *color;
             std::string verbose, details;

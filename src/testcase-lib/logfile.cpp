@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <iterator>
 #include <string>
 #include <vector>
@@ -12,6 +13,7 @@
 
 using apdebug::Process::MemoryStream;
 using apdebug::Testcase::Result;
+namespace fs = std::filesystem;
 
 namespace apdebug::Logfile
 {
@@ -48,6 +50,7 @@ namespace apdebug::Logfile
     };
     void Stacktrace::parse(MemoryStream& ms)
     {
+        const fs::path cur = fs::current_path();
         size_t dump, dep;
         ms.read(dump);
         ms.read(totalDepth);
@@ -59,6 +62,8 @@ namespace apdebug::Logfile
             size_t line;
             ms.read(addr);
             std::string &&file = readString(ms), &&name = readString(ms);
+            if (fs::exists(file))
+                file = fs::relative(file, cur);
             maxFile = std::max(maxFile, file.size());
             maxName = std::max(maxName, name.size());
             ms.read(line);
@@ -239,7 +244,7 @@ namespace apdebug::Logfile
 
 using apdebug::Logfile::Frame;
 template <>
-struct fmt::formatter<Frame>
+struct fmt::formatter<Frame> // formatter for detail output
 {
     constexpr auto parse(fmt::format_parse_context& c)
     {
@@ -248,6 +253,6 @@ struct fmt::formatter<Frame>
     template <class FormatContext>
     auto format(const Frame& f, FormatContext& ctx)
     {
-        return fmt::format_to(ctx.out(), FMT_COMPILE("{} {} {}:{}"), f.address, f.name, f.file, f.line);
+        return fmt::format_to(ctx.out(), FMT_COMPILE("{}:{}"), f.file, f.line);
     }
 };

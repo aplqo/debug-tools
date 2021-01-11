@@ -137,7 +137,7 @@ namespace apdebug
                 runTime = Process::TimeUsage {};
                 return;
             }
-            Process::MemoryStream ms { platform->sharedMemory.ptr };
+            Process::MemoryStream ms { platform->sharedMemory.ptr + Process::interactArgsSize };
             using Logfile::RStatus;
             RStatus stat;
             ms.read(stat);
@@ -163,7 +163,7 @@ namespace apdebug
                     .type = Result::Type::Pass,
                     .name = "Pass",
                     .color = SGR::TextGreen,
-                    .verbose = fmt::format(FMT_COMPILE("[Pass] Program finished. \n\tTime(real/user/sys): {}/{}/{} ms ({}/{}/{} us) \n\tMemory: {} MiB ({} KiB)"),
+                    .verbose = fmt::format(FMT_COMPILE("[Pass] Program finished. \n\tTime(real/user/sys): {} / {} / {} ms ({} / {} / {} us) \n\tMemory: {} MiB ({} KiB)"),
                         runTime.real / 1000.0, runTime.user / 1000.0, runTime.sys / 1000.0,
                         runTime.real, runTime.user, runTime.sys,
                         runMemory / 1024.0, runMemory)

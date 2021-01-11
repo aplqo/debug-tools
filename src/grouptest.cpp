@@ -33,16 +33,16 @@ enum class ResultColumn
     output,
     answer,
     differ,
-    msTime,
-    usTime,
+    realTime,
+    userTime,
+    sysTime,
     mbMemory,
-    kbMemory,
     detail
 };
 const std::array<const char*, 12> ResultHeader {
     "Id", "State(Run)", "State(Test)", "Input",
-    "Output", "Answer", "Differ", "Time(ms)",
-    "Time(us)", "Memory(MiB)", "Memory(KiB)", "Details"
+    "Output", "Answer", "Differ", "Real", "User", "System",
+    "Memory(MiB)", "Details"
 };
 
 enum class GroupColumn
@@ -70,7 +70,7 @@ const std::array<const char*, 11> GroupHeader {
 typedef Table<11> GroupTable;
 #else
 const std::array<const char*, 10> GroupHeader {
-    "Id", "InDir", "AnsDir", "Argument",
+    "Id", "Input", "Answer", "Argument",
     "Test command", "Time", "Hard time",
     "Mmory", "Hard memory", "Verbose"
 };
@@ -125,10 +125,10 @@ void TestPoint::writeToTable(ResultTable& dest)
         { ResultColumn::output, std::move(output) },
         { ResultColumn::answer, std::move(answer) },
         { ResultColumn::differ, std::move(diff.differ) },
-        { ResultColumn::msTime, fmt::format("{}/{}/{}", runTime.real / 1000.0, runTime.user / 1000.0, runTime.sys / 1000.0) },
-        { ResultColumn::usTime, fmt::format("{}/{}/{}", runTime.real, runTime.user, runTime.sys) },
-        { ResultColumn::mbMemory, std::to_string(runMemory / 1024.0) },
-        { ResultColumn::kbMemory, std::to_string(runMemory) },
+        { ResultColumn::realTime, fmt::format("{}", runTime.real / 1000.0) },
+        { ResultColumn::userTime, fmt::format("{}", runTime.user / 1000.0) },
+        { ResultColumn::sysTime, fmt::format("{}", runTime.sys / 1000.0) },
+        { ResultColumn::mbMemory, fmt::format("{}", runMemory / 1024.0) },
         { ResultColumn::detail, std::string(runResult[0]->details) } });
 }
 
@@ -220,9 +220,10 @@ void TestGroup::execute()
 {
     tmpl.platform = &platform;
     tmpl.init();
-    std::cout << SGR::TextBlue << SGR::Underline << "[Info] Start testing for group #" << gid << "\n";
+    std::cout << SGR::TextBlue << SGR::Underline << "[Info] Start testing for group #" << gid;
     for (unsigned int i = 0; i < tests.size(); ++i)
     {
+        std::cout.put('\n');
         TestPoint tst(i, gid, TestcaseType(tests[i].first, tests[i].second, tmpl));
         tst.execute(verbose);
         tst.writeToTable(results);
@@ -242,6 +243,7 @@ void TestGroup::printResult(Testcase::Summary& totalSummary)
     results.printAll(std::cout);
     std::cout << "Summary: \n";
     summary.print(std::cout);
+    std::cout.put('\n');
     totalSummary.mergeData(summary);
 }
 void TestGroup::findFile()
@@ -292,7 +294,7 @@ std::pair<bool, std::string> TestGroup::isInclude(const fs::path& p, const Regex
         s = p.string();
     else
         s = p.filename().string();
-    const auto [suc1, val1] = r->eval(s);
+    const auto [suc1, val1] = testPattern->eval(s);
     if (!suc1)
         return std::make_pair(false, "");
     const auto [suc2, val2] = r->eval(s);

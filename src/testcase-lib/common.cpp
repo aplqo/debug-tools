@@ -12,14 +12,14 @@ namespace apdebug::Testcase
     namespace ResultConstant
     {
         const char* name[13] = {
-            "AC", "WA", "Pass", "TLE", "RE",
-            "MLE", "Warn", "UKE", "Hard MLE", "Hard TLE",
-            "Skip", "PV", "Other"
+            "TLE", "MLE", "AC", "WA", "Pass",
+            "RE", "Warn", "Hard MLE", "Hard TLE", "PV",
+            "Other", "Unknown", "Skip"
         };
         const char* color[13] = {
-            SGR::TextGreen, SGR::TextRed, SGR::TextGreen, SGR::TextYellow, SGR::TextPurple,
-            SGR::TextYellow, SGR::TextYellow, SGR::None, SGR::TextRed, SGR::TextRed,
-            SGR::None, SGR::TextRed, SGR::None
+            SGR::TextYellow, SGR::TextYellow, SGR::TextGreen, SGR::TextRed, SGR::TextGreen,
+            SGR::TextPurple, SGR::TextYellow, SGR::TextRed, SGR::TextRed, SGR::TextRed,
+            SGR::None, SGR::None, SGR::None
         };
         const Result hardTLE {
             .type = Result::Type::HardTLE,
@@ -74,10 +74,10 @@ namespace apdebug::Testcase
     }
     std::ostream& operator<<(std::ostream& os, const LimitInfo& lim)
     {
-        os << "[info] Time limit: " << lim.timeLimit / 1000.0 << " ms ( " << lim.timeLimit / 1e6 << " s )\n";
-        os << "[info] Hard time limit: " << lim.hardTimeLimit / 1000.0 << " ms ( " << lim.hardTimeLimit / 1e6 << " s )\n";
-        os << "[info] Memory limit: " << lim.memoryLimit / 1024.0 << " MiB ( " << lim.memoryLimit / (1024 * 1024.0) << " GiB )\n";
-        os << "[info] Hard memory limit: " << lim.hardMemoryLimit / 1024.0 << " MiB ( " << lim.hardMemoryLimit / (1024.0 * 1024) << " GiB)";
+        os << "[info] Time limit: " << lim.timeLimit / 1000.0 << " ms (" << lim.timeLimit / 1e6 << " s)\n";
+        os << "[info] Hard time limit: " << lim.hardTimeLimit / 1000.0 << " ms (" << lim.hardTimeLimit / 1e6 << " s)\n";
+        os << "[info] Memory limit: " << lim.memoryLimit / 1024.0 << " MiB (" << lim.memoryLimit / (1024 * 1024.0) << " GiB)\n";
+        os << "[info] Hard memory limit: " << lim.hardMemoryLimit / 1024.0 << " MiB (" << lim.hardMemoryLimit / (1024.0 * 1024) << " GiB)";
         return os;
     }
 
