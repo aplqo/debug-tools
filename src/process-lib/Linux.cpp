@@ -189,7 +189,7 @@ namespace apdebug::Process
     {
         static const itimerspec stop {};
         cntrl = killParam { .pid = p.nativeHandle, .killed = false };
-        // timer_settime(timer, 0, &spec, nullptr);
+        timer_settime(timer, 0, &spec, nullptr);
         int stat;
         waitpid(p.nativeHandle, &stat, 0);
         if (!cntrl.killed)
