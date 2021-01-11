@@ -11,11 +11,14 @@
 #include <exception>
 using namespace apdebug::Process;
 using namespace apdebug::Logfile;
-static const unsigned int maxStackDumpDepth = 30;
+static constexpr unsigned int maxStackDumpDepth = 30, guardVal1 = 0xcdcdcdcd, guardVal2 = 0xcccccccc;
+static constexpr unsigned int guardByte1 = 0xcd, guardByte2 = 0xcc;
 
-SharedMemory* shm;
-MemoryStream ms;
-TimeUsage startTime;
+static unsigned int guardBefore[8];
+static SharedMemory* shm;
+static MemoryStream ms;
+static TimeUsage startTime;
+static unsigned int guardEnd[8];
 
 void writeString(const std::string& s)
 {
@@ -53,7 +56,7 @@ namespace Judger
             writeString(st[i].name());
             ms.write(st[i].source_line());
         }
-        quick_exit(1);
+        std::_Exit(1);
     }
     extern "C" void stopWatch()
     {
@@ -61,6 +64,15 @@ namespace Judger
         const MemoryUsage m = getMemoryUsage();
         ms.write(t);
         ms.write(m);
+    }
+    inline void checkGuard()
+    {
+        for (unsigned int i : guardBefore)
+            if (i != guardVal1)
+                std::_Exit(guardVal1);
+        for (unsigned int i : guardEnd)
+            if (i != guardVal2)
+                std::_Exit(guardVal2);
     }
     void finishProgram()
     {
@@ -70,6 +82,7 @@ namespace Judger
 
     void signalHandler(int sig)
     {
+        checkGuard();
         ms.write(RStatus::RuntimeError);
         stopWatch();
         ms.write(RtError::Signal);
@@ -92,6 +105,7 @@ namespace Judger
     }
     void fpeHandler(int)
     {
+        checkGuard();
         ms.write(RStatus::RuntimeError);
         stopWatch();
         ms.write(RtError::Sigfpe);
@@ -125,7 +139,9 @@ namespace Judger
     extern "C" int judgeMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[])
     {
         shm = new SharedMemory(argv[argc - 1]);
-        ms.ptr = reinterpret_cast<char*>(shm->ptr);
+        ms.ptr = reinterpret_cast<char*>(shm->ptr) + apdebug::Process::interactArgsSize;
+        memset(guardBefore, guardByte1, sizeof(guardBefore));
+        memset(guardEnd, guardByte2, sizeof(guardEnd));
         registerHandler();
         std::atexit(finishProgram);
         try
@@ -136,19 +152,21 @@ namespace Judger
         }
         catch (const std::exception& e)
         {
+            checkGuard();
             ms.write(RStatus::RuntimeError);
             stopWatch();
             ms.write(RtError::STDExcept);
             writeName(typeid(e).name());
             writeString(e.what());
-            quick_exit(1);
+            std::_Exit(1);
         }
         catch (...)
         {
+            checkGuard();
             ms.write(RStatus::RuntimeError);
             stopWatch();
             ms.write(RtError::UnknownExcept);
-            quick_exit(1);
+            std::_Exit(1);
         }
         return 0;
     }
@@ -175,17 +193,9 @@ namespace Interactor
     }
     extern "C" int interactorMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[])
     {
-        {
-            using namespace apdebug::Process;
-            SharedMemory args(argv[argc - 1]);
-            char tp[shmNameLength + 1];
-            MemoryStream ms { args.ptr };
-            ms.read(judged.nativeHandle);
-            ms.read(tp, shmNameLength);
-            tp[shmNameLength] = '\0';
-            shm = new SharedMemory(tp);
-        }
+        shm = new SharedMemory(argv[argc - 1]);
         ms.ptr = shm->ptr;
+        ms.read(judged.nativeHandle);
         return userMain(argc - 1, argv);
     }
 }

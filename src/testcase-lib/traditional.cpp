@@ -60,10 +60,10 @@ namespace apdebug
         BasicTest::BasicTest(std::string&& input, std::string&& answer, const BasicTemplate& te)
             : BasicTemplate(te)
             , input(input)
+            , output(fmt::format(FMT_COMPILE("{}-{}.out"), platform->threadId, platform->count))
             , answer(answer)
         {
             using namespace fmt::literals;
-            output = input + "-" + platform->threadId + ".out";
             Utility::ReplaceStrict(
                 fmt::make_format_args("input"_a = this->input, "output"_a = output, "answer"_a = this->answer, "thread"_a = platform->threadId),
 #ifdef Interact
@@ -72,6 +72,7 @@ namespace apdebug
                 diff, tmpfiles, program, tester
 #endif
             );
+            ++(platform->count);
             program
                 .appendArgument(platform->sharedMemory.name)
                 .finalizeForExec();
@@ -79,7 +80,7 @@ namespace apdebug
                 tester.finalizeForExec();
 #ifdef Interact
             interactor
-                .appendArgument(platform->interArgs.name)
+                .appendArgument(platform->sharedMemory.name)
                 .finalizeForExec();
 #endif
             platform->memoryProtect.clear();
@@ -96,11 +97,7 @@ namespace apdebug
                 .setRedirect(RedirectType::StdIn, pogi.read)
                 .setRedirect(RedirectType::StdOut, pigo.write);
             const auto p = program.execute();
-            {
-                Process::MemoryStream ms { platform->interArgs.ptr };
-                ms.write(p.nativeHandle);
-                ms.write(platform->sharedMemory.name, Process::shmNameLength);
-            }
+            *reinterpret_cast<Process::Process::NativeHandle*>(platform->sharedMemory.ptr) = p.nativeHandle;
             const auto i = interactor.execute();
             platform->memoryProtect.addProcess(p);
             exitStatus = platform->timeProtect.waitFor(p).second;
@@ -202,7 +199,8 @@ namespace apdebug
                     .type = Result::Type::Unknown,
                     .name = "UKE",
                     .color = SGR::None,
-                    .verbose = fmt::format(FMT_COMPILE("[UKE] Program return code {}"), exitStatus)
+                    .verbose = fmt::format(FMT_COMPILE("[UKE] Program return code {}"), exitStatus),
+                    .details = fmt::format(FMT_COMPILE("Program return code {}"), exitStatus)
                 };
                 runMemory = 0;
                 runTime = Process::TimeUsage {};

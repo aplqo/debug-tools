@@ -129,6 +129,8 @@ namespace apdebug::Process
     };
     TimeUsage getTimeUsage();
     MemoryUsage getMemoryUsage();
+
+    static const unsigned int interactArgsSize = sizeof(Process::NativeHandle);
 }
 
 #endif
