@@ -25,6 +25,7 @@ namespace PublicFiles
     {
         const path c = current_path();
         copy(c / "bin", dest / "bin", copyOpt);
+        copy(c / "lib", dest / "lib", copyOpt);
         copy(c / "debug_tools", dest / "debug_tools", copyOpt);
         copy(c / "config" / ".clang-format", dest, copyOpt);
         switch (sc)
@@ -55,6 +56,7 @@ namespace PublicFiles
     {
         remove_all(dest / "bin");
         remove_all(dest / "debug_tools");
+        remove_all(dest / "lib");
         remove_all(dest / "scripts");
         remove_all(dest / ".config");
         remove(dest / ".clang-format");

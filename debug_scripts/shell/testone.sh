@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./bin/single $1 -in $2.in -out $2.out -ans $2.ans $3 -test './scripts/test.sh' -testargs [ "<input>" "<output>" "<answer>" ]
+./bin/single -program $1 -in $2.in -ans $2.ans -test 'diff' -test-args [ '{output}' '{answer}' -a -w -u --color ]

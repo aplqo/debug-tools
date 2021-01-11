@@ -14,12 +14,15 @@ endif()
 add_library(testtools-lib STATIC ${toolsrc})
 set_standard(testtools-lib)
 target_link_libraries(testtools-lib)
+
 add_library(testcase-lib STATIC ${testsrc})
 set_standard(testcase-lib)
 target_link_libraries(testcase-lib testtools-lib process-lib)
+
 add_library(judge-lib STATIC ${judgesrc})
 target_compile_definitions(judge-lib PUBLIC BOOST_STACKTRACE_USE_BACKTRACE)
 target_link_libraries(judge-lib process-lib)
+install(TARGETS judge-lib DESTINATION lib/)
 
 function(add_target target_name src)
 	add_executable(${target_name} ${src})

@@ -16,4 +16,4 @@ if [ -n "$5" ]
 then
     ansreg="$5"
 fi
-./bin/group $1 -test-regex [ "$regex" -em 1 ';' ] -indir "$2" -in-regex [ "$inreg" -mm  ';' ] -ansdir "$2" -ans-regex [ "$ansreg" -mm ';' ] -test './scripts/test.sh' -testargs [ "<input>" "<output>" "<answer>" ] ';'
+./bin/group -program $1 -test-regex [ "$regex" -em 1 ';' ] -indir "$2" -in-regex [ "$inreg" -mm  ';' ] -ansdir "$2" -ans-regex [ "$ansreg" -mm ';' ] -test diff -test-args [ '{output}' '{answer}' -a -w -u --color ] ';'
