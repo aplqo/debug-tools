@@ -132,6 +132,7 @@ namespace apdebug::Process
     Command& Command::setRedirect(const RedirectType which, const char* file)
     {
         setRedirect(which, open(file, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR));
+        created[static_cast<unsigned int>(which)] = true;
         return *this;
     }
     void Command::parseArgument(int& argc, const char* const argv[])
@@ -159,6 +160,9 @@ namespace apdebug::Process
     }
     Command::~Command()
     {
+        for (unsigned int i = 0; i < 3; ++i)
+            if (created[i])
+                close(fd[i]);
         delete[] pointers;
     }
 
@@ -292,5 +296,10 @@ namespace apdebug::Process
         pipe(fd);
         read = fd[0];
         write = fd[1];
+    }
+    Pipe::~Pipe()
+    {
+        close(read);
+        close(write);
     }
 }

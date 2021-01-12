@@ -76,6 +76,7 @@ namespace apdebug::Process
 
     private:
         int fd[3] { -1, -1, -1 };
+        bool created[3] {};
         std::vector<std::string> args;
         const char** pointers = nullptr; // pointer to args
     };
@@ -124,6 +125,7 @@ namespace apdebug::Process
     {
     public:
         Pipe();
+        ~Pipe();
 
         int read, write;
     };
