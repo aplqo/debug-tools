@@ -80,11 +80,11 @@ typedef Table<10> GroupTable;
 class TestPoint : public TestcaseType
 {
 public:
-    TestPoint(const unsigned int id, const unsigned int gid, TestcaseType&& tst)
-        : TestcaseType(std::move(tst))
+    TestPoint(const unsigned int id, const unsigned int gid, std::string&& input, std::string&& answer, TestTemplate& te)
+        : TestcaseType(std::move(input), std::move(answer), te)
+        , id(id)
+        , gid(gid)
     {
-        this->id = id;
-        this->gid = gid;
     }
     void execute(const bool verbose);
     void writeToTable(ResultTable& dest);
@@ -224,7 +224,7 @@ void TestGroup::execute()
     for (unsigned int i = 0; i < tests.size(); ++i)
     {
         std::cout.put('\n');
-        TestPoint tst(i, gid, TestcaseType(tests[i].first.string(), tests[i].second.string(), tmpl));
+        TestPoint tst(i, gid, tests[i].first.string(), tests[i].second.string(), tmpl);
         tst.execute(verbose);
         tst.writeToTable(results);
         summary.insert(fmt::format(FMT_STRING("{}.{}"), gid, i), tst);
@@ -346,6 +346,7 @@ int main(int argc, char* argv[])
         gtable.printAll(std::cout);
         std::cout.put('\n');
     }
+    Process::systemInit();
     platform.init();
     for (auto& i : grp)
     {

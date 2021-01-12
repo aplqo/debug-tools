@@ -98,7 +98,6 @@ namespace apdebug
         {
         public:
             BasicTest(std::string&& input, std::string&& answer, const BasicTemplate& tmpl);
-            BasicTest(BasicTest&&) = default;
             BasicTest(const BasicTest&) = delete;
             BasicTest& operator=(const BasicTest&) = delete;
             void run();
@@ -141,7 +140,7 @@ namespace apdebug
             };
             struct SummaryEntry
             {
-                unsigned int count;
+                unsigned int count = 0;
                 ValSummary<decltype(Process::TimeUsage::real)> timeReal, timeUser, timeSys;
                 ValSummary<Process::MemoryUsage> memory;
 
