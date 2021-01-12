@@ -1,7 +1,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include "include/process_common.h"
+#include "include/system_common.h"
 #include <filesystem>
 #include <initializer_list>
 #include <ostream>

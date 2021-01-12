@@ -2,7 +2,7 @@
 #define LOGFILE_H
 
 #include "include/testcase.h"
-#include "process.h"
+#include "system.h"
 
 namespace apdebug
 {
