@@ -1,5 +1,0 @@
-function(set_standard target_name)
-	set(TARGET ${target_name} PROPERTY CXX_STANDARD 20)
-	set(TARGET ${target_name} PROPERTY CXX_STANDARD_REQUIRED ON)
-	target_compile_features(${target_name} PUBLIC "cxx_std_20")
-endfunction()

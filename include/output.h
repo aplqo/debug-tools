@@ -150,10 +150,15 @@ namespace apdebug::Output
     {
         namespace info = apdebug::info;
         os << std::endl;
-        os << "Debug tool: " << str << std::endl;
-        os << "Version " << info::branch << "@" << info::hash << " " << info::version << std::endl;
-        os << "Build compiler: " << info::compier << std::endl;
-        os << "Build on " << __TIME__ << " " << __DATE__ << " by " << info::builder << std::endl;
+        os << "Debug tool: " << str;
+#ifdef Interact
+        os << " interactive\n";
+#else
+        os << " traditional\n";
+#endif
+        os << "Version " << info::branch << "@" << info::hash << " " << info::version << "\n";
+        os << "Build compiler: " << info::compier << "\n";
+        os << "Build on " << __TIME__ << " " << __DATE__ << " by " << info::builder << "\n";
         os << std::endl;
     }
 }

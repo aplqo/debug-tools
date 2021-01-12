@@ -10,7 +10,7 @@ namespace apdebug
         static const char* version = "@ver@";
         static const char* builder = "@build@";
         static const char* compier = "@CMAKE_CXX_COMPILER_ID@ @CMAKE_CXX_COMPILER_VERSION@";
-        static const char* buildArgs = "@buildArgs@";
+        static const char* buildArgs = "coloc=@color@ cgroupVersion=@cgroupVersion@ static=@static_link@";
     }
 }
 #endif
