@@ -224,7 +224,7 @@ void TestGroup::execute()
     for (unsigned int i = 0; i < tests.size(); ++i)
     {
         std::cout.put('\n');
-        TestPoint tst(i, gid, TestcaseType(tests[i].first, tests[i].second, tmpl));
+        TestPoint tst(i, gid, TestcaseType(tests[i].first.string(), tests[i].second.string(), tmpl));
         tst.execute(verbose);
         tst.writeToTable(results);
         summary.insert(fmt::format(FMT_STRING("{}.{}"), gid, i), tst);

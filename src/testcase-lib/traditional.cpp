@@ -2,7 +2,7 @@
 #include "include/output.h"
 #include "include/testcase.h"
 #include "include/utility.h"
-#include "process.h"
+#include "system.h"
 #include <cstring>
 #include <filesystem>
 #include <initializer_list>

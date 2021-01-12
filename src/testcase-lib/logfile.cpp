@@ -63,7 +63,7 @@ namespace apdebug::Logfile
             ms.read(addr);
             std::string &&file = readString(ms), &&name = readString(ms);
             if (fs::exists(file))
-                file = fs::relative(file, cur);
+                file = fs::relative(file, cur).string();
             maxFile = std::max(maxFile, file.size());
             maxName = std::max(maxName, name.size());
             ms.read(line);

@@ -1,5 +1,5 @@
 #include "include/utility.h"
-#include "process.h"
+#include "system.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -148,6 +148,8 @@ namespace apdebug::Process
         {
             if (!std::strcmp(argv[argc], "]") && !(--stk))
                 break;
+            else if (!std::strcmp(argv[argc], "["))
+                ++stk;
             args.push_back(argv[argc]);
         }
     }

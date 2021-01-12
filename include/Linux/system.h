@@ -61,7 +61,6 @@ namespace apdebug::Process
         Command() = default;
         Command(const Command&) = default;
         Command(Command&&);
-        void init();
         Command& appendArgument(const std::string_view val);
         Command& replace(fmt::format_args args);
         Command& finalizeForExec();
@@ -131,6 +130,7 @@ namespace apdebug::Process
     };
     TimeUsage getTimeUsage();
     std::pair<TimeUsage, MemoryUsage> getUsage();
+    inline void systemInit() { }
 
     static const unsigned int interactArgsSize = sizeof(Process::NativeHandle);
 }

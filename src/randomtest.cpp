@@ -144,8 +144,8 @@ void TestPointTemplate::print(std::ostream& os) const
 
 TestPoint::TestPoint(const unsigned int tid, const unsigned int id, TestPointTemplate& tp)
     : TestcaseType(
-        tp.tmpdir / fmt::format(FMT_COMPILE("{}-{}.in"), tp.platform->threadId, id),
-        tp.tmpdir / fmt::format(FMT_COMPILE("{}-{}.ans"), tp.platform->threadId, id),
+        (tp.tmpdir / fmt::format(FMT_COMPILE("{}-{}.in"), tp.platform->threadId, id)).string(),
+        (tp.tmpdir / fmt::format(FMT_COMPILE("{}-{}.ans"), tp.platform->threadId, id)).string(),
         tp)
     , tid(tid)
     , id(id)

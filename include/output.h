@@ -40,7 +40,7 @@ namespace apdebug::Output
     }
 
     template <class... Args>
-    std::string writeToString(Args... args)
+    std::string writeToString(Args&&... args)
     {
         std::ostringstream os;
         (os << ... << args);

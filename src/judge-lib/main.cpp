@@ -1,5 +1,5 @@
 #include "include/logfile.h"
-#include "process.h"
+#include "system.h"
 
 #include <boost/core/demangle.hpp>
 #include <boost/stacktrace.hpp>
@@ -58,13 +58,6 @@ namespace Judger
         }
         std::_Exit(1);
     }
-    extern "C" void stopWatch()
-    {
-        const auto [ct, cm] = getUsage();
-        const TimeUsage t = ct - startTime;
-        ms.write(t);
-        ms.write(cm);
-    }
     inline void checkGuard()
     {
         for (unsigned int i : guardBefore)
@@ -74,17 +67,23 @@ namespace Judger
             if (i != guardVal2)
                 std::_Exit(guardVal2);
     }
+    extern "C" void stopWatch(const RStatus stat)
+    {
+        const auto [ct, cm] = getUsage();
+        const TimeUsage t = ct - startTime;
+        checkGuard();
+        ms.write(stat);
+        ms.write(t);
+        ms.write(cm);
+    }
     void finishProgram()
     {
-        ms.write(RStatus::Return);
-        stopWatch();
+        stopWatch(RStatus::Return);
     }
 
     void signalHandler(int sig)
     {
-        checkGuard();
-        ms.write(RStatus::RuntimeError);
-        stopWatch();
+        stopWatch(RStatus::RuntimeError);
         ms.write(RtError::Signal);
         switch (sig)
         {
@@ -105,9 +104,7 @@ namespace Judger
     }
     void fpeHandler(int)
     {
-        checkGuard();
-        ms.write(RStatus::RuntimeError);
-        stopWatch();
+        stopWatch(RStatus::RuntimeError);
         ms.write(RtError::Sigfpe);
         uint32_t v = 0;
         if (fetestexcept(FE_DIVBYZERO))
@@ -139,7 +136,7 @@ namespace Judger
     extern "C" int judgeMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[])
     {
         shm = new SharedMemory(argv[argc - 1]);
-        ms.ptr = reinterpret_cast<char*>(shm->ptr) + apdebug::Process::interactArgsSize;
+        ms.ptr = shm->ptr + apdebug::Process::interactArgsSize;
         memset(guardBefore, guardByte1, sizeof(guardBefore));
         memset(guardEnd, guardByte2, sizeof(guardEnd));
         registerHandler();
@@ -152,9 +149,7 @@ namespace Judger
         }
         catch (const std::exception& e)
         {
-            checkGuard();
-            ms.write(RStatus::RuntimeError);
-            stopWatch();
+            stopWatch(RStatus::RuntimeError);
             ms.write(RtError::STDExcept);
             writeName(typeid(e).name());
             writeString(e.what());
@@ -162,9 +157,7 @@ namespace Judger
         }
         catch (...)
         {
-            checkGuard();
-            ms.write(RStatus::RuntimeError);
-            stopWatch();
+            stopWatch(RStatus::RuntimeError);
             ms.write(RtError::UnknownExcept);
             std::_Exit(1);
         }
@@ -178,8 +171,7 @@ namespace Interactor
     extern "C" void beginReportFail(const uint32_t id)
     {
         judged.terminate();
-        ms.write(id);
-        Judger::stopWatch();
+        Judger::stopWatch(static_cast<RStatus>(id));
     }
     extern "C" void endReportFail()
     {
