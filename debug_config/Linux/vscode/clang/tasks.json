@@ -2,16 +2,19 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "type": "shell",
+            "type": "cppbuild",
             "label": "C/C++: clang++ build active file(test)",
             "command": "/usr/bin/clang++",
             "args": [
                 "-DAPTEST",
                 "${file}",
-                "-static",
                 "-I${workspaceFolder}",
                 "-L${workspaceFolder}/lib",
                 "-ljudge-lib",
+                "-lsystem-lib",
+                "-lbacktrace",
+                "-ldl",
+                "-lrt",
                 "-std=c++11",
                 "-Wall",
                 "-Wextra",
@@ -29,7 +32,7 @@
             "group": "build"
         },
         {
-            "type": "shell",
+            "type": "cppbuild",
             "label": "C/C++: clang++ build active file(debug)",
             "command": "/usr/bin/clang++",
             "args": [
