@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     }
     tmpl.platform = &plat;
     plat.init();
-    Process::systemInit();
+    System::systemInit();
     tmpl.init();
     TestcaseType test(std::move(input), std::move(answer), tmpl);
     test.printRunInfo(cout);

@@ -67,7 +67,7 @@ endif()
 option(interact "whether support interactive problem" off)
 if(interact)
 	message("Support interactive problem")
-	add_definitions(Interact)
+	add_compile_definitions(Interact)
 endif()
 
 include_directories(".")

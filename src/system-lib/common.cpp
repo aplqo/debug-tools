@@ -3,7 +3,7 @@
 #include <sstream>
 #include <thread>
 
-namespace apdebug::Process
+namespace apdebug::System
 {
     std::string GetThreadId()
     {

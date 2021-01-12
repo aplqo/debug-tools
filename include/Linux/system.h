@@ -16,7 +16,7 @@
 
 #include <fmt/format.h>
 
-namespace apdebug::Process
+namespace apdebug::System
 {
     const unsigned int shmNameLength = 8;
 

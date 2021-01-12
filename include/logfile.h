@@ -49,9 +49,9 @@ namespace apdebug
             Sigsegv = 0x04
         };
 
-        const Testcase::Result* parseRE(Process::MemoryStream& ms, Testcase::Result*& cur);
-        const Testcase::Result* parseWarn(Process::MemoryStream& ms, Testcase::Result*& cur);
-        std::string readString(Process::MemoryStream& ms);
+        const Testcase::Result* parseRE(System::MemoryStream& ms, Testcase::Result*& cur);
+        const Testcase::Result* parseWarn(System::MemoryStream& ms, Testcase::Result*& cur);
+        std::string readString(System::MemoryStream& ms);
     }
 }
 

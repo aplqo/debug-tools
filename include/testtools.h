@@ -17,7 +17,7 @@ namespace apdebug::TestTools
     public:
         AutoDiff& replace(fmt::format_args args);
         void parseArgument(int& argc, const char* const argv[]);
-        void check(Process::Command& cmd);
+        void check(System::Command& cmd);
         void release();
 
         std::string differ;

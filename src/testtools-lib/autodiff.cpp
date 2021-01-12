@@ -42,7 +42,7 @@ namespace apdebug::TestTools
                 file = Utility::parseCmdArray<std::string>(++argc, argv);
         }
     }
-    void AutoDiff::check(Process::Command& cmd)
+    void AutoDiff::check(System::Command& cmd)
     {
         if (!enable)
             return;
@@ -53,7 +53,7 @@ namespace apdebug::TestTools
                 std::cout << SGR::TextCyan << "Autodiff: Redirect stdout to " << differ << "\n";
                 std::cout << SGR::TextBlue << "Autodiff: Test command " << cmd << SGR::None << std::endl;
             }
-            cmd.setRedirect(Process::RedirectType::StdOut, differ.c_str());
+            cmd.setRedirect(System::RedirectType::StdOut, differ.c_str());
         }
         else
         {
@@ -73,7 +73,7 @@ namespace apdebug::TestTools
                 std::cout << SGR::TextBlue << "Autodiff: Test command " << cmd << SGR::None << std::endl;
             }
             if (exceed)
-                cmd.setRedirect(Process::RedirectType::StdOut, differ.c_str());
+                cmd.setRedirect(System::RedirectType::StdOut, differ.c_str());
         }
     }
     void AutoDiff::release()

@@ -51,7 +51,7 @@ enum class ResultColumn
 };
 struct TestPointTemplate : public TestTemplateBase
 {
-    Process::Command generator, validor, standard;
+    System::Command generator, validor, standard;
     fs::path tmpdir;
     bool created;
 
@@ -73,7 +73,7 @@ public:
 protected:
     void release();
     unsigned int tid, id;
-    Process::Command generator, validor, standard;
+    System::Command generator, validor, standard;
 };
 static const Testcase::Result judgeFail {
     .type = Testcase::Result::Type::Other,
@@ -84,7 +84,7 @@ static const Testcase::Result judgeFail {
 
 void TestPointTemplate::globalInit()
 {
-    Process::systemInit();
+    System::systemInit();
     if (!fs::exists(tmpdir))
     {
         fs::create_directory(tmpdir);
@@ -171,7 +171,7 @@ bool TestPoint::generate()
         return true;
     }
     unsigned int fv = maxVaRetries, fs = maxStdRetries;
-    static auto tryRun = [](Process::Command& r, unsigned int& i) -> bool {
+    static auto tryRun = [](System::Command& r, unsigned int& i) -> bool {
         if (r.path.empty())
             return true;
         if (r.execute().wait())

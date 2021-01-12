@@ -9,7 +9,7 @@
 #include <iomanip>
 #include <thread>
 
-namespace apdebug::Process
+namespace apdebug::System
 {
     static const size_t sharedMemorySize = 1 * 1024 * 1024; // 1 MiB
     static const SECURITY_ATTRIBUTES attrInherit {

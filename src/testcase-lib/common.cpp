@@ -83,7 +83,7 @@ namespace apdebug::Testcase
 
     void Platform::init()
     {
-        threadId = Process::GetThreadId();
+        threadId = System::GetThreadId();
         timeProtect.create();
     }
 }

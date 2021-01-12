@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <exception>
-using namespace apdebug::Process;
+using namespace apdebug::System;
 using namespace apdebug::Logfile;
 static constexpr unsigned int maxStackDumpDepth = 30, guardVal1 = 0xcdcdcdcd, guardVal2 = 0xcccccccc;
 static constexpr unsigned int guardByte1 = 0xcd, guardByte2 = 0xcc;
@@ -136,7 +136,7 @@ namespace Judger
     extern "C" int judgeMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[])
     {
         shm = new SharedMemory(argv[argc - 1]);
-        ms.ptr = shm->ptr + apdebug::Process::interactArgsSize;
+        ms.ptr = shm->ptr + apdebug::System::interactArgsSize;
         memset(guardBefore, guardByte1, sizeof(guardBefore));
         memset(guardEnd, guardByte2, sizeof(guardEnd));
         registerHandler();

@@ -6,7 +6,7 @@
 #include <random>
 #include <string>
 
-namespace apdebug::Process
+namespace apdebug::System
 {
     class MemoryStream
     {

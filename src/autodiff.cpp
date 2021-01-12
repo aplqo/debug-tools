@@ -8,7 +8,7 @@ using apdebug::Output::PrintVersion;
 using std::cout;
 namespace SGR = apdebug::Output::SGR;
 
-apdebug::Process::Command exe;
+apdebug::System::Command exe;
 apdebug::TestTools::AutoDiff diff;
 
 int main(int argc, char* argv[])

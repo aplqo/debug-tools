@@ -25,7 +25,7 @@
 
 namespace fs = std::filesystem;
 
-namespace apdebug::Process
+namespace apdebug::System
 {
     static const size_t SharedMemorySize = 1 * 1024 * 1024; // 1 MiB
     static const size_t cgroupNamelength = 20;

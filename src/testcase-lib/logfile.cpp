@@ -11,7 +11,7 @@
 #include <fmt/compile.h>
 #include <fmt/format.h>
 
-using apdebug::Process::MemoryStream;
+using apdebug::System::MemoryStream;
 using apdebug::Testcase::Result;
 namespace fs = std::filesystem;
 

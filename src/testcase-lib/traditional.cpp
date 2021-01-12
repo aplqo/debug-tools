@@ -88,8 +88,8 @@ namespace apdebug
 #ifdef Interact
         void BasicTest::run()
         {
-            using Process::RedirectType;
-            Process::Pipe pigo, pogi; // program in grader out, program out grader in
+            using System::RedirectType;
+            System::Pipe pigo, pogi; // program in grader out, program out grader in
             program
                 .setRedirect(RedirectType::StdIn, pigo.read)
                 .setRedirect(RedirectType::StdOut, pogi.write);
@@ -97,7 +97,7 @@ namespace apdebug
                 .setRedirect(RedirectType::StdIn, pogi.read)
                 .setRedirect(RedirectType::StdOut, pigo.write);
             const auto p = program.execute();
-            *reinterpret_cast<Process::Process::NativeHandle*>(platform->sharedMemory.ptr) = p.nativeHandle;
+            *reinterpret_cast<System::Process::NativeHandle*>(platform->sharedMemory.ptr) = p.nativeHandle;
             const auto i = interactor.execute();
             platform->memoryProtect.addProcess(p);
             exitStatus = platform->timeProtect.waitFor(p).second;
@@ -111,8 +111,8 @@ namespace apdebug
         void BasicTest::run()
         {
             program
-                .setRedirect(Process::RedirectType::StdIn, input.c_str())
-                .setRedirect(Process::RedirectType::StdOut, output.c_str());
+                .setRedirect(System::RedirectType::StdIn, input.c_str())
+                .setRedirect(System::RedirectType::StdOut, output.c_str());
             const auto p = program.execute();
             platform->memoryProtect.addProcess(p);
             exitStatus = platform->timeProtect.waitFor(p).second;
@@ -134,10 +134,10 @@ namespace apdebug
                 accept = runPass = false;
                 finalResult = runResult[0] = &ResultConstant::hardMLE;
                 runMemory = hardMemoryLimit;
-                runTime = Process::TimeUsage {};
+                runTime = System::TimeUsage {};
                 return;
             }
-            Process::MemoryStream ms { platform->sharedMemory.ptr + Process::interactArgsSize };
+            System::MemoryStream ms { platform->sharedMemory.ptr + System::interactArgsSize };
             using Logfile::RStatus;
             RStatus stat;
             ms.read(stat);
@@ -203,7 +203,7 @@ namespace apdebug
                     .details = fmt::format(FMT_COMPILE("Program return code {}"), exitStatus)
                 };
                 runMemory = 0;
-                runTime = Process::TimeUsage {};
+                runTime = System::TimeUsage {};
                 runResult[0] = cur++;
             err:
                 accept = runPass = false;

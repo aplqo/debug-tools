@@ -15,7 +15,7 @@ namespace apdebug
 {
     namespace Testcase
     {
-        static const inline Process::MemoryUsage defaultMemory = Process::MemoryUsage(1024) * 1024 * 3;
+        static const inline System::MemoryUsage defaultMemory = System::MemoryUsage(1024) * 1024 * 3;
         static const inline unsigned long long defaultTime = 1000000;
 
         struct Result
@@ -55,7 +55,7 @@ namespace apdebug
         struct LimitInfo
         {
             unsigned long long timeLimit = defaultTime, hardTimeLimit = defaultTime * 10;
-            Process::MemoryUsage memoryLimit = defaultMemory, hardMemoryLimit = 1024 * 1024 * 3;
+            System::MemoryUsage memoryLimit = defaultMemory, hardMemoryLimit = 1024 * 1024 * 3;
 
             bool parseArgument(int& argc, const char* const argv[]);
             friend std::ostream& operator<<(std::ostream& os, const LimitInfo& lim);
@@ -64,8 +64,8 @@ namespace apdebug
         {
             bool runPass = true, testPass = true, accept = true;
             const Result *runResult[3] {}, *testResult = nullptr, *finalResult;
-            Process::TimeUsage runTime;
-            Process::MemoryUsage runMemory;
+            System::TimeUsage runTime;
+            System::MemoryUsage runMemory;
 
         protected:
             Result mem[4], *cur = mem;
@@ -73,9 +73,9 @@ namespace apdebug
         struct Platform
         {
             std::string threadId;
-            Process::TimeLimit timeProtect;
-            Process::MemoryLimit memoryProtect;
-            Process::SharedMemory sharedMemory;
+            System::TimeLimit timeProtect;
+            System::MemoryLimit memoryProtect;
+            System::SharedMemory sharedMemory;
             unsigned int count = 0;
 
             void init();
@@ -83,9 +83,9 @@ namespace apdebug
 
         struct BasicTemplate : public LimitInfo
         {
-            Process::Command program, tester;
+            System::Command program, tester;
 #ifdef Interact
-            Process::Command interactor;
+            System::Command interactor;
 #endif
             TestTools::AutoDiff diff;
             TestTools::TemporaryFile tmpfiles;
@@ -141,8 +141,8 @@ namespace apdebug
             struct SummaryEntry
             {
                 unsigned int count = 0;
-                ValSummary<decltype(Process::TimeUsage::real)> timeReal, timeUser, timeSys;
-                ValSummary<Process::MemoryUsage> memory;
+                ValSummary<decltype(System::TimeUsage::real)> timeReal, timeUser, timeSys;
+                ValSummary<System::MemoryUsage> memory;
 
                 void update(std::shared_ptr<std::string>& s, const TestResult& tst);
             } entries[ResultConstant::TypeNumber + 1];
