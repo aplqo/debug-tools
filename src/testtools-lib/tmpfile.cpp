@@ -23,8 +23,13 @@ namespace apdebug::TestTools
         enable = true;
         for (; !strcmp(argv[argc], "]"); ++argc)
         {
-            const char* const cptr = argv[argc++];
-            files[cptr[1] == 'T'][cptr[2] == 'P'][cptr[3] == 'P'] = parseCmdArray<std::string>(argc, argv);
+            if (!strcmp(argv[argc], "-disable"))
+                enable = false;
+            else
+            {
+                const char* const cptr = argv[argc++];
+                files[cptr[1] == 'T'][cptr[2] == 'P'][cptr[3] == 'P'] = parseCmdArray<std::string>(argc, argv);
+            }
         }
     }
     void TemporaryFile::release(const Phase p, const bool pass, const bool accept)

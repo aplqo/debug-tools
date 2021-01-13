@@ -40,6 +40,8 @@ namespace apdebug::TestTools
                 differ = argv[++argc];
             else if (!strcmp(argv[argc], "-files"))
                 file = Utility::parseCmdArray<std::string>(++argc, argv);
+            else if (!strcmp(argv[argc], "-disable"))
+                enable = false;
         }
     }
     void AutoDiff::check(System::Command& cmd)
