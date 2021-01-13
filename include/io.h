@@ -38,10 +38,12 @@ namespace apdebug
         {
             namespace info = apdebug::info;
             os << "\nDebug tool: " << str;
-#ifdef Interact
-            os << " interactive\n";
+#if defined Interact
+            os << " (interactive)\n";
+#elif defined Tradition
+            os << " (traditional)\n";
 #else
-            os << " traditional\n";
+            os << "\n";
 #endif
             os << "Version " << info::branch << "@" << info::hash << " " << info::version << "\n";
             os << "Build compiler: " << info::compier << "\n";
