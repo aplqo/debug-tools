@@ -33,9 +33,9 @@ namespace apdebug::Testcase
     void Summary::ValSummary<T>::mergeData(const ValSummary& other)
     {
         sum += other.sum;
-        if (other.min.val <= min.val)
+        if (other.min.val <= min.val && other.min.from)
             min = other.min;
-        if (other.max.val >= max.val)
+        if (other.max.val >= max.val && other.min.from)
             max = other.max;
     }
     template <class T>
@@ -62,6 +62,8 @@ namespace apdebug::Testcase
         {
             auto& ours = entries[i];
             const auto& theirs = other.entries[i];
+            if (!theirs.count)
+                continue;
             ours.count += theirs.count;
             ours.timeReal.mergeData(theirs.timeReal);
             ours.timeUser.mergeData(theirs.timeUser);

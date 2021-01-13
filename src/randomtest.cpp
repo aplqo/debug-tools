@@ -281,7 +281,7 @@ void PrintThread<false>()
         }
         std::this_thread::sleep_for(print_duration);
     }
-    std::cout.put('\n');
+    std::cout << SGR::None << "\n";
 }
 template <bool realTime>
 void threadMain(const unsigned int tid)
@@ -407,5 +407,6 @@ int main(int argc, char* argv[])
         std::cout << SGR::TextCyan << "\n[Info] Test passed removed temporary directory.";
         remove_all(global.tmpdir);
     }
+    std::cout.put('\n');
     return 0;
 }
