@@ -24,16 +24,16 @@ namespace apdebug::Utility
     }
     inline bool removeFile(std::filesystem::path& s)
     {
-        namespace fs = std::filesystem;
-        if (fs::exists(s))
+        if (std::filesystem::remove(s))
         {
-            fs::remove(s);
             s = "<released>";
             return true;
         }
         else
+        {
             s = "<unused>";
-        return false;
+            return false;
+        }
     }
 } // namespace apdebug
 

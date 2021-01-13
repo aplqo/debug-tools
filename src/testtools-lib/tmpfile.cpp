@@ -37,8 +37,7 @@ namespace apdebug::TestTools
         if (!enable)
             return;
         for (const auto& i : files[p][pass][accept])
-            if (fs::exists(i))
-                fs::remove(i);
+            fs::remove(i);
     }
 
 }

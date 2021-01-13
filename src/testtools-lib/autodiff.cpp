@@ -61,11 +61,14 @@ namespace apdebug::TestTools
         {
             const std::filesystem::path* exceed = nullptr;
             for (const auto& i : file)
-                if (fs::file_size(i) > size)
+            {
+                std::error_code ec;
+                if (fs::file_size(i, ec) > size && !ec)
                 {
                     exceed = &i;
                     break;
                 }
+            }
             if (verbose)
             {
                 std::cout << SGR::TextCyan << "Autodiff: File size limit " << size << " byte\n";
