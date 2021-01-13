@@ -2,7 +2,6 @@
 #define TESTCASE_H
 
 #include "include/define.h"
-#include "include/output.h"
 #include "include/testtools.h"
 #include "system.h"
 #include <memory>

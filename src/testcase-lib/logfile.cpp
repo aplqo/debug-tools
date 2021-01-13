@@ -1,5 +1,5 @@
 #include "include/logfile.h"
-#include "include/output.h"
+#include "include/color.h"
 
 #include <algorithm>
 #include <cmath>

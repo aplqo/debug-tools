@@ -1,5 +1,6 @@
+#include "include/color.h"
 #include "include/define.h"
-#include "include/output.h"
+#include "include/io.h"
 #include "include/testcase.h"
 #include <cstring>
 #include <filesystem>

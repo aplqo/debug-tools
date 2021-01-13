@@ -1,24 +1,27 @@
+#include "include/init-list.h"
 #include "include/init.h"
 #include "include/utility.h"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
-using apdebug::Utility::readFileVal;
-using apdebug::Utility::writeFile;
+using apdebug::Input::readFileVal;
+using apdebug::Output::writeFile;
 using std::cout;
 using std::string;
 using std::unique_ptr;
 using std::filesystem::path;
 namespace apdebug::init
 {
-
+    template class list<compiler*>;
     list<compiler*>* shared()
     {
         static unique_ptr<list<compiler*>> obj(new list<compiler*>("Shared"));
         return obj.get();
     }
+    template class list<editor*>;
     list<editor*>* editors()
     {
         static unique_ptr<list<editor*>> obj(new list<editor*>("Editors"));

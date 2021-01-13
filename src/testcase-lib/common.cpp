@@ -1,4 +1,4 @@
-#include "include/output.h"
+#include "include/color.h"
 #include "include/testcase.h"
 #include <cstring>
 #include <ostream>

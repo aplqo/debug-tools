@@ -1,5 +1,7 @@
+#include "include/color.h"
 #include "include/define.h"
-#include "include/output.h"
+#include "include/io.h"
+#include "include/table.h"
 #include "include/testcase.h"
 #include "include/utility.h"
 
@@ -26,7 +28,7 @@ typedef Testcase::BasicTest TestcaseType;
 
 const std::chrono::milliseconds print_duration(100);
 const unsigned int maxStdRetries = 20, maxVaRetries = 20;
-typedef Output::Table<12> ResultTable;
+typedef Table::Table<12> ResultTable;
 ResultTable results(std::array<const char*, 12> {
                         "Id", "State(Run)", "State(Test)",
                         "Input", "Output", "Answer", "Diff",
@@ -156,7 +158,7 @@ TestPoint::TestPoint(const unsigned int tid, const unsigned int id, TestPointTem
 {
     using namespace fmt::literals;
     this->id = id;
-    Utility::ReplaceStrict(
+    System::ReplaceStrict(
         fmt::make_format_args("input"_a = input, "output"_a = output, "answer"_a = answer, "thread"_a = tp.platform->threadId),
         generator, validor, standard);
     generator.finalizeForExec();

@@ -1,6 +1,8 @@
+#include "include/color.h"
 #include "include/define.h"
-#include "include/output.h"
+#include "include/io.h"
 #include "include/regexseq.h"
+#include "include/table.h"
 #include "include/testcase.h"
 #include <algorithm>
 #include <cstring>
@@ -16,14 +18,13 @@ using apdebug::regex_seq::RegexSeq;
 using namespace apdebug;
 namespace fs = std::filesystem;
 namespace SGR = Output::SGR;
-using Output::Table;
 
 typedef Testcase::BasicTemplate TestTemplate;
 typedef Testcase::BasicTest TestcaseType;
 
 Testcase::Platform platform;
 
-typedef Table<12> ResultTable;
+typedef Table::Table<12> ResultTable;
 enum class ResultColumn
 {
     id,
@@ -67,14 +68,14 @@ const std::array<const char*, 11> GroupHeader {
     "Test command", "Time", "Hard time",
     "Memory", "Hard memory", "Verbose"
 };
-typedef Table<11> GroupTable;
+typedef Table::Table<11> GroupTable;
 #else
 const std::array<const char*, 10> GroupHeader {
     "Id", "Input", "Answer", "Argument",
     "Test command", "Time", "Hard time",
     "Mmory", "Hard memory", "Verbose"
 };
-typedef Table<10> GroupTable;
+typedef Table::Table<10> GroupTable;
 #endif
 
 class TestPoint : public TestcaseType

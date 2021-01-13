@@ -1,4 +1,4 @@
-#include "include/utility.h"
+#include "include/io.h"
 #include "system.h"
 
 #include <algorithm>
@@ -243,20 +243,20 @@ namespace apdebug::System
     {
 #if cgroupVersion == 1
         if (swapAccount)
-            Utility::writeFile(cgroup / "memory.memsw.limit_in_bytes", kb * 1024);
+            Output::writeFile(cgroup / "memory.memsw.limit_in_bytes", kb * 1024);
         else
         {
-            Utility::writeFile(cgroup / "memory.limit_in_bytes", kb * 1024);
-            Utility::writeFile(cgroup / "memory.swappiness", 0);
+            Output::writeFile(cgroup / "memory.limit_in_bytes", kb * 1024);
+            Output::writeFile(cgroup / "memory.swappiness", 0);
         }
 #else
-        Utility::writeFile(cgroup / "memory.max", kb * 1024);
-        Utility::writeFile(cgroup / "memory.swap.max", 0);
+        Output::writeFile(cgroup / "memory.max", kb * 1024);
+        Output::writeFile(cgroup / "memory.swap.max", 0);
 #endif
     }
     void MemoryLimit::addProcess(const Process& p)
     {
-        Utility::writeFile(cgroup / "cgroup.procs", p.nativeHandle);
+        Output::writeFile(cgroup / "cgroup.procs", p.nativeHandle);
     }
     bool MemoryLimit::isExceed()
     {

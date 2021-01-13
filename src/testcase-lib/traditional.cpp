@@ -1,5 +1,5 @@
+#include "include/color.h"
 #include "include/logfile.h"
-#include "include/output.h"
 #include "include/testcase.h"
 #include "include/utility.h"
 #include "system.h"
@@ -64,7 +64,7 @@ namespace apdebug
             , answer(answer)
         {
             using namespace fmt::literals;
-            Utility::ReplaceStrict(
+            System::ReplaceStrict(
                 fmt::make_format_args("input"_a = this->input, "output"_a = output, "answer"_a = this->answer, "thread"_a = platform->threadId),
 #ifdef Interact
                 diff, tmpfiles, program, tester, interactor

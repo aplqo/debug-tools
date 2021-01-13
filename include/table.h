@@ -1,52 +1,18 @@
-#ifndef OUTPUT_H
-#define OUTPUT_H
+#ifndef TABLE_H
+#define TABLE_H
 
-#if __cplusplus < 201103L
-#error ISO c++11 is required to use test output!
-#endif
-
-#include "include/define.h"
+#include "include/color.h"
+#include "include/io.h"
 
 #include <array>
 #include <concepts>
-#include <cstring>
-#include <initializer_list>
 #include <list>
 #include <ostream>
-#include <sstream>
-#include <type_traits>
+#include <string>
 
-namespace apdebug::Output
+namespace apdebug::Table
 {
-    /*-----ecma-48 SGR(Select Graphic Rendition)-----*/
-    namespace SGR
-    {
-#ifdef COLOR
-#define defSGR(name, code) const static inline char name[] = "\033[" #code "m"
-#else
-#define defSGR(name, code) const static inline char name[] = "";
-#endif
-        defSGR(None, 0);
-        defSGR(TextRed, 31);
-        defSGR(TextGreen, 92);
-        defSGR(TextYellow, 33);
-        defSGR(TextBlue, 94);
-        defSGR(TextPurple, 95);
-        defSGR(TextCyan, 36);
-        defSGR(Bold, 1);
-        defSGR(Underline, 4);
-        defSGR(CrossOut, 9);
-#undef defColor
-    }
-
-    template <class... Args>
-    std::string writeToString(Args&&... args)
-    {
-        std::ostringstream os;
-        (os << ... << args);
-        return os.str();
-    }
-    /*-----Print table-----*/
+    namespace SGR = Output::SGR;
     template <class T>
     concept ColumnId = std::convertible_to<T, unsigned int> || requires { typename std::is_enum<T>::value_type; };
     template <class T>
@@ -79,7 +45,7 @@ namespace apdebug::Output
             for (unsigned int i = 1; i <= siz; ++i)
             {
                 for (unsigned int j = 0; j < width[i]; ++j)
-                    os << "-";
+                    os << "─";
                 os << "  ";
             }
             os << SGR::None << "\n";
@@ -144,22 +110,6 @@ namespace apdebug::Output
     };
     template <size_t siz, ColumnData T>
     Table(const std::array<const char*, siz>&, T &&) -> Table<siz>;
-
-    /*-----Print version info-----*/
-    static void PrintVersion(const char* str, std::ostream& os)
-    {
-        namespace info = apdebug::info;
-        os << std::endl;
-        os << "Debug tool: " << str;
-#ifdef Interact
-        os << " interactive\n";
-#else
-        os << " traditional\n";
-#endif
-        os << "Version " << info::branch << "@" << info::hash << " " << info::version << "\n";
-        os << "Build compiler: " << info::compier << "\n";
-        os << "Build on " << __TIME__ << " " << __DATE__ << " by " << info::builder << "\n";
-        os << std::endl;
-    }
 }
+
 #endif

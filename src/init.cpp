@@ -1,5 +1,5 @@
 #include "include/init.h"
-#include "include/output.h"
+#include "include/io.h"
 #include "include/utility.h"
 #include <cstring>
 #include <filesystem>
@@ -9,8 +9,8 @@
 using namespace apdebug::init;
 using namespace std;
 using namespace std::filesystem;
-using apdebug::Utility::readFileVal;
-using apdebug::Utility::writeFile;
+using apdebug::Input::readFileVal;
+using apdebug::Output::writeFile;
 const auto copyOpt = copy_options::recursive | copy_options::overwrite_existing;
 
 enum class Script

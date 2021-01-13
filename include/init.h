@@ -1,12 +1,15 @@
 #ifndef INIT_H
 #define INIT_H
 
-#include "include/output.h"
+#include "include/io.h"
+#include "include/table.h"
+
+#include <concepts>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace apdebug::init
@@ -15,61 +18,26 @@ namespace apdebug::init
     std::string readFileLn(const std::filesystem::path& p);
 
     template <class T>
-    class list
+    concept ListEntry = requires(T&& a, Table::Table<3> b)
+    {
+        { b.writeColumn(0, a) };
+    };
+    template <class T>
+    class list // when use it, include init-list.h
     {
     public:
-        list(const char* typ)
-            : tab(std::array<const char*, 3> { "Id", typ, "Description" }, Output::SGR::None)
-        {
-        }
-        void append(T c)
-        {
-            m[c->name] = size();
-            lst.push_back(c);
-        }
-        void print(unsigned int beg = 0) const
-        {
-            for (auto i : lst)
-            {
-                tab.newColumn("");
-                tab.writeColumn(0, std::to_string(beg));
-                tab.writeColumn(1, i->name);
-                tab.writeColumn(2, i->description);
-                ++beg;
-            }
-            tab.printHeader(std::cout);
-            tab.printAll(std::cout);
-        }
-        T read() const
-        {
-            unsigned int sel;
-            std::cout << "Enter selection: ";
-            std::cout.flush();
-            std::cin >> sel;
-            while (size() <= sel)
-            {
-                std::cout << "No such configuration!" << std::endl;
-                std::cout << "Enter selection: ";
-                std::cout.flush();
-                std::cin >> sel;
-            }
-            return lst[sel];
-        }
-        T find(const std::string& s) const
-        {
-            const auto it = m.find(s);
-            return it == m.end() ? nullptr : lst[it->second];
-        }
-        size_t size() const
-        {
-            return lst.size();
-        }
+        list(const char* typ);
+        void append(T c);
+        void print(unsigned int beg = 0) const;
+        T read() const;
+        T find(const std::string& s) const;
+        size_t size() const;
 
         std::vector<T> lst;
 
     private:
-        std::map<std::string, size_t> m;
-        mutable Output::Table<3> tab;
+        std::unordered_map<std::string, size_t> m;
+        mutable Table::Table<3> tab;
     };
 
     class compiler

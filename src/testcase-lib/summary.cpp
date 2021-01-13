@@ -1,4 +1,5 @@
-#include "include/output.h"
+#include "include/color.h"
+#include "include/table.h"
 #include "include/testcase.h"
 
 #include <cmath>
@@ -82,7 +83,7 @@ namespace apdebug::Testcase
     void Summary::print(std::ostream& os)
     {
         using namespace ResultConstant;
-        Output::Table tab(header, "");
+        Table::Table tab(header, "");
         for (unsigned int i = 0; i <= TypeNumber; ++i)
         {
             if (!entries[i].count)

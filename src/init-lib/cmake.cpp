@@ -1,5 +1,5 @@
 #include "include/init.h"
-#include "include/utility.h"
+#include "include/io.h"
 #include <array>
 #include <cstdlib>
 #include <filesystem>
@@ -9,7 +9,7 @@
 #include <string>
 
 namespace fs = std::filesystem;
-using apdebug::Utility::writeFile;
+using apdebug::Output::writeFile;
 namespace apdebug::init::cmake
 {
 
