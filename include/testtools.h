@@ -5,9 +5,8 @@
 
 #include <fmt/format.h>
 
-#include <initializer_list>
+#include <filesystem>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace apdebug::TestTools
@@ -20,14 +19,14 @@ namespace apdebug::TestTools
         void check(System::Command& cmd);
         void release();
 
-        std::string differ;
+        std::filesystem::path differ;
 
         bool enable = false;
         unsigned int size = 200;
 
     private:
         bool verbose = false;
-        std::vector<std::string> file;
+        std::vector<std::filesystem::path> file;
     };
     class TemporaryFile
     {
@@ -43,7 +42,7 @@ namespace apdebug::TestTools
 
     private:
         bool enable = false;
-        std::vector<std::string> files[2][2][2]; // 0: run, 1: test
+        std::vector<std::filesystem::path> files[2][2][2]; // 0: run, 1: test
     };
 }
 

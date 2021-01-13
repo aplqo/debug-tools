@@ -4,6 +4,7 @@
 #include "include/define.h"
 #include "include/testtools.h"
 #include "system.h"
+#include <filesystem>
 #include <memory>
 #include <regex>
 #include <string>
@@ -96,7 +97,7 @@ namespace apdebug
         class BasicTest : public TestResult, private BasicTemplate
         {
         public:
-            BasicTest(std::string&& input, std::string&& answer, const BasicTemplate& tmpl);
+            BasicTest(std::filesystem::path&& input, std::filesystem::path&& answer, const BasicTemplate& tmpl);
             BasicTest(const BasicTest&) = delete;
             BasicTest& operator=(const BasicTest&) = delete;
             void run();
@@ -105,7 +106,7 @@ namespace apdebug
             void printRunInfo(std::ostream& os);
             void printTestInfo(std::ostream& os);
 
-            std::string input, output, answer;
+            std::filesystem::path input, output, answer;
             using BasicTemplate::diff;
 
         protected:

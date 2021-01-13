@@ -81,7 +81,7 @@ typedef Table::Table<10> GroupTable;
 class TestPoint : public TestcaseType
 {
 public:
-    TestPoint(const unsigned int id, const unsigned int gid, std::string&& input, std::string&& answer, TestTemplate& te)
+    TestPoint(const unsigned int id, const unsigned int gid, fs::path&& input, fs::path&& answer, TestTemplate& te)
         : TestcaseType(std::move(input), std::move(answer), te)
         , id(id)
         , gid(gid)
@@ -123,15 +123,15 @@ void TestPoint::writeToTable(ResultTable& dest)
     dest.writeColumnList<ResultColumn, std::string&&>({ { ResultColumn::id, std::to_string(id) },
         { ResultColumn::runState, std::string(runResult[0]->name) + (runResult[1] ? " "s + runResult[1]->name : ""s) },
         { ResultColumn::testState, std::string(testResult->name) },
-        { ResultColumn::input, std::move(input) },
-        { ResultColumn::output, std::move(output) },
-        { ResultColumn::answer, std::move(answer) },
-        { ResultColumn::differ, std::move(diff.differ) },
         { ResultColumn::realTime, fmt::format("{}", runTime.real / 1000.0) },
         { ResultColumn::userTime, fmt::format("{}", runTime.user / 1000.0) },
         { ResultColumn::sysTime, fmt::format("{}", runTime.sys / 1000.0) },
         { ResultColumn::mbMemory, fmt::format("{}", runMemory / 1024.0) },
         { ResultColumn::detail, std::string(runResult[0]->details) } });
+    dest.writeColumnList<ResultColumn, fs::path&&>({ { ResultColumn::input, std::move(input) },
+        { ResultColumn::output, std::move(output) },
+        { ResultColumn::answer, std::move(answer) },
+        { ResultColumn::differ, std::move(diff.differ) } });
 }
 
 class TestGroup
@@ -226,7 +226,7 @@ void TestGroup::execute()
     for (unsigned int i = 0; i < tests.size(); ++i)
     {
         std::cout.put('\n');
-        TestPoint tst(i, gid, tests[i].first.string(), tests[i].second.string(), tmpl);
+        TestPoint tst(i, gid, std::move(tests[i].first), std::move(tests[i].second), tmpl);
         tst.execute(verbose);
         tst.writeToTable(results);
         summary.insert(fmt::format(FMT_STRING("{}.{}"), gid, i), tst);

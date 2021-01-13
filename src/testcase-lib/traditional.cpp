@@ -13,7 +13,8 @@
 #include <fmt/compile.h>
 #include <fmt/format.h>
 
-using namespace apdebug::Output;
+namespace fs = std::filesystem;
+namespace SGR = apdebug::Output::SGR;
 using namespace std::string_literals;
 using apdebug::TestTools::TemporaryFile;
 using std::regex;
@@ -57,15 +58,19 @@ namespace apdebug
             return true;
         }
 
-        BasicTest::BasicTest(std::string&& input, std::string&& answer, const BasicTemplate& te)
+        BasicTest::BasicTest(fs::path&& input, fs::path&& answer, const BasicTemplate& te)
             : BasicTemplate(te)
             , input(input)
-            , output(fmt::format(FMT_COMPILE("{}-{}.out"), platform->threadId, platform->count))
+            , output(this->input.parent_path() / fmt::format(FMT_COMPILE("{}-{}.out"), platform->threadId, platform->count))
             , answer(answer)
         {
             using namespace fmt::literals;
             System::ReplaceStrict(
-                fmt::make_format_args("input"_a = this->input, "output"_a = output, "answer"_a = this->answer, "thread"_a = platform->threadId),
+                fmt::make_format_args(
+                    "input"_a = this->input.c_str(),
+                    "output"_a = output.c_str(),
+                    "answer"_a = this->answer.c_str(),
+                    "thread"_a = platform->threadId),
 #ifdef Interact
                 diff, tmpfiles, program, tester, interactor
 #else

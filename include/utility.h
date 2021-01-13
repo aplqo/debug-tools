@@ -22,12 +22,12 @@ namespace apdebug::Utility
             ret.emplace_back(argv[pos], args...);
         return ret;
     }
-    inline bool removeFile(std::string& s)
+    inline bool removeFile(std::filesystem::path& s)
     {
         namespace fs = std::filesystem;
-        if (fs::path tmp(s); fs::exists(tmp))
+        if (fs::exists(s))
         {
-            fs::remove(tmp);
+            fs::remove(s);
             s = "<released>";
             return true;
         }

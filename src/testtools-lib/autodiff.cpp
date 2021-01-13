@@ -20,8 +20,8 @@ namespace apdebug::TestTools
         if (!enable)
             return *this;
         for (auto& i : file)
-            i = fmt::vformat(i, args);
-        differ = fmt::vformat(differ, args);
+            i = fmt::vformat(i.c_str(), args);
+        differ = fmt::vformat(differ.c_str(), args);
         return *this;
     }
     void AutoDiff::parseArgument(int& argc, const char* const argv[])
@@ -39,7 +39,7 @@ namespace apdebug::TestTools
             else if (!strcmp(argv[argc], "-diff"))
                 differ = argv[++argc];
             else if (!strcmp(argv[argc], "-files"))
-                file = Utility::parseCmdArray<std::string>(++argc, argv);
+                file = Utility::parseCmdArray<std::filesystem::path>(++argc, argv);
             else if (!strcmp(argv[argc], "-disable"))
                 enable = false;
         }
@@ -59,7 +59,7 @@ namespace apdebug::TestTools
         }
         else
         {
-            const std::string* exceed = nullptr;
+            const std::filesystem::path* exceed = nullptr;
             for (const auto& i : file)
                 if (fs::file_size(i) > size)
                 {

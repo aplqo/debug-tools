@@ -159,7 +159,11 @@ TestPoint::TestPoint(const unsigned int tid, const unsigned int id, TestPointTem
     using namespace fmt::literals;
     this->id = id;
     System::ReplaceStrict(
-        fmt::make_format_args("input"_a = input, "output"_a = output, "answer"_a = answer, "thread"_a = tp.platform->threadId),
+        fmt::make_format_args(
+            "input"_a = input.c_str(),
+            "output"_a = output.c_str(),
+            "answer"_a = answer.c_str(),
+            "thread"_a = tp.platform->threadId),
         generator, validor, standard);
     generator.finalizeForExec();
     validor.finalizeForExec();
@@ -220,15 +224,15 @@ void TestPoint::printTable(ResultTable& dest)
     dest.writeColumnList<ResultColumn, std::string&&>({ { ResultColumn::id, fmt::format("{}.{}", tid, id) },
         { ResultColumn::runState, std::string(runResult[0]->name) + (runResult[1] ? runResult[1]->name : "") },
         { ResultColumn::testState, std::string(testResult->name) },
-        { ResultColumn::input, std::move(const_cast<std::string&>(input)) },
-        { ResultColumn::output, std::move(output) },
-        { ResultColumn::answer, std::move(const_cast<std::string&>(answer)) },
-        { ResultColumn::differ, std::move(diff.differ) },
         { ResultColumn::realTime, fmt::format(FMT_COMPILE("{}"), runTime.real / 1000.0) },
         { ResultColumn::userTime, fmt::format(FMT_COMPILE("{}"), runTime.user / 1000.0) },
         { ResultColumn::sysTime, fmt::format(FMT_COMPILE("{}"), runTime.sys / 1000.0) },
         { ResultColumn::mbMemory, fmt::format(FMT_COMPILE("{}"), runMemory / 1024.0) },
         { ResultColumn::detail, std::string(runResult[0]->details) } });
+    dest.writeColumnList<ResultColumn, fs::path&&>({ { ResultColumn::input, std::move(input) },
+        { ResultColumn::output, std::move(output) },
+        { ResultColumn::answer, std::move(answer) },
+        { ResultColumn::differ, std::move(diff.differ) } });
 }
 std::mutex tableLock;
 std::atomic_flag empty;

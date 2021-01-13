@@ -15,7 +15,7 @@ namespace apdebug::TestTools
             for (auto& currentState : phase)
                 for (auto& isAccept : currentState)
                     for (auto& k : isAccept)
-                        k = fmt::vformat(k, args);
+                        k = fmt::vformat(k.c_str(), args);
         return *this;
     }
     void TemporaryFile::parseArgument(int& argc, const char* const argv[])
@@ -28,7 +28,7 @@ namespace apdebug::TestTools
             else
             {
                 const char* const cptr = argv[argc++];
-                files[cptr[1] == 'T'][cptr[2] == 'P'][cptr[3] == 'P'] = parseCmdArray<std::string>(argc, argv);
+                files[cptr[1] == 'T'][cptr[2] == 'P'][cptr[3] == 'P'] = parseCmdArray<std::filesystem::path>(argc, argv);
             }
         }
     }
@@ -37,8 +37,8 @@ namespace apdebug::TestTools
         if (!enable)
             return;
         for (const auto& i : files[p][pass][accept])
-            if (const fs::path p(i); fs::exists(p))
-                fs::remove(p);
+            if (fs::exists(i))
+                fs::remove(i);
     }
 
 }
