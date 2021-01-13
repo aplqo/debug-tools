@@ -1,5 +1,3 @@
 #!/bin/bash
 
-readonly single='./bin/single'
-
-$single -program $1 -in $2.in -ans $2.ans -test 'diff' -test-args [ '{output}' '{answer}' -a -w -u --color ]
+./bin/single-$type -program $1 -in $2.in -ans $2.ans -test 'diff' -test-args [ '{output}' '{answer}' -a -w -u --color ]
