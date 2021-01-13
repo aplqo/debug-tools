@@ -222,7 +222,6 @@ namespace apdebug
                 return;
             }
             diff.check(tester);
-            const bool old = accept;
             if (const int ret = tester.execute().wait(); ret)
             {
                 *cur = Result {
@@ -231,19 +230,21 @@ namespace apdebug
                     .color = SGR::TextRed,
                     .verbose = fmt::format(FMT_COMPILE("[WA] Test program return {}"), ret)
                 };
-                testResult = cur++;
+                finalResult = testResult = cur++;
                 testPass = accept = false;
             }
             else
+            {
                 testResult = &ResultConstant::Accept;
+                if (accept)
+                    finalResult = testResult;
+            }
             tmpfiles.release(TemporaryFile::Test, testPass, accept);
-            if (old)
-                finalResult = testResult;
         }
         void BasicTest::release()
         {
             using namespace std::filesystem;
-            if (accept)
+            if (testPass)
             {
                 Utility::removeFile(output);
                 diff.release();

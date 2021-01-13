@@ -117,9 +117,10 @@ void TestPoint::execute(const bool verbose)
 }
 void TestPoint::writeToTable(ResultTable& dest)
 {
+    using namespace std::string_literals;
     dest.newColumn(finalResult->color);
     dest.writeColumnList<ResultColumn, std::string&&>({ { ResultColumn::id, std::to_string(id) },
-        { ResultColumn::runState, std::string(runResult[0]->name) + (runResult[1] ? runResult[1]->name : "") },
+        { ResultColumn::runState, std::string(runResult[0]->name) + (runResult[1] ? " "s + runResult[1]->name : ""s) },
         { ResultColumn::testState, std::string(testResult->name) },
         { ResultColumn::input, std::move(input) },
         { ResultColumn::output, std::move(output) },
