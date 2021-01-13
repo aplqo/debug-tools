@@ -44,12 +44,21 @@ namespace apdebug::Logfile
         std::vector<Frame> frames;
         size_t totalDepth, maxName, maxFile;
         unsigned int formatLength, userFrameDep;
+        bool enable;
 
         void print(std::string& dest) const;
         void parse(MemoryStream& ms);
     };
     void Stacktrace::parse(MemoryStream& ms)
     {
+        ms.read(enable);
+        if (!enable)
+        {
+            totalDepth = 0;
+            frames.push_back(Frame { .file = "<null>", .line = 0 });
+            userFrameDep = 0;
+            return;
+        }
         const fs::path cur = fs::current_path();
         size_t dump, dep;
         ms.read(dump);
@@ -74,6 +83,11 @@ namespace apdebug::Logfile
     }
     void Stacktrace::print(std::string& dest) const
     {
+        if (!enable)
+        {
+            dest += "\tStack backtrace: unavailable";
+            return;
+        }
         fmt::format_to(std::back_inserter(dest),
             "\tStack backtrace: (dumped depth {} total depth {})", frames.size(), totalDepth);
         const int idLen = ceil(log10(frames.size() + 1)), nameLen = maxName;

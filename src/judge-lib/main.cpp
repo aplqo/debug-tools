@@ -46,6 +46,8 @@ namespace Judger
         using namespace boost::stacktrace;
         const auto st = boost::stacktrace::stacktrace();
         const size_t dumpDepth = std::min<size_t>(st.size(), maxStackDumpDepth + dep);
+        char* const ptr = ms.ptr;
+        ms.write(false);
         ms.write(dumpDepth);
         ms.write(st.size());
         ms.write(dep);
@@ -56,6 +58,8 @@ namespace Judger
             writeString(st[i].name());
             ms.write(st[i].source_line());
         }
+        ms.ptr = ptr;
+        ms.write(true);
         std::_Exit(1);
     }
     inline void checkGuard()
