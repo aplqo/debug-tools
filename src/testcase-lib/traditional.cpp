@@ -89,6 +89,8 @@ namespace apdebug
                 .finalizeForExec();
 #endif
             platform->memoryProtect.clear();
+            *reinterpret_cast<Logfile::RStatus*>(platform->sharedMemory.ptr + System::interactArgsSize)
+                = Logfile::RStatus::Unknown;
         }
 #ifdef Interact
         void BasicTest::run()
