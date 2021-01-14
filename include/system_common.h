@@ -10,6 +10,8 @@
 
 namespace apdebug::System
 {
+    static const uint32_t eof = 0xffffffff;
+
     class MemoryStream
     {
     public:
@@ -27,6 +29,8 @@ namespace apdebug::System
         inline void read(T& res) { read(reinterpret_cast<char*>(&res), sizeof(T)); }
         template <class T>
         inline void write(const T res) { write(reinterpret_cast<const char*>(&res), sizeof(T)); }
+        bool eof() const { return *reinterpret_cast<uint32_t*>(ptr) == System::eof; }
+        inline void ignore(const size_t len) { ptr += len; }
 
         char* ptr;
     };

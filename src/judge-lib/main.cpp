@@ -11,14 +11,17 @@
 #include <exception>
 using namespace apdebug::System;
 using namespace apdebug::Logfile;
-static constexpr unsigned int maxStackDumpDepth = 30, guardVal1 = 0xcdcdcdcd, guardVal2 = 0xcccccccc;
-static constexpr unsigned int guardByte1 = 0xcd, guardByte2 = 0xcc;
+static constexpr unsigned int maxStackDumpDepth = 30;
+static constexpr inline unsigned long long protectBase = protectLowAddress;
 
-static unsigned int guardBefore[8];
-static SharedMemory* shm;
+struct ProtectedVariable
+{
+    SharedMemory shm;
+    TimeUsage startTime;
+};
+#define protectVar (reinterpret_cast<ProtectedVariable*>(protectBase))
+
 static MemoryStream ms;
-static TimeUsage startTime;
-static unsigned int guardEnd[8];
 
 void writeString(const std::string& s)
 {
@@ -44,13 +47,13 @@ namespace Judger
     extern "C" void abortProgram(const unsigned int dep)
     {
         using namespace boost::stacktrace;
+        char* const ptr = ms.ptr;
+        ms.write(eof);
         const auto st = boost::stacktrace::stacktrace();
         const size_t dumpDepth = std::min<size_t>(st.size(), maxStackDumpDepth + dep);
-        char* const ptr = ms.ptr;
-        ms.write(false);
         ms.write(dumpDepth);
         ms.write(st.size());
-        ms.write(dep);
+        ms.write(dep + 1);
         for (unsigned int i = 0; i < dumpDepth; ++i)
         {
             ms.write<const void*>(st[i].address());
@@ -59,24 +62,20 @@ namespace Judger
             ms.write(st[i].source_line());
         }
         ms.ptr = ptr;
-        ms.write(true);
+        ms.write(uint32_t(0));
         std::_Exit(1);
-    }
-    inline void checkGuard()
-    {
-        for (unsigned int i : guardBefore)
-            if (i != guardVal1)
-                std::_Exit(guardVal1);
-        for (unsigned int i : guardEnd)
-            if (i != guardVal2)
-                std::_Exit(guardVal2);
     }
     extern "C" void stopWatch(const RStatus stat)
     {
-        const auto [ct, cm] = getUsage();
-        const TimeUsage t = ct - startTime;
-        checkGuard();
+        ms.ptr = protectVar->shm.ptr + interactArgsSize;
         ms.write(stat);
+        char* const ptr = ms.ptr;
+        ms.write(TimeUsage {});
+        ms.write(MemoryUsage {});
+        ms.write(eof);
+        const auto [ct, cm] = getUsage();
+        const TimeUsage t = ct - protectVar->startTime;
+        ms.ptr = ptr;
         ms.write(t);
         ms.write(cm);
     }
@@ -104,7 +103,7 @@ namespace Judger
             ms.write(Signal::Sigterm);
             break;
         }
-        abortProgram(3);
+        abortProgram(2);
     }
     void fpeHandler(int)
     {
@@ -122,7 +121,7 @@ namespace Judger
         if (fetestexcept(FE_UNDERFLOW))
             v |= FPE::FE_Underflow;
         ms.write(v);
-        abortProgram(3);
+        abortProgram(2);
     }
     void registerHandler()
     {
@@ -139,15 +138,16 @@ namespace Judger
     }
     extern "C" int judgeMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[])
     {
-        shm = new SharedMemory(argv[argc - 1]);
-        ms.ptr = shm->ptr + apdebug::System::interactArgsSize;
-        memset(guardBefore, guardByte1, sizeof(guardBefore));
-        memset(guardEnd, guardByte2, sizeof(guardEnd));
+        createPageAt(reinterpret_cast<void*>(protectBase), sizeof(ProtectedVariable));
+        new (protectVar) ProtectedVariable {
+            { argv[argc - 1] }, {}
+        };
         registerHandler();
         std::atexit(finishProgram);
         try
         {
-            startTime = getTimeUsage();
+            protectVar->startTime = getTimeUsage();
+            protectPage(reinterpret_cast<void*>(protectBase), sizeof(ProtectedVariable), false);
             userMain(argc - 1, argv);
             finishProgram();
         }
@@ -189,8 +189,11 @@ namespace Interactor
     }
     extern "C" int interactorMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[])
     {
-        shm = new SharedMemory(argv[argc - 1]);
-        ms.ptr = shm->ptr;
+        createPageAt(reinterpret_cast<void*>(protectBase), sizeof(ProtectedVariable));
+        new (protectVar) ProtectedVariable {
+            { argv[argc - 1] }, {}
+        };
+        ms.ptr = protectVar->shm.ptr;
         ms.read(judged.nativeHandle);
         return userMain(argc - 1, argv);
     }

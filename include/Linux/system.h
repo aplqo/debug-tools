@@ -132,7 +132,11 @@ namespace apdebug::System
     std::pair<TimeUsage, MemoryUsage> getUsage();
     inline void systemInit() { }
 
+    bool createPageAt(void* const address, const size_t size);
+    void protectPage(void* const address, const size_t size, const bool write);
+
     static const unsigned int interactArgsSize = sizeof(Process::NativeHandle);
+    static constexpr inline unsigned long long protectLowAddress = 65536;
 }
 
 #endif

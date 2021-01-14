@@ -51,14 +51,18 @@ namespace apdebug::Logfile
     };
     void Stacktrace::parse(MemoryStream& ms)
     {
-        ms.read(enable);
-        if (!enable)
+        if (ms.eof())
         {
+            enable = false;
             totalDepth = 0;
             frames.push_back(Frame { .file = "<null>", .line = 0 });
-            userFrameDep = 0;
+            userFrameDep = maxName = 0;
+            maxFile = sizeof("<null>");
+            formatLength = 100;
             return;
         }
+        ms.ignore(sizeof(System::eof));
+        enable = true;
         const fs::path cur = fs::current_path();
         size_t dump, dep;
         ms.read(dump);
@@ -252,6 +256,14 @@ namespace apdebug::Logfile
             return parseDivbyzero(ms, cur);
         case RtError::Signal:
             return parseSignal(ms, cur);
+        default:
+            *cur = Result {
+                .type = Result::Type::RE,
+                .name = "RE",
+                .color = Output::SGR::TextPurple,
+                .verbose = "[RE] Unknown runtime error",
+                .details = "Unknown runtime error"
+            };
         }
     }
 } // namespace apdebug::Logfile
