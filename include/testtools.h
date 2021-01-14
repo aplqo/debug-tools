@@ -25,7 +25,7 @@ namespace apdebug::TestTools
         unsigned int size = 200;
 
     private:
-        bool verbose = false;
+        bool verbose = false, redirect;
         std::vector<std::filesystem::path> file;
     };
     class TemporaryFile

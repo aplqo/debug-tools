@@ -77,15 +77,18 @@ namespace apdebug::TestTools
                               << "Autodiff: Redirect stdout to " << differ << "\n";
                 std::cout << SGR::TextBlue << "Autodiff: Test command " << cmd << SGR::None << std::endl;
             }
+            redirect = exceed;
             if (exceed)
                 cmd.setRedirect(System::RedirectType::StdOut, differ.c_str());
+            else
+                differ = "<unused>";
         }
     }
     void AutoDiff::release()
     {
         if (!enable)
             return;
-        if (Utility::removeFile(differ) && verbose)
+        if (redirect && Utility::removeFile(differ) && verbose)
             std::cout << SGR::TextGreen << "Autodiff: Test passed removed output file." << SGR::None << "\n";
     }
 }
