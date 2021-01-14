@@ -45,8 +45,8 @@ namespace apdebug::Testcase
         static constexpr double u = unit;
         if (!min.from)
             return "<null>";
-        return fmt::format(FMT_STRING("#{} {} / {} / #{} {}"),
-            *min.from, round(min.val / u), round(sum / cnt / u), *max.from, round(max.val / u));
+        return fmt::format(FMT_STRING("{} (#{})/ {} / {} (#{})"),
+            round(min.val / u), *min.from, round(sum / cnt / u), round(max.val / u), *max.from);
     }
     void Summary::SummaryEntry::update(std::shared_ptr<std::string>& s, const TestResult& tst)
     {
