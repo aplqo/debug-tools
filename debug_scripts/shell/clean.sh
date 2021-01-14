@@ -1,7 +1,9 @@
 #!/bin/bash
 
-rm *.ilk
-rm *.obj
-rm *.pdb
-rm *.exe
-rm *.out
+if [ -n "$1" ]
+then
+    cd "$1"
+fi
+
+rm -fv *.ilk *.obj *.pdb *.exe
+rm -fv *.out *.diff
