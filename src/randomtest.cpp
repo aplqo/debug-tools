@@ -250,25 +250,28 @@ inline bool isRun()
 template <bool realTime>
 void PrintThread()
 {
+    ResultTable local;
     {
         lat->wait();
         {
             std::cout << "Test Results:\n";
             std::lock_guard lk(tableLock);
             results.printHeader(std::cout);
+            local.mergeData(std::move(results));
         }
         std::cout.flush();
     }
-    ResultTable local;
     while (isRun())
     {
         if (!empty.test_and_set())
         {
-            std::lock_guard lk(tableLock);
-            local.mergeData(std::move(results));
+            {
+                std::lock_guard lk(tableLock);
+                local.mergeData(std::move(results));
+            }
+            local.printAll(std::cout);
+            std::cout.flush();
         }
-        local.printAll(std::cout);
-        std::cout.flush();
         std::this_thread::sleep_for(print_duration);
     }
 }
@@ -339,10 +342,10 @@ void setMinWidth()
 {
     constexpr unsigned int rlen = sizeof("(Released)");
     const unsigned int tlen = log10(global.hardTimeLimit / 1000.0 + 1);
-    results.update(ResultColumn::realTime, tlen);
-    results.update(ResultColumn::userTime, tlen);
-    results.update(ResultColumn::sysTime, tlen);
-    results.update(ResultColumn::mbMemory, log10(global.hardMemoryLimit / 1024.0 + 1));
+    results.update(ResultColumn::realTime, tlen + 5);
+    results.update(ResultColumn::userTime, tlen + 5);
+    results.update(ResultColumn::sysTime, tlen + 5);
+    results.update(ResultColumn::mbMemory, log10(global.hardMemoryLimit / 1024.0 + 1) + 5);
     results.update(ResultColumn::input, rlen);
     results.update(ResultColumn::output, rlen);
     results.update(ResultColumn::answer, rlen);

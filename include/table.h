@@ -2,10 +2,10 @@
 #define TABLE_H
 
 #include "include/color.h"
-#include "include/io.h"
 
 #include <array>
 #include <concepts>
+#include <cstring>
 #include <list>
 #include <ostream>
 #include <string>
@@ -83,10 +83,7 @@ namespace apdebug::Table
         void mergeData(Table&& other)
         {
             for (unsigned int i = 1; i <= siz; ++i)
-            {
                 width[i] = std::max(width[i], other.width[i]);
-                other.width[i] = 0;
-            }
             q.splice(q.end(), std::move(other.q));
         }
 
