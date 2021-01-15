@@ -26,8 +26,8 @@ int main(int argc, char* argv[])
         else if (!strcmp(argv[i], "-test-args"))
             exe.parseArgument(++i, argv);
     }
-    diff.check(exe);
-    const int ret = exe.finalizeForExec().execute().wait();
+    diff.instantiate().check(exe);
+    const int ret = exe.instantiate().execute().wait();
     if (!ret)
         diff.release();
     else

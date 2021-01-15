@@ -29,6 +29,7 @@ namespace apdebug::System
 {
     static const size_t SharedMemorySize = 1 * 1024 * 1024; // 1 MiB
     static const size_t cgroupNamelength = 20;
+    static const size_t maxArgsSize = 500;
 
     Process::Process(NativeHandle v)
         : nativeHandle(v) {};
@@ -70,32 +71,39 @@ namespace apdebug::System
     Command::Command(Command&& other)
         : path(other.path)
         , args(std::move(other.args))
-        , pointers(other.pointers)
     {
         if (&other == this)
             return;
         for (unsigned int i = 0; i < 3; ++i)
+        {
             fd[i] = other.fd[i];
-        other.pointers = nullptr;
+            other.fd[i] = -1;
+        }
+        other.args.clear();
     }
     Command& Command::appendArgument(const std::string_view val)
     {
         args.emplace_back(val);
         return *this;
     }
-    Command& Command::replace(fmt::format_args args)
+    Command& Command::instantiate(fmt::format_args args)
     {
-        for (auto& i : this->args)
-            i = fmt::vformat(i, args);
+        const size_t cnt = templateArgs->size();
+        this->args.reserve(cnt + 1);
+        this->args.push_back(path.data());
+        for (size_t i = 1; i < cnt; ++i)
+        {
+            char* buf = new char[maxArgsSize + 1];
+            fmt::format_to(buf, templateArgs->at(i), args);
+            this->args.push_back(buf);
+        }
         return *this;
     }
-    Command& Command::finalizeForExec()
+    Command& Command::instantiate()
     {
-        pointers = new const char*[args.size() + 2];
-        pointers[0] = path.data();
-        std::transform(args.cbegin(), args.cend(), pointers + 1, std::mem_fn(&std::string::c_str));
-        pointers[args.size() + 1] = nullptr;
-        return *this;
+        args.push_back(path.data());
+        args.reserve(1 + templateArgs->size());
+        std::copy(templateArgs->cbegin(), templateArgs->cend(), std::back_inserter(args));
     }
     Process Command::execute() const
     {
@@ -108,7 +116,7 @@ namespace apdebug::System
                 dup2(fd[1], STDOUT_FILENO);
             if (fd[2] != -1)
                 dup2(fd[2], STDERR_FILENO);
-            execvp(pointers[0], const_cast<char** const>(pointers));
+            execvp(args.front(), const_cast<char**>(args.data()));
             exit(1);
         }
         return Process(p);
@@ -129,9 +137,9 @@ namespace apdebug::System
         }
         return *this;
     }
-    Command& Command::setRedirect(const RedirectType which, const char* file)
+    Command& Command::setRedirect(const RedirectType which, const fs::path& file)
     {
-        setRedirect(which, open(file, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR));
+        setRedirect(which, open(file.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR));
         created[static_cast<unsigned int>(which)] = true;
         return *this;
     }
@@ -165,7 +173,8 @@ namespace apdebug::System
         for (unsigned int i = 0; i < 3; ++i)
             if (created[i])
                 close(fd[i]);
-        delete[] pointers;
+        for (unsigned int i = 1; i < args.size(); ++i)
+            delete[] args[i];
     }
 
     static void killer(union ::sigval v)

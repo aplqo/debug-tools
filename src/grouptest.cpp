@@ -123,15 +123,15 @@ void TestPoint::writeToTable(ResultTable& dest)
     dest.writeColumnList<ResultColumn, std::string&&>({ { ResultColumn::id, std::to_string(id) },
         { ResultColumn::runState, std::string(runResult[0]->name) + (runResult[1] ? " "s + runResult[1]->name : ""s) },
         { ResultColumn::testState, std::string(testResult->name) },
+        { ResultColumn::input, input.string() },
+        { ResultColumn::output, output.string() },
+        { ResultColumn::answer, answer.string() },
+        { ResultColumn::differ, diff.differ.string() },
         { ResultColumn::realTime, fmt::format("{}", runTime.real / 1000.0) },
         { ResultColumn::userTime, fmt::format("{}", runTime.user / 1000.0) },
         { ResultColumn::sysTime, fmt::format("{}", runTime.sys / 1000.0) },
         { ResultColumn::mbMemory, fmt::format("{}", runMemory / 1024.0) },
         { ResultColumn::detail, std::string(runResult[0]->details) } });
-    dest.writeColumnList<ResultColumn, fs::path&&>({ { ResultColumn::input, std::move(input) },
-        { ResultColumn::output, std::move(output) },
-        { ResultColumn::answer, std::move(answer) },
-        { ResultColumn::differ, std::move(diff.differ) } });
 }
 
 class TestGroup

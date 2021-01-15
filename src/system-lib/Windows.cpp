@@ -56,9 +56,6 @@ namespace apdebug::System
     SharedMemory::SharedMemory(const char* name)
     {
         fd = reinterpret_cast<HANDLE>(std::stoull(name));
-
-        const unsigned int tp = GetLastError();
-
         ptr = reinterpret_cast<char*>(MapViewOfFile(fd, FILE_MAP_ALL_ACCESS, 0, 0, sharedMemorySize));
     }
     SharedMemory::~SharedMemory()
@@ -77,46 +74,54 @@ namespace apdebug::System
     }
     Command& Command::appendArgument(const std::string_view arg)
     {
+        instantiated = true;
         cmdline += Output::writeToString(" ", std::quoted<char, std::char_traits<char>>(arg));
         return *this;
     }
-    Command& Command::replace(fmt::format_args args)
+    Command& Command::instantiate(fmt::format_args args)
     {
-        fmt::vformat(cmdline, args);
+        instantiated = true;
+        fmt::vformat(*templateCmdline, args);
+        return *this;
+    }
+    Command& Command::instantiate()
+    {
+        cmdline = *templateCmdline;
         return *this;
     }
     Process Command::execute()
     {
         PROCESS_INFORMATION pinfo;
+        cmdline = path.data() + (" " + cmdline);
         CreateProcessA(NULL, const_cast<char*>(cmdline.data()), NULL, NULL, true, 0, NULL, NULL, &info, &pinfo);
         CloseHandle(pinfo.hThread);
         Process ret(pinfo.hProcess);
         ret.owns = true;
         return ret;
     }
-    static inline HANDLE open(const char* file)
+    static inline HANDLE open(const wchar_t* file)
     {
         SECURITY_ATTRIBUTES sec = attrInherit;
-        return CreateFile(file,
+        return CreateFileW(file,
             GENERIC_READ | GENERIC_WRITE,
             FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
             &sec,
             CREATE_ALWAYS,
             FILE_ATTRIBUTE_NORMAL, NULL);
     }
-    Command& Command::setRedirect(RedirectType typ, const char* file)
+    Command& Command::setRedirect(RedirectType typ, const std::filesystem::path& file)
     {
         info.dwFlags = STARTF_USESTDHANDLES;
         switch (typ)
         {
         case RedirectType::StdIn:
-            info.hStdInput = openFile[0] = open(file);
+            info.hStdInput = openFile[0] = open(file.c_str());
             break;
         case RedirectType::StdOut:
-            info.hStdOutput = openFile[1] = open(file);
+            info.hStdOutput = openFile[1] = open(file.c_str());
             break;
         case RedirectType::StdErr:
-            info.hStdError = openFile[2] = open(file);
+            info.hStdError = openFile[2] = open(file.c_str());
             break;
         }
         return *this;
@@ -138,16 +143,13 @@ namespace apdebug::System
         }
         return *this;
     }
-    Command& Command::finalizeForExec()
-    {
-        cmdline = path.data() + (" " + cmdline);
-        return *this;
-    }
     void Command::parseArgument(int& argc, const char* const argv[])
     {
+        std::string* tmpl = new std::string;
+        templateCmdline = tmpl;
         if (std::strcmp(argv[argc], "["))
         {
-            cmdline += Output::writeToString(std::quoted<char>(argv[argc]));
+            tmpl->append(Output::writeToString(std::quoted<char>(argv[argc])));
             return;
         }
         unsigned int dep = 1;
@@ -158,12 +160,12 @@ namespace apdebug::System
                 break;
             else if (!std::strcmp(argv[argc], "["))
                 ++dep;
-            cmdline += Output::writeToString(" ", std::quoted<char>(argv[argc]));
+            *tmpl += Output::writeToString(" ", std::quoted<char>(argv[argc]));
         }
     }
     std::ostream& operator<<(std::ostream& os, const Command& c)
     {
-        return os << c.cmdline;
+        return os << (c.instantiated ? c.cmdline : *c.templateCmdline);
     }
     Command::~Command()
     {

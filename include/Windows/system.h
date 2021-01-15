@@ -4,9 +4,9 @@
 #include "include/system_common.h"
 
 #define NOMINMAX
-
 #include <windows.h>
 
+#include <filesystem>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -53,19 +53,21 @@ namespace apdebug::System
     public:
         Command();
         Command& appendArgument(const std::string_view arg);
-        Command& replace(fmt::format_args args);
+        Command& instantiate(fmt::format_args args);
+        Command& instantiate();
         Process execute();
-        Command& setRedirect(RedirectType typ, const char* file);
+        Command& setRedirect(RedirectType typ, const std::filesystem::path& file);
         Command& setRedirect(RedirectType typ, HANDLE had);
-        Command& finalizeForExec();
         void parseArgument(int&, const char* const argv[]);
         friend std::ostream& operator<<(std::ostream& os, const Command& cmd);
         ~Command();
 
-        std ::string_view path;
+        std::string_view path;
 
     private:
+        bool instantiated = false;
         std::string cmdline;
+        const std::string* templateCmdline;
         STARTUPINFOA info;
         HANDLE openFile[3] = { INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE };
     };

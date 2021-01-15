@@ -15,13 +15,24 @@ namespace SGR = apdebug::Output::SGR;
 
 namespace apdebug::TestTools
 {
-    AutoDiff& AutoDiff::replace(fmt::format_args args)
+
+    AutoDiff& AutoDiff::instantiate(fmt::format_args args)
     {
         if (!enable)
             return *this;
-        for (auto& i : file)
-            i = fmt::vformat(i.c_str(), args);
-        differ = fmt::vformat(differ.c_str(), args);
+        using namespace fmt::literals;
+        file.reserve(fileTemplate->size());
+        for (unsigned int i = 0; i < fileTemplate->size(); ++i)
+            file.emplace_back(fmt::vformat(fileTemplate->at(i), args));
+        differ = fmt::vformat(differTemplate, args);
+        return *this;
+    }
+    AutoDiff& AutoDiff::instantiate()
+    {
+        file.reserve(fileTemplate->size());
+        for (unsigned int i = 0; i < fileTemplate->size(); ++i)
+            file.emplace_back(fileTemplate->at(i));
+        differ = differTemplate;
         return *this;
     }
     void AutoDiff::parseArgument(int& argc, const char* const argv[])
@@ -37,9 +48,9 @@ namespace apdebug::TestTools
             else if (!strcmp(argv[argc], "-limit"))
                 size = atoll(argv[++argc]);
             else if (!strcmp(argv[argc], "-diff"))
-                differ = argv[++argc];
+                differTemplate = argv[++argc];
             else if (!strcmp(argv[argc], "-files"))
-                file = Utility::parseCmdArray<std::filesystem::path>(++argc, argv);
+                fileTemplate = new std::vector(Utility::parseCmdArray<const char*>(++argc, argv));
             else if (!strcmp(argv[argc], "-disable"))
                 enable = false;
         }
@@ -55,11 +66,11 @@ namespace apdebug::TestTools
                 std::cout << SGR::TextCyan << "Autodiff: Redirect stdout to " << differ << "\n";
                 std::cout << SGR::TextBlue << "Autodiff: Test command " << cmd << SGR::None << std::endl;
             }
-            cmd.setRedirect(System::RedirectType::StdOut, differ.c_str());
+            cmd.setRedirect(System::RedirectType::StdOut, differ);
         }
         else
         {
-            const std::filesystem::path* exceed = nullptr;
+            const fs::path* exceed = nullptr;
             for (const auto& i : file)
             {
                 std::error_code ec;
@@ -79,7 +90,7 @@ namespace apdebug::TestTools
             }
             redirect = exceed;
             if (exceed)
-                cmd.setRedirect(System::RedirectType::StdOut, differ.c_str());
+                cmd.setRedirect(System::RedirectType::StdOut, differ);
             else
                 differ = "<unused>";
         }

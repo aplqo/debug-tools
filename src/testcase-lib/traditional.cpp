@@ -67,9 +67,9 @@ namespace apdebug
             using namespace fmt::literals;
             System::ReplaceStrict(
                 fmt::make_format_args(
-                    "input"_a = this->input.c_str(),
-                    "output"_a = output.c_str(),
-                    "answer"_a = this->answer.c_str(),
+                    "input"_a = this->input,
+                    "output"_a = output,
+                    "answer"_a = this->answer,
                     "thread"_a = platform->threadId),
 #ifdef Interact
                 diff, tmpfiles, program, tester, interactor
@@ -78,15 +78,9 @@ namespace apdebug
 #endif
             );
             ++(platform->count);
-            program
-                .appendArgument(platform->sharedMemory.name)
-                .finalizeForExec();
-            if (!tester.path.empty())
-                tester.finalizeForExec();
+            program.appendArgument(platform->sharedMemory.name);
 #ifdef Interact
-            interactor
-                .appendArgument(platform->sharedMemory.name)
-                .finalizeForExec();
+            interactor.appendArgument(platform->sharedMemory.name);
 #endif
             platform->memoryProtect.clear();
             *reinterpret_cast<Logfile::RStatus*>(platform->sharedMemory.ptr + System::interactArgsSize)
@@ -118,8 +112,8 @@ namespace apdebug
         void BasicTest::run()
         {
             program
-                .setRedirect(System::RedirectType::StdIn, input.c_str())
-                .setRedirect(System::RedirectType::StdOut, output.c_str());
+                .setRedirect(System::RedirectType::StdIn, input)
+                .setRedirect(System::RedirectType::StdOut, output);
             const auto p = program.execute();
             platform->memoryProtect.addProcess(p);
             exitStatus = platform->timeProtect.waitFor(p).second;

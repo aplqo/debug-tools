@@ -7,15 +7,21 @@ using apdebug::Utility::parseCmdArray;
 
 namespace apdebug::TestTools
 {
-    TemporaryFile& TemporaryFile::replace(fmt::format_args args)
+    TemporaryFile& TemporaryFile::instantiate(fmt::format_args args)
     {
         if (!enable)
             return *this;
-        for (auto& phase : files)
-            for (auto& currentState : phase)
-                for (auto& isAccept : currentState)
-                    for (auto& k : isAccept)
-                        k = fmt::vformat(k.c_str(), args);
+        for (unsigned int i = 0; i < 2; ++i)
+            for (unsigned int j = 0; j < 2; ++j)
+                for (unsigned int k = 0; k < 2; ++k)
+                    if (filesTemplate[i][j][k])
+                    {
+                        auto& cur = files[i][j][k];
+                        const auto& pattern = *filesTemplate[i][j][k];
+                        cur.reserve(pattern.size());
+                        for (unsigned int i = 0; i < pattern.size(); ++i)
+                            cur.emplace_back(fmt::vformat(pattern[i], args));
+                    }
         return *this;
     }
     void TemporaryFile::parseArgument(int& argc, const char* const argv[])
@@ -28,7 +34,7 @@ namespace apdebug::TestTools
             else
             {
                 const char* const cptr = argv[argc++];
-                files[cptr[1] == 'T'][cptr[2] == 'P'][cptr[3] == 'P'] = parseCmdArray<std::filesystem::path>(argc, argv);
+                filesTemplate[cptr[1] == 'T'][cptr[2] == 'P'][cptr[3] == 'P'] = new std::vector(parseCmdArray<const char*>(argc, argv));
             }
         }
     }

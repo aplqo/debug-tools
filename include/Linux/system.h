@@ -2,6 +2,7 @@
 #define PROCESS_H
 
 #include "include/system_common.h"
+
 #include <filesystem>
 #include <initializer_list>
 #include <ostream>
@@ -62,11 +63,11 @@ namespace apdebug::System
         Command(const Command&) = default;
         Command(Command&&);
         Command& appendArgument(const std::string_view val);
-        Command& replace(fmt::format_args args);
-        Command& finalizeForExec();
+        Command& instantiate(fmt::format_args args);
+        Command& instantiate();
         Process execute() const;
         Command& setRedirect(const RedirectType which, const int fd);
-        Command& setRedirect(const RedirectType which, const char* file);
+        Command& setRedirect(const RedirectType which, const std::filesystem::path& file);
         void parseArgument(int& argc, const char* const argv[]);
         friend std::ostream& operator<<(std::ostream& os, const Command& c);
         ~Command();
@@ -76,8 +77,9 @@ namespace apdebug::System
     private:
         int fd[3] { -1, -1, -1 };
         bool created[3] {};
-        std::vector<std::string> args;
-        const char** pointers = nullptr; // pointer to args
+        std::vector<const char*> args;
+
+        std::vector<const char*>* templateArgs;
     };
     struct killParam
     {
