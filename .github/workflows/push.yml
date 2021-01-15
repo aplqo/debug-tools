@@ -10,31 +10,31 @@ on:
 
 jobs:
   create-release:
-  runs-on: ubuntu-latest
-  steps:
-    - run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-    - name: Create Release
-      if: contains(github.ref, 'tags/v')
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ env.version }}
-        body: 
-        draft: false
-        prerelease: ${{contains(env.version,'-')}}
-    - name: Store Release url
-      run: |
-        echo "${{ steps.create_release.outputs.upload_url }}" > ./upload_url
-      if: contains(github.ref, 'tags/v')
-    - name: Store null url
-      run: touch upload_url
-    - uses: actions/upload-artifact@v1
-      with:
-        path: ./upload_url
-        name: upload_url
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Create Release
+        if: contains(github.ref, 'tags/v')
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ env.version }}
+          body: 
+          draft: false
+          prerelease: ${{contains(env.version,'-')}}
+      - name: Store Release url
+        run: |
+          echo "${{ steps.create_release.outputs.upload_url }}" > ./upload_url
+        if: contains(github.ref, 'tags/v')
+      - name: Store null url
+        run: touch upload_url
+      - uses: actions/upload-artifact@v1
+        with:
+          path: ./upload_url
+          name: upload_url
 
   build-Windows:
     runs-on: windows-latest
@@ -61,11 +61,11 @@ jobs:
         if: ${{ !contains(github.ref,'tags/v') }}
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Install dep
-        run: vcpkg install fmt boost:x64-windows
+        run: vcpkg install fmt:x64-windows boost-thread:x64-windows boost-stacktrace:x64-windows
       - name: build
         run: |
           mkdir build
-          cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE="Release" -Dstatic_link="${{ matrix.static_link.enable }}" -Dver="${{ env.version }}" -S . -B build
+          cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET='x64-windows' -DCMAKE_BUILD_TYPE="Release" -Dstatic_link="${{ matrix.static_link.enable }}" -Dver="${{ env.version }}" -S . -B build
           cd build
           nmake package
       - name: Download URL
@@ -81,79 +81,82 @@ jobs:
           echo "upload_url=$upload_url" >> $GITHUB_ENV
       - name: Upload package
         uses: actions/upload-artifact@v2
-        if: ${{ !contains(github.rev, 'tags/v') }}
+        if: ${{ !contains(github.ref, 'tags/v') }}
         with:
           path: ./build/Windows-${{ env.version }}-${{ matrix.static_link.name }}.zip
           name: Windows-${{ env.version }}-${{ matrix.static_link.name }}
       - name: Upload release
         id: upload_to_release
+        if: contains(github.ref, 'tags/v')
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
+          upload_url: ${{ env.upload_url }}
           asset_name: Windows-${{ env.version }}-${{ matrix.satic_link.name }}.zip
-          asset_path: Windows-${{ env.version }}-${{ matrix.static_link.name }}.zip
+          asset_path: ./build/Windows-${{ env.version }}-${{ matrix.static_link.name }}.zip
           asset_content_type: application/zip
         
 
-    build-Linux:
-      runs-on: ubuntu-latest
-      needs: create-release
-      strategy:
-        fail-fast: false
-        matrix:
-          static_link:
-            - {
-                enable: on,
-                name: static
-              }
-            - {
-                enable: off,
-                name: shared
-              }
-          cgroup: [1,2]
-        steps:
-          - uses: actions/checkout@v2
-          - run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-            shell: bash
-            if: contains(github.ref, 'tags/v')
-          - run: echo "version=autobuild" >> $GITHUB_ENV
-            shell: bash
-            if: ${{ !contains(github.ref,'tags/v') }}
-          - name: setup dep
-            run: sudo apt-get install 
-          - name: build
-            run: |
-              mkdir build
-              cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE="Release" -Dver="${{ env.version }}" -DcgroupVersion=${{ matrix.cgroup }} -Dstatic_link=${{ matrix.static_link.name }} -S . -B build
-              cd build
-              make
-              make package
-          - name: Download URL
-            uses: actions/download-artifact@v1
-            with:
-              name: upload_url
-              path: ./
-          - name: Set upload url
-            id: set_upload_url
-            run: |
-              upload_url=`cat ./upload_url`
-              echo "upload_url=$upload_url" >> $GITHUB_ENV
-          - name: Upload package
-            uses: actions/upload-artifact@v2
-            if: ${{ !contains(github.rev, 'tags/v') }}
-            with:
-              path: ./build/Linux-${{ env.version }}-cg${{ matrix.cgroup }}-${{ matrix.static_link.name }}.zip
-              name: Linux-${{ env.version }}-cg${{ matrix.cgroup }}-${{ matrix.static_link.name }}.zip
-          - name: Upload release
-            id: upload_to_release
-            if: contains(github.rev, 'tags/v')
-            uses: actions/upload-release-asset@v1.0.1
-            env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            with:
-              upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
-              asset_name: Linux-${{ env.version }}-cg${{ matrix.cgroup }}-${{ matrix.satic_link.name }}.zip
-              asset_path: Linux-${{ env.version }}-cg${{ matrix.cgroup }}-${{ matrix.static_link.name }}.zip
-              asset_content_type: application/zip
+  build-Linux:
+    runs-on: ubuntu-latest
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        static_link:
+          - {
+              enable: on,
+              name: static
+            }
+          - {
+              enable: off,
+              name: shared
+            }
+        cgroup: [1,2]
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        shell: bash
+        if: contains(github.ref, 'tags/v')
+      - run: echo "version=autobuild" >> $GITHUB_ENV
+        shell: bash
+        if: ${{ !contains(github.ref,'tags/v') }}
+      - name: setup dep
+        run: vcpkg install boost-thread:x64-linux fmt:x64-linux boost-stacktrace:x64-linux
+      - name: build
+        run: |
+          mkdir build
+          cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE="Release" -DCMAKE_TOOLCHAIN_FILE="/usr/local/share/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET='x64-linux' -Dver="${{ env.version }}" -DcgroupVersion=${{ matrix.cgroup }} -Dstatic_link=${{ matrix.static_link.enable }} -S . -B build
+          cd build
+          make package -j2
+        env:
+          CC: gcc-10
+          CXX: g++-10
+      - name: Download URL
+        uses: actions/download-artifact@v1
+        with:
+          name: upload_url
+          path: ./
+      - name: Set upload url
+        id: set_upload_url
+        run: |
+          upload_url=`cat ./upload_url`
+          echo "upload_url=$upload_url" >> $GITHUB_ENV
+      - name: Upload package
+        uses: actions/upload-artifact@v2
+        if: ${{ !contains(github.ref, 'tags/v') }}
+        with:
+          path: ./build/Linux-${{ env.version }}-cg${{ matrix.cgroup }}-${{ matrix.static_link.name }}.zip
+          name: Linux-${{ env.version }}-cg${{ matrix.cgroup }}-${{ matrix.static_link.name }}.zip
+      - name: Upload release
+        id: upload_to_release
+        if: contains(github.ref, 'tags/v')
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ env.upload_url }}
+          asset_name: Linux-${{ env.version }}-cg${{ matrix.cgroup }}-${{ matrix.static_link.name }}.zip
+          asset_path: ./build/Linux-${{ env.version }}-cg${{ matrix.cgroup }}-${{ matrix.static_link.name }}.zip
+          asset_content_type: application/zip
