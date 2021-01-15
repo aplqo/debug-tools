@@ -76,10 +76,10 @@ namespace apdebug::System
 
     private:
         int fd[3] { -1, -1, -1 };
-        bool created[3] {};
+        bool created[3] {}, instantiated = false;
         std::vector<const char*> args;
 
-        std::vector<const char*>* templateArgs;
+        std::vector<const char*>* templateArgs = nullptr;
     };
     struct killParam
     {

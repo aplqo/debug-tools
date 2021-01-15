@@ -29,8 +29,8 @@ namespace apdebug::TestTools
         bool verbose = false, redirect;
         std::vector<std::filesystem::path> file;
 
-        std::vector<const char*>* fileTemplate;
-        const char* differTemplate;
+        std::vector<const char*>* fileTemplate = nullptr;
+        const char* differTemplate = nullptr;
     };
     class TemporaryFile
     {
@@ -48,7 +48,7 @@ namespace apdebug::TestTools
         bool enable = false;
         std::vector<std::filesystem::path> files[2][2][2]; // 0: run, 1: test
 
-        std::vector<const char*>* filesTemplate[2][2][2];
+        std::vector<const char*>* filesTemplate[2][2][2] {};
     };
 }
 

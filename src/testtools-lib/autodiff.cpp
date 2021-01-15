@@ -21,18 +21,26 @@ namespace apdebug::TestTools
         if (!enable)
             return *this;
         using namespace fmt::literals;
-        file.reserve(fileTemplate->size());
-        for (unsigned int i = 0; i < fileTemplate->size(); ++i)
-            file.emplace_back(fmt::vformat(fileTemplate->at(i), args));
-        differ = fmt::vformat(differTemplate, args);
+        if (fileTemplate)
+        {
+            file.reserve(fileTemplate->size());
+            for (unsigned int i = 0; i < fileTemplate->size(); ++i)
+                file.emplace_back(fmt::vformat(fileTemplate->at(i), args));
+        }
+        if (differTemplate)
+            differ = fmt::vformat(differTemplate, args);
         return *this;
     }
     AutoDiff& AutoDiff::instantiate()
     {
-        file.reserve(fileTemplate->size());
-        for (unsigned int i = 0; i < fileTemplate->size(); ++i)
-            file.emplace_back(fileTemplate->at(i));
-        differ = differTemplate;
+        if (fileTemplate)
+        {
+            file.reserve(fileTemplate->size());
+            for (unsigned int i = 0; i < fileTemplate->size(); ++i)
+                file.emplace_back(fileTemplate->at(i));
+        }
+        if (differTemplate)
+            differ = differTemplate;
         return *this;
     }
     void AutoDiff::parseArgument(int& argc, const char* const argv[])

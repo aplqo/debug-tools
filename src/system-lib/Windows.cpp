@@ -81,12 +81,14 @@ namespace apdebug::System
     Command& Command::instantiate(fmt::format_args args)
     {
         instantiated = true;
-        fmt::vformat(*templateCmdline, args);
+        if (templateCmdline)
+            cmdline = fmt::vformat(*templateCmdline, args);
         return *this;
     }
     Command& Command::instantiate()
     {
-        cmdline = *templateCmdline;
+        if (templateCmdline)
+            cmdline = *templateCmdline;
         return *this;
     }
     Process Command::execute()

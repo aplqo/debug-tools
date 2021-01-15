@@ -83,27 +83,39 @@ namespace apdebug::System
     }
     Command& Command::appendArgument(const std::string_view val)
     {
-        args.emplace_back(val.data());
+        args.back() = val.data();
+        args.push_back(nullptr);
         return *this;
     }
     Command& Command::instantiate(fmt::format_args args)
     {
-        const size_t cnt = templateArgs->size();
-        this->args.reserve(cnt + 1);
         this->args.push_back(path.data());
-        for (size_t i = 1; i < cnt; ++i)
+        instantiated = true;
+        if (templateArgs)
         {
-            char* buf = new char[maxArgsSize + 1];
-            fmt::vformat_to(buf, templateArgs->at(i), args);
-            this->args.push_back(buf);
+            const size_t cnt = templateArgs->size();
+            this->args.reserve(cnt + 1);
+            for (size_t i = 1; i < cnt; ++i)
+            {
+                char* buf = new char[maxArgsSize + 1];
+                *fmt::vformat_to(buf, templateArgs->at(i - 1), args) = '\0';
+                this->args.push_back(buf);
+            }
         }
+        this->args.push_back(nullptr);
         return *this;
     }
     Command& Command::instantiate()
     {
+        instantiated = true;
         args.push_back(path.data());
-        args.reserve(1 + templateArgs->size());
-        std::copy(templateArgs->cbegin(), templateArgs->cend(), std::back_inserter(args));
+        if (templateArgs)
+        {
+            args.reserve(1 + templateArgs->size());
+            std::copy(templateArgs->cbegin(), templateArgs->cend(), std::back_inserter(args));
+        }
+        args.push_back(nullptr);
+        return *this;
     }
     Process Command::execute() const
     {
@@ -145,9 +157,10 @@ namespace apdebug::System
     }
     void Command::parseArgument(int& argc, const char* const argv[])
     {
+        templateArgs = new std::vector<const char*>;
         if (std::strcmp(argv[argc], "["))
         {
-            args.push_back(argv[argc]);
+            templateArgs->push_back(argv[argc]);
             return;
         }
         unsigned int stk = 1;
@@ -158,22 +171,39 @@ namespace apdebug::System
                 break;
             else if (!std::strcmp(argv[argc], "["))
                 ++stk;
-            args.push_back(argv[argc]);
+            templateArgs->push_back(argv[argc]);
         }
     }
     std::ostream& operator<<(std::ostream& os, const Command& c)
     {
-        os << std::quoted(c.path);
-        for (const auto& i : c.args)
-            os << " " << std::quoted(i);
+        if (!c.instantiated)
+        {
+            os << std::quoted(c.path);
+            if (c.templateArgs)
+            {
+                for (unsigned int i = 0; i < c.templateArgs->size(); ++i)
+                    os << " " << std::quoted(c.templateArgs->at(i));
+            }
+        }
+        else
+        {
+            for (unsigned int i = 0; i < c.args.size() - 1; ++i)
+                os << " " << std::quoted(c.args[i]);
+        }
         return os;
     }
     Command::~Command()
     {
+        if (!instantiated)
+        {
+            delete templateArgs;
+            return;
+        }
         for (unsigned int i = 0; i < 3; ++i)
             if (created[i])
                 close(fd[i]);
-        for (unsigned int i = 1; i < args.size(); ++i)
+        const unsigned int cnt = templateArgs ? templateArgs->size() : 0;
+        for (unsigned int i = 1; i <= cnt; ++i)
             delete[] args[i];
     }
 

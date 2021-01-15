@@ -67,7 +67,7 @@ namespace apdebug::System
     private:
         bool instantiated = false;
         std::string cmdline;
-        const std::string* templateCmdline;
+        const std::string* templateCmdline = nullptr;
         STARTUPINFOA info;
         HANDLE openFile[3] = { INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE };
     };
