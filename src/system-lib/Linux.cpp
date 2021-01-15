@@ -236,7 +236,7 @@ namespace apdebug::System
         fs::create_directory(cgroup);
 
 #if cgroupVersion == 1
-        swapaccount = getenv("swapaccount");
+        swapAccount = getenv("swapaccount");
 #endif
     }
     void MemoryLimit::setLimit(const MemoryUsage kb)
@@ -262,7 +262,7 @@ namespace apdebug::System
     {
         const unsigned int old = count;
 #if cgroupVersion == 1
-        count = readProperty(cgroup / (swapAccount ? "memory.memsw.failcnt" : "memory.failcnt"));
+        count = Input::readFileVal<unsigned int>(cgroup / (swapAccount ? "memory.memsw.failcnt" : "memory.failcnt"));
 #else
         count = readProperty(cgroup / "memory.events", "oom_kill");
 #endif
