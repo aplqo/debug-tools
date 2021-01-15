@@ -83,7 +83,7 @@ namespace apdebug::System
     }
     Command& Command::appendArgument(const std::string_view val)
     {
-        args.emplace_back(val);
+        args.emplace_back(val.data());
         return *this;
     }
     Command& Command::instantiate(fmt::format_args args)
@@ -94,7 +94,7 @@ namespace apdebug::System
         for (size_t i = 1; i < cnt; ++i)
         {
             char* buf = new char[maxArgsSize + 1];
-            fmt::format_to(buf, templateArgs->at(i), args);
+            fmt::vformat_to(buf, templateArgs->at(i), args);
             this->args.push_back(buf);
         }
         return *this;
