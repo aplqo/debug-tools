@@ -48,7 +48,7 @@ namespace Judger
     {
         using namespace boost::stacktrace;
         char* const ptr = ms.ptr;
-        ms.write(eof);
+        ms.write(apdebug::System::eof);
         const auto st = boost::stacktrace::stacktrace();
         const size_t dumpDepth = std::min<size_t>(st.size(), maxStackDumpDepth + dep);
         ms.write(dumpDepth);
@@ -72,7 +72,7 @@ namespace Judger
         char* const ptr = ms.ptr;
         ms.write(TimeUsage {});
         ms.write(MemoryUsage {});
-        ms.write(eof);
+        ms.write(apdebug::System::eof);
         const auto [ct, cm] = getUsage();
         const TimeUsage t = ct - protectVar->startTime;
         ms.ptr = ptr;

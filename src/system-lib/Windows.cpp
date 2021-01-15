@@ -291,4 +291,14 @@ namespace apdebug::System
         stdIO[1] = GetStdHandle(STD_OUTPUT_HANDLE);
         stdIO[2] = GetStdHandle(STD_ERROR_HANDLE);
     }
+
+    bool createPageAt(void* const address, const size_t size)
+    {
+        return !VirtualAlloc(address, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    }
+    void protectPage(void* const address, const size_t size)
+    {
+        DWORD old;
+        VirtualProtect(address, size, write ? PAGE_READWRITE : PAGE_READONLY, &old);
+    }
 }

@@ -118,8 +118,11 @@ namespace apdebug::System
     TimeUsage getTimeUsage();
     void systemInit();
 
-    constexpr static unsigned int interactArgsSize = sizeof(Process::NativeHandle);
+    bool createPageAt(void* const addr, const size_t size);
+    void protectPage(void* const address, const size_t size, const bool write);
 
+    constexpr static unsigned int interactArgsSize = sizeof(Process::NativeHandle);
+    constexpr static unsigned long long protectLowAddress = 0x00007FFFFFFEFFFF - 1024 * 1024 * 40;
 }
 
 #endif
