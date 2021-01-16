@@ -177,6 +177,8 @@ int main(int argc, char* argv[])
         else
             dest = argv[2];
         init::read();
+        if (!exists(dest))
+            create_directory(dest);
         dest = canonical(dest);
         func2 = init::install;
     }
