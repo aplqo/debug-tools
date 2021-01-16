@@ -1,3 +1,3 @@
 @echo off
 
-bin\single.exe %1 -in "%2.in" -out "%2.out" -ans "$2.ans" %3 -test "scripts\test.cmd" -testargs [ "<input>" "<output>" "<answer>" ]
+bin\single-%type%.exe -program %1 -in "%2.in" -ans "$2.ans" %3 -test "fc.exe" -test-args [  "{output}" "{answer}" ] -autodiff [ -diff "{input}.diff" -files [ "{output}" "{answer}" ] ]
