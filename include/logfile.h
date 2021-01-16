@@ -1,8 +1,11 @@
 #ifndef LOGFILE_H
 #define LOGFILE_H
 
+#ifndef Judge
 #include "include/testcase.h"
 #include "system.h"
+#endif
+#include <cstdint>
 
 namespace apdebug
 {
@@ -49,9 +52,11 @@ namespace apdebug
             Sigsegv = 0x04
         };
 
+#ifndef Judge
         const Testcase::Result* parseRE(System::MemoryStream& ms, Testcase::Result*& cur);
         const Testcase::Result* parseWarn(System::MemoryStream& ms, Testcase::Result*& cur);
         std::string readString(System::MemoryStream& ms);
+#endif
     }
 }
 
