@@ -114,11 +114,11 @@ namespace apdebug::init
     editor* select;
     void read()
     {
+        PublicFiles::read();
         cout << "Available editors:" << endl;
         editors()->print();
         select = editors()->read();
         cout << endl;
-        PublicFiles::read();
         select->read();
     }
     void install(const path& src, const path& dest)
@@ -126,7 +126,7 @@ namespace apdebug::init
         if (!exists(dest))
             create_directory(dest);
         create_directory(dest / ".config");
-        writeFile(dest / ".config" / "src", current_path().string());
+        writeFile(dest / ".config" / "src", src);
         writeFile(dest / ".config" / "editor", select->name);
         PublicFiles::install(src, dest);
         select->install(src, dest);

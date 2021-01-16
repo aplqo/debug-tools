@@ -80,6 +80,7 @@ namespace apdebug::init
     void editor::read()
     {
         unsigned int sel;
+        print();
         std::cout << "Enter compiler: ";
         std::cout.flush();
         std::cin >> sel;
