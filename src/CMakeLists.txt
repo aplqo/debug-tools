@@ -58,5 +58,5 @@ install(TARGETS diff DESTINATION bin/)
 
 add_subdirectory(init-lib)
 add_executable(init init.cpp)
-target_link_libraries(init configs)
+target_link_libraries(init configs system-lib)
 install(TARGETS init DESTINATION .)

@@ -17,6 +17,7 @@ Testcase::Platform plat;
 
 int main(int argc, char* argv[])
 {
+    System::consoleInit();
     if (strcmp(argv[1], "-no-version"))
         Output::PrintVersion("Single test runner", cout);
     TestTemplate tmpl;

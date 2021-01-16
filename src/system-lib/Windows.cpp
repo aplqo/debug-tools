@@ -295,6 +295,11 @@ namespace apdebug::System
         stdIO[1] = GetStdHandle(STD_OUTPUT_HANDLE);
         stdIO[2] = GetStdHandle(STD_ERROR_HANDLE);
     }
+    void consoleInit()
+    {
+        SetConsoleOutputCP(CP_UTF8);
+        SetConsoleCP(CP_UTF8);
+    }
 
     bool createPageAt(void* const address, const size_t size)
     {

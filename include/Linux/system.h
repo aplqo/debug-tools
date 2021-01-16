@@ -133,6 +133,7 @@ namespace apdebug::System
     TimeUsage getTimeUsage();
     std::pair<TimeUsage, MemoryUsage> getUsage();
     inline void systemInit() { }
+    inline void consoleInit() { }
 
     bool createPageAt(void* const address, const size_t size);
     void protectPage(void* const address, const size_t size, const bool write);

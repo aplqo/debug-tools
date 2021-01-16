@@ -375,6 +375,7 @@ void runTest(const unsigned int parallel)
 
 int main(int argc, char* argv[])
 {
+    System::consoleInit();
     if (strcmp(argv[1], "-no-version"))
         Output::PrintVersion("random test runner", std::cout);
     unsigned int parallel = std::thread::hardware_concurrency();

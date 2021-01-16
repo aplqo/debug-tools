@@ -1,6 +1,7 @@
 #include "include/init.h"
 #include "include/io.h"
 #include "include/utility.h"
+#include"system.h"
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -161,6 +162,7 @@ namespace apdebug::init
 }
 int main(int argc, char* argv[])
 {
+    apdebug::System::consoleInit();
     apdebug::Output::PrintVersion("Config installer", cout);
     void (*func1)(const path&) = nullptr;
     void (*func2)(const path&, const path&) = nullptr;

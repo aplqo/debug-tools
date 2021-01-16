@@ -327,6 +327,7 @@ std::vector<TestGroup> grp;
 
 int main(int argc, char* argv[])
 {
+    System::consoleInit();
     if (strcmp(argv[1], "-no-version"))
         Output::PrintVersion("group test runner", std::cout);
     for (int p = 1, id = 0; p < argc; ++p)

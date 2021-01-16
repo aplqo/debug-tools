@@ -14,6 +14,8 @@ apdebug::TestTools::AutoDiff diff;
 
 int main(int argc, char* argv[])
 {
+    apdebug::System::systemInit();
+    apdebug::System::consoleInit();
     if (strcmp(argv[1], "-no-version"))
         PrintVersion("auto diff", cout);
     diff.enable = true;
