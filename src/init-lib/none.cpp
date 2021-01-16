@@ -19,18 +19,18 @@ namespace apdebug::init::none
         {
             return nullptr;
         }
-        compiler* read()
-        {
-            return nullptr;
-        }
-        void print() const { }
-        void init(const path&, compiler*) { }
-        void update(const path&) { }
-        void deinit(const path&) { }
+        void read() override { }
+        void print() const override { }
+        void load(const path&, const Operate) override { }
+        void install(const path&, const path&) override { }
+        void init(const path&, const path&) override { }
+        void update(const path&, const path&) override { }
+        void deinit(const path&) override { }
+        void uninstall(const path&) override { }
 
     private:
-        void initImpl(const path&, bool) { }
-        void deinitImpl(const path&, bool) { }
+        void initImpl(const path&, const path&) override { }
+        void deinitImpl(const path&) { }
     } noedit;
 
     class nocompiler : public compiler
@@ -41,12 +41,14 @@ namespace apdebug::init::none
         {
             shared()->append(this);
         }
-        void init(const path&) { }
-        void update(const path&) { }
-        void deinit(const path&) { }
+        void install(const path&, const path&) override { }
+        void init(const path&, const path&) override { }
+        void update(const path&, const path&) override { }
+        void deinit(const path&) override { }
+        void uninstall(const path&) override { }
 
     private:
-        void initImpl(const path&, bool) { }
-        void deinitImpl(const path&, bool) { }
+        void initImpl(const path&, const path&) override { }
+        void deinitImpl(const path&) override { }
     } nocompile;
 }

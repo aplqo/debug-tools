@@ -1,118 +1,172 @@
 #include "include/init.h"
 #include "include/io.h"
 #include "include/utility.h"
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
-using namespace apdebug::init;
 using namespace std;
 using namespace std::filesystem;
+using namespace apdebug;
 using apdebug::Input::readFileVal;
 using apdebug::Output::writeFile;
 const auto copyOpt = copy_options::recursive | copy_options::overwrite_existing;
 
-enum class Script
+namespace apdebug::init
 {
-    Batch = 0,
-    Powershell = 1,
-    Bash = 2
-};
-namespace PublicFiles
-{
-    void initPublic(const path& dest, Script sc)
+    enum class Script
     {
-        const path c = current_path();
-        copy(c / "bin", dest / "bin", copyOpt);
-        copy(c / "lib", dest / "lib", copyOpt);
-        copy(c / "debug_tools", dest / "debug_tools", copyOpt);
-        copy(c / "config" / ".clang-format", dest, copyOpt);
-        switch (sc)
+        Batch = 0,
+        Powershell = 1,
+        Bash = 2
+    };
+    namespace PublicFiles
+    {
+        Script typ;
+
+        void init(const path& c, const path& dest)
         {
-        case Script::Batch:
-            copy(c / "scripts" / "batch", dest / "scripts", copyOpt);
-            break;
-        case Script::Powershell:
-            copy(c / "scripts" / "powershell", dest / "scripts", copyOpt);
-            break;
-        case Script::Bash:
-            copy(c / "scripts" / "shell", dest / "scripts", copyOpt);
-            break;
+            copy(c / "bin", dest / "bin", copyOpt);
+            copy(c / "lib", dest / "lib", copyOpt);
+            copy(c / "debug_tools", dest / "debug_tools", copyOpt);
+            copy(c / "config" / ".clang-format", dest, copyOpt);
+            switch (typ)
+            {
+            case Script::Batch:
+                copy(c / "scripts" / "batch", dest / "scripts", copyOpt);
+                break;
+            case Script::Powershell:
+                copy(c / "scripts" / "powershell", dest / "scripts", copyOpt);
+                break;
+            case Script::Bash:
+                copy(c / "scripts" / "shell", dest / "scripts", copyOpt);
+                break;
+            }
+        }
+        void deinit(const path& dest)
+        {
+            remove_all(dest / "bin");
+            remove_all(dest / "debug_tools");
+            remove_all(dest / "lib");
+            remove_all(dest / "scripts");
+            remove(dest / ".clang-format");
+        }
+        void install(const path& src, const path& dest)
+        {
+            writeFile(dest / ".config" / "stype", static_cast<unsigned int>(typ));
+            init(src, dest);
+        }
+        void read()
+        {
+            unsigned int sc;
+            do
+            {
+                cout << "Enter script type (0: batch, 1:powershell, 2:bash): ";
+                cout.flush();
+                cin >> sc;
+                cout << endl;
+                if (sc > 2)
+                    std::cout << "Invalid select!\n";
+                else
+                    break;
+            } while (true);
+            typ = static_cast<Script>(sc);
+        }
+        void load(const path& dest, const Operate op)
+        {
+            const path config = dest / ".config";
+            typ = Script(readFileVal<unsigned int>(config / "stype"));
+            switch (op)
+            {
+            case Operate::Update:
+                readCommandFile<false>(config / "pre-update", preScript());
+                readCommandFile<true>(config / "post-update", postScript());
+                break;
+            case Operate::Init:
+                readCommandFile<true>(config / "pre-init", preScript());
+                readCommandFile<false>(config / "post-config", postScript());
+                break;
+            case Operate::Deinit:
+                readCommandFile<false>(config / "pre-deinit", preScript());
+                readCommandFile<true>(config / "post-deinit", postScript());
+                break;
+            case Operate::Uninstall:
+                readCommandFile<false>(config / "pre-uninstall", preScript());
+                readCommandFile<true>(config / "post-uninstall", postScript());
+                break;
+            }
+        }
+        void update(const path& src, const path& dest)
+        {
+            deinit(dest);
+            init(src, dest);
         }
     }
-    void init(const path& dest, Script sc)
-    {
-        create_directory(dest / ".config");
-        writeFile(dest / ".config" / "src", current_path().string());
-        writeFile(dest / ".config" / "stype", static_cast<unsigned int>(sc));
-        initPublic(dest, sc);
-    }
-    void update(const path& dest)
-    {
-        initPublic(dest, Script(readFileVal<unsigned int>(dest / ".config" / "stype")));
-    }
-    void deinit(const path& dest)
-    {
-        remove_all(dest / "bin");
-        remove_all(dest / "debug_tools");
-        remove_all(dest / "lib");
-        remove_all(dest / "scripts");
-        remove_all(dest / ".config");
-        remove(dest / ".clang-format");
-    }
-}
 
-void install(const path& dest)
-{
-    unsigned int sc;
-    editor* e;
-    compiler* c;
+    void execSeq(init::CommandList* seq)
     {
-        cout << "Enter script type (0: batch, 1:powershell, 2:bash): ";
-        cout.flush();
-        cin >> sc;
-        cout << endl;
+        for (const auto& i : *seq)
+            i();
     }
+
+    editor* select;
+    void read()
     {
         cout << "Available editors:" << endl;
         editors()->print();
-        e = editors()->read();
+        select = editors()->read();
         cout << endl;
+        PublicFiles::read();
+        select->read();
     }
+    void install(const path& src, const path& dest)
     {
-        cout << "Available compilers" << endl;
-        e->print();
-        c = e->read();
+        if (!exists(dest))
+            create_directory(dest);
+        create_directory(dest / ".config");
+        writeFile(dest / ".config" / "src", current_path().string());
+        writeFile(dest / ".config" / "editor", select->name);
+        PublicFiles::install(src, dest);
+        select->install(src, dest);
     }
-    PublicFiles::init(dest, static_cast<Script>(sc));
-    writeFile(dest / ".config" / "editor", e->name);
-    e->init(dest, c);
+    void load(const path& dest, const Operate op)
+    {
+        PublicFiles::load(dest, op);
+        select = editors()->find(readFileLn(dest / ".config" / "editor"));
+        select->load(dest, op);
+    }
+    void update(const path& src, const path& dest)
+    {
+        PublicFiles::update(src, dest);
+        select->update(src, dest);
+    }
+    void uninstall(const path& dest)
+    {
+        select->uninstall(dest);
+        PublicFiles::deinit(dest);
+        remove_all(dest / ".config");
+    }
+    void init(const path& src, const path& dest)
+    {
+        PublicFiles::init(src, dest);
+        select->init(src, dest);
+    }
+    void deinit(const path& dest)
+    {
+        select->deinit(dest);
+        PublicFiles::deinit(dest);
+    }
 }
-void update(const path& dest)
-{
-    editor* e = editors()->find(readFileLn(dest / ".config" / "editor"));
-    PublicFiles::update(dest);
-    e->update(dest);
-}
-void uninatll(const path& dest)
-{
-    editor* e = editors()->find(readFileLn(dest / ".config" / "editor"));
-    e->deinit(dest);
-    PublicFiles::deinit(dest);
-}
-
 int main(int argc, char* argv[])
 {
     apdebug::Output::PrintVersion("Config installer", cout);
-    const auto cd = [&argv](const path& dest) -> path {
-        path ret = canonical(dest);
-        current_path(path(argv[0]).parent_path());
-        return ret;
-    };
+    void (*func1)(const path&) = nullptr;
+    void (*func2)(const path&, const path&) = nullptr;
+    path dest, src = canonical(path(argv[0]).parent_path());
     if (argc <= 1 || !strcmp(argv[1], "install"))
     {
-        path dest;
         if (argc <= 1)
         {
             cout << "Enter destination: ";
@@ -122,13 +176,42 @@ int main(int argc, char* argv[])
         }
         else
             dest = argv[2];
-        if (!exists(dest))
-            create_directory(dest);
-        install(cd(dest));
+        init::read();
+        dest = canonical(dest);
+        func2 = init::install;
     }
-    else if (!strcmp(argv[1], "update"))
-        update(cd(argv[2]));
-    else if (!strcmp(argv[1], "deinit"))
-        uninatll(cd(argv[2]));
+    else
+    {
+        dest = argv[2];
+        init::Operate op;
+        if (!strcmp(argv[1], "init"))
+        {
+            op = init::Operate::Init;
+            func2 = init::init;
+        }
+        else if (!strcmp(argv[1], "update"))
+        {
+            op = init::Operate::Update;
+            func2 = init::update;
+        }
+        else if (!strcmp(argv[1], "deinit"))
+        {
+            op = init::Operate::Deinit;
+            func1 = init::deinit;
+        }
+        else if (!strcmp(argv[2], "uninstall"))
+        {
+            op = init::Operate::Uninstall;
+            func1 = init::uninstall;
+        }
+        init::load(dest, op);
+    }
+    current_path(dest);
+    init::execSeq(init::preScript());
+    if (func1)
+        func1(dest);
+    else
+        func2(src, dest);
+    init::execSeq(init::postScript());
     return 0;
 }

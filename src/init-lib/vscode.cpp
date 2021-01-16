@@ -24,11 +24,11 @@ namespace apdebug::init::vscode
         }
 
     private:
-        void initImpl(const fs::path& p, const bool upd = false)
+        void initImpl(const fs::path&, const fs::path& dest) override
         {
-            fs::create_directory(p / ".vscode");
+            fs::create_directory(dest / ".vscode");
         }
-        void deinitImpl(const fs::path& dest, const bool)
+        void deinitImpl(const fs::path& dest) override
         {
             fs::remove_all(dest / ".vscode");
         }
@@ -44,13 +44,13 @@ namespace apdebug::init::vscode
         }
 
     private:
-        void initImpl(const fs::path& dest, const bool)
+        void initImpl(const fs::path& src, const fs::path& dest) override
         {
-            fs::directory_iterator it(confPath);
+            fs::directory_iterator it(src / confPath);
             for (auto& i : it)
-                fs::copy(i.path(), dest / ".vscode", fs::copy_options::overwrite_existing | fs::copy_options::recursive);
+                fs::copy(i, dest / ".vscode", fs::copy_options::overwrite_existing | fs::copy_options::recursive);
         }
-        void deinitImpl(const fs::path&, const bool) { }
+        void deinitImpl(const fs::path&) override { }
 
         const fs::path confPath;
     };

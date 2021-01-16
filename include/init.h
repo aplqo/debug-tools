@@ -7,15 +7,20 @@
 #include <concepts>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <iostream>
+#include <list>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace apdebug::init
 {
+    typedef std::list<std::function<void(void)>> CommandList;
     // simple file operations
     std::string readFileLn(const std::filesystem::path& p);
+    template <bool front>
+    void readCommandFile(const std::filesystem::path& p, CommandList* dest);
 
     template <class T>
     concept ListEntry = requires(T&& a, Table::Table<3> b)
@@ -40,6 +45,14 @@ namespace apdebug::init
         mutable Table::Table<3> tab;
     };
 
+    enum class Operate
+    {
+        Install,
+        Uninstall,
+        Init,
+        Deinit,
+        Update
+    };
     class compiler
     {
     public:
@@ -48,17 +61,20 @@ namespace apdebug::init
             , description(descript)
         {
         }
-        virtual void init(const std::filesystem::path& dest);
-        virtual void update(const std::filesystem::path& dest);
-        virtual void deinit(const std::filesystem::path& dest);
         virtual void read() { }
+        virtual void load(const std::filesystem::path& dest, const Operate op) {};
+        virtual void install(const std::filesystem::path& src, const std::filesystem::path& dest);
+        virtual void init(const std::filesystem::path& src, const std::filesystem::path& dest);
+        virtual void update(const std::filesystem::path& src, const std::filesystem::path& dest);
+        virtual void deinit(const std::filesystem::path& dest);
+        virtual void uninstall(const std::filesystem::path& dest);
         virtual ~compiler() { }
 
         const std::string name, description;
 
     protected:
-        virtual void initImpl(const std::filesystem::path& dest, bool upd = false) = 0;
-        virtual void deinitImpl(const std::filesystem::path& dest, bool upd = false) = 0;
+        virtual void initImpl(const std::filesystem::path& src, const std::filesystem::path& dest) = 0;
+        virtual void deinitImpl(const std::filesystem::path& dest) = 0;
     };
     list<compiler*>* shared();
 
@@ -71,23 +87,30 @@ namespace apdebug::init
             , com("Compiler")
         {
         }
-        virtual compiler* find(const std::string& c) const;
-        virtual compiler* read();
         virtual void add(compiler* c);
         virtual void print() const;
-        virtual void init(const std::filesystem::path& dest, compiler* c);
-        virtual void update(const std::filesystem::path& dest);
+        virtual void read();
+        virtual void load(const std::filesystem::path& dest, const Operate op);
+        virtual void install(const std::filesystem::path& src, const std::filesystem::path& dest);
+        virtual void init(const std::filesystem::path& src, const std::filesystem::path& dest);
+        virtual void update(const std::filesystem::path& src, const std::filesystem::path& dest);
         virtual void deinit(const std::filesystem::path& dest);
+        virtual void uninstall(const std::filesystem::path& dest);
         virtual ~editor() { }
 
         const std::string name, description;
 
     protected:
-        virtual void initImpl(const std::filesystem::path& dest, bool upd = false) = 0;
-        virtual void deinitImpl(const std::filesystem::path& dest, bool upd = false) = 0;
+        virtual compiler* find(const std::string& c) const;
+        virtual void initImpl(const std::filesystem::path& src, const std::filesystem::path& dest) = 0;
+        virtual void deinitImpl(const std::filesystem::path& dest) = 0;
 
+        compiler* c;
         list<compiler*> com;
     };
     list<editor*>* editors();
+
+    CommandList* postScript(); // command to run after operate
+    CommandList* preScript(); // command to run before operate
 }
 #endif

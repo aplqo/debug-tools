@@ -29,11 +29,11 @@ namespace apdebug::init::cmake
         }
 
     private:
-        void initImpl(const fs::path& dest, const bool)
+        void initImpl(const fs::path& src, const fs::path& dest)
         {
-            fs::copy("./config/cmake/CMakeLists.txt", dest, fs::copy_options::overwrite_existing);
+            fs::copy(src / "config" / "cmake" / "CMakeLists.txt", dest, fs::copy_options::overwrite_existing);
         }
-        void deinitImpl(const fs::path& dest, const bool)
+        void deinitImpl(const fs::path& dest)
         {
             remove(dest / "CMakeLists.txt");
         }
@@ -46,7 +46,7 @@ namespace apdebug::init::cmake
         {
             cmake::instance()->add(this);
         }
-        void read()
+        void read() override
         {
             using std::cin;
             using std::cout;
@@ -57,24 +57,16 @@ namespace apdebug::init::cmake
             cin.ignore(10, '\n');
             std::getline(cin, gen);
         }
-        void init(const fs::path& dest)
-        {
-            writeFile(dest / ".config" / "cmake_gen", gen);
-            initImpl(dest);
-        }
-        void update(const fs::path& dest)
+        void load(const fs::path& dest, const Operate) override
         {
             gen = readFileLn(dest / ".config" / "cmake_gen");
-            deinitImpl(dest);
-            initImpl(dest);
         }
-        void deinit(const fs::path& dest)
+        void install(const fs::path& src, const fs::path& dest) override
         {
-            deinitImpl(dest);
+            writeFile(dest / ".config" / "cmake_gen", gen);
+            init(src, dest);
         }
-
-    private:
-        void initImpl(const fs::path& dest, const bool upd = false)
+        void init(const fs::path&, const fs::path& dest) override
         {
             fs::create_directory(dest / "build");
             std::string cmd = "cmake ";
@@ -83,10 +75,19 @@ namespace apdebug::init::cmake
             cmd += "-S \"" + dest.string() + "\" -B \"" + (dest / "build").string() + "\"";
             std::system(cmd.c_str());
         }
-        void deinitImpl(const fs::path& dest, const bool upd = false)
+        void update(const fs::path& src, const fs::path& dest) override
+        {
+            deinit(dest);
+            init(src, dest);
+        }
+        void deinit(const fs::path& dest)
         {
             fs::remove_all(dest / "build");
         }
+
+    private:
+        void initImpl(const fs::path&, const fs::path&) override {};
+        void deinitImpl(const fs::path& dest) override {};
 
         std::string gen;
     };
@@ -105,8 +106,8 @@ namespace apdebug::init::cmake
         }
 
     private:
-        void initImpl(const fs::path&, const bool) override { }
-        void deinitImpl(const fs::path& dest, const bool) override
+        void initImpl(const fs::path&, const fs::path&) override { }
+        void deinitImpl(const fs::path& dest) override
         {
             for (const auto& i : rmList)
             {

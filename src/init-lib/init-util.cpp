@@ -13,6 +13,8 @@ using std::cout;
 using std::string;
 using std::unique_ptr;
 using std::filesystem::path;
+namespace fs = std::filesystem;
+
 namespace apdebug::init
 {
     template class list<compiler*>;
@@ -27,6 +29,16 @@ namespace apdebug::init
         static unique_ptr<list<editor*>> obj(new list<editor*>("Editors"));
         return obj.get();
     }
+    CommandList* preScript()
+    {
+        static std::unique_ptr<CommandList> obj(new CommandList);
+        return obj.get();
+    }
+    CommandList* postScript()
+    {
+        static std::unique_ptr<CommandList> obj(new CommandList);
+        return obj.get();
+    }
 
     string readFileLn(const path& p)
     {
@@ -35,13 +47,37 @@ namespace apdebug::init
         std::getline(f, ret);
         return ret;
     }
+    template <bool front>
+    void readCommandFile(const path& p, CommandList* lst)
+    {
+        CommandList cur;
+        std::ifstream f(p);
+        if (!f.is_open())
+            return;
+        while (f)
+        {
+            std::string s;
+            getline(f, s);
+            if (!s.empty())
+                cur.push_back([v = std::move(s)]() { system(v.c_str()); });
+        }
+        if constexpr (front)
+        {
+            cur.splice(cur.end(), std::move(*lst));
+            std::swap(cur, *lst);
+        }
+        else
+            lst->splice(lst->end(), std::move(cur));
+    }
+    template void readCommandFile<true>(const path&, CommandList*);
+    template void readCommandFile<false>(const path&, CommandList*);
 
     compiler* editor::find(const string& c) const
     {
         compiler* ptr = com.find(c);
         return ptr ? ptr : shared()->find(c);
     }
-    compiler* editor::read()
+    void editor::read()
     {
         unsigned int sel;
         std::cout << "Enter compiler: ";
@@ -55,19 +91,28 @@ namespace apdebug::init
             std::cin >> sel;
         }
         std::cout << std::endl;
-        compiler* ret = sel >= com.size() ? shared()->lst[sel - com.size()] : com.lst[sel];
-        ret->read();
-        return ret;
+        c = sel >= com.size() ? shared()->lst[sel - com.size()] : com.lst[sel];
+        c->read();
     }
     void editor::add(compiler* c)
     {
         com.append(c);
     }
-    void editor::init(const path& dest, compiler* c)
+    void editor::load(const path& dest, const Operate op)
     {
-        initImpl(dest);
+        c = find(readFileLn(dest / ".config" / "compiler"));
+        c->load(dest, op);
+    }
+    void editor::install(const path& src, const path& dest)
+    {
         writeFile(dest / ".config" / "compiler", c->name);
-        c->init(dest);
+        initImpl(src, dest);
+        c->install(src, dest);
+    }
+    void editor::init(const path& src, const path& dest)
+    {
+        initImpl(src, dest);
+        c->init(src, dest);
     }
     void editor::print() const
     {
@@ -75,28 +120,41 @@ namespace apdebug::init
         std::cout << std::endl;
         shared()->print(com.lst.size());
     }
-    void editor::update(const path& dest)
+    void editor::update(const path& src, const path& dest)
     {
-        deinitImpl(dest, true);
-        initImpl(dest, true);
-        find(readFileLn(dest / ".config" / "compiler"))->update(dest);
+        deinitImpl(dest);
+        initImpl(src, dest);
+        c->update(src, dest);
     }
     void editor::deinit(const path& dest)
     {
-        find(readFileLn(dest / ".config" / "compiler"))->deinit(dest);
+        c->deinit(dest);
+        deinitImpl(dest);
+    }
+    void editor::uninstall(const path& dest)
+    {
+        c->uninstall(dest);
         deinitImpl(dest);
     }
 
-    void compiler::init(const path& dest)
+    void compiler::install(const path& src, const path& dest)
     {
-        initImpl(dest);
+        initImpl(src, dest);
     }
-    void compiler::update(const path& dest)
+    void compiler::init(const path& src, const path& dest)
     {
-        deinitImpl(dest, true);
-        initImpl(dest, true);
+        initImpl(src, dest);
+    }
+    void compiler::update(const path& src, const path& dest)
+    {
+        deinitImpl(dest);
+        initImpl(src, dest);
     }
     void compiler::deinit(const path& dest)
+    {
+        deinitImpl(dest);
+    }
+    void compiler::uninstall(const path& dest)
     {
         deinitImpl(dest);
     }
