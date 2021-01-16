@@ -95,7 +95,7 @@ namespace apdebug::System
         {
             const size_t cnt = templateArgs->size();
             this->args.reserve(cnt + 1);
-            for (size_t i = 1; i < cnt; ++i)
+            for (size_t i = 1; i <= cnt; ++i)
             {
                 char* buf = new char[maxArgsSize + 1];
                 *fmt::vformat_to(buf, templateArgs->at(i - 1), args) = '\0';
@@ -195,10 +195,7 @@ namespace apdebug::System
     Command::~Command()
     {
         if (!instantiated)
-        {
-            delete templateArgs;
             return;
-        }
         for (unsigned int i = 0; i < 3; ++i)
             if (created[i])
                 close(fd[i]);
