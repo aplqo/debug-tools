@@ -126,7 +126,7 @@ namespace apdebug::init
         if (!exists(dest))
             create_directory(dest);
         create_directory(dest / ".config");
-        writeFile(dest / ".config" / "src", src);
+        writeFile(dest / ".config" / "src", src.string());
         writeFile(dest / ".config" / "editor", select->name);
         PublicFiles::install(src, dest);
         select->install(src, dest);
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        dest = argv[2];
+        dest = canonical(argv[2]);
         init::Operate op;
         if (!strcmp(argv[1], "init"))
         {
@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
             op = init::Operate::Deinit;
             func1 = init::deinit;
         }
-        else if (!strcmp(argv[2], "uninstall"))
+        else if (!strcmp(argv[1], "uninstall"))
         {
             op = init::Operate::Uninstall;
             func1 = init::uninstall;
