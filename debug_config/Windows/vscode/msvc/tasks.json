@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "type": "shell",
+            "type": "cppbuild",
             "label": "cl.exe build active file(test)",
             "command": "cl.exe",
             "args": [
@@ -14,8 +14,13 @@
                 "/Zc:__cplusplus",
                 "/Fe:",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
+                "${workspaceFolder}\\lib\\judge-lib.lib",
+                "${workspaceFolder}\\lib\\system-lib.lib",
                 "${file}"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "problemMatcher": [
                 "$msCompile"
             ],
@@ -36,6 +41,9 @@
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
                 "${file}"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "problemMatcher": [
                 "$msCompile"
             ],

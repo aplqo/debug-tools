@@ -58,7 +58,6 @@ namespace apdebug::init::vscode
 // config for windows
 #ifdef Windows
     inline static DirectCopy msvc("MSVC", "Microsoft c++ compiler", "./config/vscode/msvc");
-    inline static DirectCopy gcc("gcc", "GCC in MinGW", "./config/vscode/gcc");
     inline static DirectCopy devc("Dev c++", "Dev-c++ (Header path only)", "./config/vscode/devc");
 #endif
 #ifdef Linux
