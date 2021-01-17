@@ -51,7 +51,6 @@ namespace apdebug::System
     class Command
     {
     public:
-        Command();
         Command& appendArgument(const std::string_view arg);
         Command& instantiate(fmt::format_args args);
         Command& instantiate();

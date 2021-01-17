@@ -64,13 +64,13 @@ namespace apdebug::System
         CloseHandle(fd);
     }
 
-    Command::Command()
+    static inline void initStartInfo(STARTUPINFO& inf)
     {
-        ZeroMemory(&info, sizeof(info));
-        info.cb = sizeof(info);
-        info.hStdInput = stdIO[0];
-        info.hStdOutput = stdIO[1];
-        info.hStdError = stdIO[2];
+        ZeroMemory(&inf, sizeof(inf));
+        inf.cb = sizeof(inf);
+        inf.hStdInput = stdIO[0];
+        inf.hStdOutput = stdIO[1];
+        inf.hStdError = stdIO[2];
     }
     Command& Command::appendArgument(const std::string_view arg)
     {
@@ -83,12 +83,15 @@ namespace apdebug::System
         instantiated = true;
         if (templateCmdline)
             cmdline = fmt::vformat(*templateCmdline, args);
+        initStartInfo(info);
         return *this;
     }
     Command& Command::instantiate()
     {
+        instantiated = true;
         if (templateCmdline)
             cmdline = *templateCmdline;
+        initStartInfo(info);
         return *this;
     }
     Process Command::execute()
@@ -168,7 +171,7 @@ namespace apdebug::System
     std::ostream& operator<<(std::ostream& os, const Command& c)
     {
         os << c.path;
-        if (c.instantiated)
+        if (!c.instantiated)
         {
             if (c.templateCmdline)
                 os << " " << *c.templateCmdline;
@@ -240,7 +243,7 @@ namespace apdebug::System
                 .LimitFlags = JOB_OBJECT_LIMIT_JOB_MEMORY },
             .JobMemoryLimit = kb * 1024
         };
-        SetInformationJobObject(job, JobObjectBasicLimitInformation, &lim, sizeof(lim));
+        SetInformationJobObject(job, JobObjectExtendedLimitInformation, &lim, sizeof(lim));
     }
     void MemoryLimit::addProcess(const Process& p)
     {
