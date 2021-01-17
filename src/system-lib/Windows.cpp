@@ -167,7 +167,15 @@ namespace apdebug::System
     }
     std::ostream& operator<<(std::ostream& os, const Command& c)
     {
-        return os << (c.instantiated ? c.cmdline : *c.templateCmdline);
+        os << c.path;
+        if (c.instantiated)
+        {
+            if (c.templateCmdline)
+                os << " " << *c.templateCmdline;
+        }
+        else
+            os << " " << c.cmdline;
+        return os;
     }
     Command::~Command()
     {
@@ -305,7 +313,7 @@ namespace apdebug::System
     {
         return !VirtualAlloc(address, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     }
-    void protectPage(void* const address, const size_t size)
+    void protectPage(void* const address, const size_t size, const bool write)
     {
         DWORD old;
         VirtualProtect(address, size, write ? PAGE_READWRITE : PAGE_READONLY, &old);

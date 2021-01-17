@@ -67,7 +67,7 @@ namespace apdebug::Testcase
         else if (!strcmp(argv[argc], "-time"))
             timeLimit = atoll(argv[++argc]) * 1000;
         else if (!strcmp(argv[argc], "-htime"))
-            hardTimeLimit = atoll(argv[argc]) * 1000;
+            hardTimeLimit = atoll(argv[++argc]) * 1000;
         else
             return false;
         return true;
