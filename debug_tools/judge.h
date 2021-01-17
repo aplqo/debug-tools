@@ -21,7 +21,7 @@ namespace apdebug
         namespace Judger
         {
             extern void stopWatch(const apdebug::Logfile::RStatus stat);
-            extern void abortProgram(const unsigned int dep);
+            extern void abortProgram();
             extern int judgeMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[]);
         }
         namespace Interactor

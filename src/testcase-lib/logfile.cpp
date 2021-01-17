@@ -67,14 +67,16 @@ namespace apdebug::Logfile
         size_t dump, dep;
         ms.read(dump);
         ms.read(totalDepth);
-        ms.read(userFrameDep);
-        maxName = maxFile = 0;
+        const std::string userFile = readString(ms);
+        maxName = maxFile = userFrameDep = 0;
         for (unsigned int i = 0; i < dump; ++i)
         {
             void* addr;
             size_t line;
             ms.read(addr);
             std::string &&file = readString(ms), &&name = readString(ms);
+            if (!userFrameDep && file == userFile)
+                userFrameDep = i;
             if (fs::exists(file))
                 file = fs::relative(file, cur).string();
             maxFile = std::max(maxFile, file.size());

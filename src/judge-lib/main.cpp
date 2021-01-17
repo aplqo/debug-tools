@@ -11,7 +11,7 @@
 #include <exception>
 using namespace apdebug::System;
 using namespace apdebug::Logfile;
-static constexpr unsigned int maxStackDumpDepth = 30;
+static constexpr unsigned int maxStackDumpDepth = 40;
 static constexpr inline unsigned long long protectBase = protectLowAddress;
 
 struct ProtectedVariable
@@ -44,16 +44,23 @@ extern "C" void writeName(const char* name)
 
 namespace Judger
 {
-    extern "C" void abortProgram(const unsigned int dep)
+    std::string findUserMain(const boost::stacktrace::stacktrace& st)
+    {
+        for (auto i = st.rbegin(); i != st.rend(); ++i)
+            if (i->name() == "user::main")
+                return i->source_file();
+        return "";
+    }
+    extern "C" void abortProgram()
     {
         using namespace boost::stacktrace;
         char* const ptr = ms.ptr;
         ms.write(apdebug::System::eof);
         const auto st = boost::stacktrace::stacktrace();
-        const size_t dumpDepth = std::min<size_t>(st.size(), maxStackDumpDepth + dep);
+        const size_t dumpDepth = std::min<size_t>(st.size(), maxStackDumpDepth);
         ms.write(dumpDepth);
         ms.write(st.size());
-        ms.write(dep + 1);
+        writeString(findUserMain(st));
         for (unsigned int i = 0; i < dumpDepth; ++i)
         {
             ms.write<const void*>(st[i].address());
@@ -103,7 +110,7 @@ namespace Judger
             ms.write(Signal::Sigterm);
             break;
         }
-        abortProgram(2);
+        abortProgram();
     }
     void fpeHandler(int)
     {
@@ -121,7 +128,7 @@ namespace Judger
         if (fetestexcept(FE_UNDERFLOW))
             v |= FPE::FE_Underflow;
         ms.write(v);
-        abortProgram(2);
+        abortProgram();
     }
     void registerHandler()
     {

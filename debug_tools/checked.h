@@ -35,14 +35,14 @@ namespace apdebug
             constexpr CheckedInteger(CheckedInteger<U> s)
             {
                 if (s.dat > std::numeric_limits<T>::max())
-                    err<0>("assign");
+                    err("assign");
                 dat = s.dat;
             }
             template <class U>
             CheckedInteger& operator=(const CheckedInteger<U> v)
             {
                 if (v.dat > std::numeric_limits<T>::max())
-                    err<0>("assign");
+                    err("assign");
                 dat = v.dat;
                 return *this;
             }
@@ -50,35 +50,35 @@ namespace apdebug
             CheckedInteger& operator=(const U v)
             {
                 if (v > std::numeric_limits<T>::max())
-                    err<0>("assign");
+                    err("assign");
                 dat = v;
                 return *this;
             }
-            template <class U, unsigned int dep = 0>
+            template <class U>
             constexpr auto operator+(const U r) const
             {
                 auto ret = dat + r;
                 if (ret - dat != r || ((r > 0) ^ (ret > this->dat)))
-                    err<dep + 1>("Add");
+                    err("Add");
                 return CheckedInteger(ret);
             }
-            template <class U, unsigned int dep = 0>
+            template <class U>
             constexpr auto operator*(const U a) const
             {
                 auto ret = dat * a;
                 if (this->dat != 0 && a != 0 && (ret == 0 || ret / a != this->dat))
-                    err<dep + 1>("Multiply");
+                    err("Multiply");
                 return CheckedInteger(ret);
             }
-            template <class U, unsigned int dep = 0>
+            template <class U>
             constexpr auto operator-(const U a) const
             {
                 auto ret = dat - a;
                 if (ret + a != this->dat || (((a > 0) ^ (ret < this->dat)) && a != 0))
-                    err<dep + 1>("Minus");
+                    err("Minus");
                 return CheckedInteger(ret);
             }
-            template <class U, unsigned int dep = 0>
+            template <class U>
             constexpr auto operator/(const U r) const
             {
                 if (r == 0)
@@ -86,13 +86,13 @@ namespace apdebug
                     Judger::stopWatch(Logfile::RStatus::RuntimeError);
                     writeObject(Logfile::RtError::DivByZero);
                     writeName(typeid(T).name());
-                    Judger::abortProgram(dep + 1);
+                    Judger::abortProgram(dep);
                 }
                 return CheckedInteger(dat / r);
             }
-#define checkOp(op)                          \
-    template <class U, unsigned int dep = 0> \
-    constexpr auto operator op(const CheckedInteger<U> r) const { return this->operator op<U, dep + 1>(r.dat); }
+#define checkOp(op)    \
+    template <class U> \
+    constexpr auto operator op(const CheckedInteger<U> r) const { return this->operator op(r.dat); }
             checkOp(+);
             checkOp(-);
             checkOp(*);
@@ -108,7 +108,7 @@ namespace apdebug
                 T ret = dat;
                 ++dat;
                 if (ret >= dat)
-                    err<1>("post-incresaement");
+                    err("post-incresaement");
                 return *this;
             }
             inline CheckedInteger<T> operator++(int t)
@@ -116,7 +116,7 @@ namespace apdebug
                 T ret = dat;
                 ++dat;
                 if (ret >= dat)
-                    err<1>("pre-increasement");
+                    err("pre-increasement");
                 return ret;
             }
             inline CheckedInteger<T>& operator--()
@@ -124,7 +124,7 @@ namespace apdebug
                 T ret = dat;
                 --dat;
                 if (ret <= dat)
-                    err<1>("post-decreasement");
+                    err("post-decreasement");
                 return *this;
             }
             inline CheckedInteger<T> operator--(int t)
@@ -132,7 +132,7 @@ namespace apdebug
                 T ret = dat;
                 --dat;
                 if (ret <= dat)
-                    err<1>("pre-decreasement");
+                    err("pre-decreasement");
                 return ret;
             }
 #define oper(op)       \
@@ -169,11 +169,11 @@ namespace apdebug
             assop(>>);
             assop(<<);
 #undef assop
-#define assop(op)                                                                            \
-    template <class U>                                                                       \
-    inline auto operator op##=(const U dat) { return *this = this->operator op<U, 1>(dat); } \
-    template <class U>                                                                       \
-    inline auto operator op##=(const CheckedInteger<U> dat) { return *this = this->operator op<U, 1>(dat.dat); }
+#define assop(op)                                                                         \
+    template <class U>                                                                    \
+    inline auto operator op##=(const U dat) { return *this = this->operator op<U>(dat); } \
+    template <class U>                                                                    \
+    inline auto operator op##=(const CheckedInteger<U> dat) { return *this = this->operator op<U>(dat.dat); }
             assop(+);
             assop(-);
             assop(*);
@@ -191,14 +191,13 @@ namespace apdebug
             T dat;
 
         private:
-            template <unsigned int dep>
             static void err(const char* op)
             {
                 Judger::stopWatch(Logfile::RStatus::Warn);
                 writeObject(Logfile::Warning::Overflow);
                 writeName(typeid(T).name());
                 writeString(op);
-                Judger::abortProgram(dep + 1);
+                Judger::abortProgram();
             }
         };
         /*Stream extraction and insertion*/
