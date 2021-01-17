@@ -8,7 +8,7 @@
             "args": [
                 "/Zi",
                 "/EHsc",
-                "/DAPTEST",
+                "/DAPTEST", // add /MT or /MD depend on build is static or shared
                 "/D_CRT_SECURE_NO_WARNINGS",
                 "/W4",
                 "/Zc:__cplusplus",
