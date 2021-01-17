@@ -27,7 +27,7 @@
             "group": "build"
         },
         {
-            "type": "shell",
+            "type": "cppbuild",
             "label": "cl.exe build active file(debug)",
             "command": "cl.exe",
             "args": [
