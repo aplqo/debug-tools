@@ -101,14 +101,14 @@ namespace apdebug::System
         ret.owns = true;
         return ret;
     }
-    static inline HANDLE open(const wchar_t* file)
+    static inline HANDLE open(const wchar_t* file, const DWORD perm, const DWORD opt)
     {
         SECURITY_ATTRIBUTES sec = attrInherit;
         return CreateFileW(file,
-            GENERIC_READ | GENERIC_WRITE,
+            perm,
             FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
             &sec,
-            CREATE_ALWAYS,
+            opt,
             FILE_ATTRIBUTE_NORMAL, NULL);
     }
     Command& Command::setRedirect(RedirectType typ, const std::filesystem::path& file)
@@ -117,13 +117,13 @@ namespace apdebug::System
         switch (typ)
         {
         case RedirectType::StdIn:
-            info.hStdInput = openFile[0] = open(file.c_str());
+            info.hStdInput = openFile[0] = open(file.c_str(), GENERIC_READ, OPEN_EXISTING);
             break;
         case RedirectType::StdOut:
-            info.hStdOutput = openFile[1] = open(file.c_str());
+            info.hStdOutput = openFile[1] = open(file.c_str(), GENERIC_WRITE, CREATE_ALWAYS);
             break;
         case RedirectType::StdErr:
-            info.hStdError = openFile[2] = open(file.c_str());
+            info.hStdError = openFile[2] = open(file.c_str(), GENERIC_WRITE, CREATE_ALWAYS);
             break;
         }
         return *this;
@@ -309,10 +309,6 @@ namespace apdebug::System
         SetConsoleCP(CP_UTF8);
     }
 
-    bool createPageAt(void* const address, const size_t size)
-    {
-        return !VirtualAlloc(address, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    }
     void protectPage(void* const address, const size_t size, const bool write)
     {
         DWORD old;

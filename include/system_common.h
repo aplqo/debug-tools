@@ -12,6 +12,7 @@
 namespace apdebug::System
 {
     static const uint32_t eof = 0xffffffff;
+    static constexpr inline unsigned long long pageSize = 4096; // 4 KiB
 
     class MemoryStream
     {
@@ -65,6 +66,7 @@ namespace apdebug::System
         std::generate_n(begin, len, [&dis, &rnd]() { return character[dis(rnd)]; });
     }
     std::string GetThreadId();
+    void* roundToPage(void* p);
 
     template <class T>
     concept Replaceable = requires(fmt::format_args pat, T&& a) { { a.instantiate(pat) }; };

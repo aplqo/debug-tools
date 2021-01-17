@@ -11,15 +11,14 @@
 #include <exception>
 using namespace apdebug::System;
 using namespace apdebug::Logfile;
-static constexpr unsigned int maxStackDumpDepth = 40;
-static constexpr inline unsigned long long protectBase = protectLowAddress;
+static constexpr unsigned int maxStackDumpDepth = 40; 
 
 struct ProtectedVariable
 {
     SharedMemory shm;
     TimeUsage startTime;
 };
-#define protectVar (reinterpret_cast<ProtectedVariable*>(protectBase))
+unsigned char protectMemory[pageSize * 3];
 
 static MemoryStream ms;
 
@@ -40,6 +39,11 @@ extern "C" void writeString(const char* str)
 extern "C" void writeName(const char* name)
 {
     writeString(boost::core::demangle(name));
+}
+
+inline ProtectedVariable* getProtectVar()
+{
+    return reinterpret_cast<ProtectedVariable*>(roundToPage(&protectMemory));
 }
 
 namespace Judger
@@ -74,14 +78,15 @@ namespace Judger
     }
     extern "C" void stopWatch(const RStatus stat)
     {
-        ms.ptr = protectVar->shm.ptr + interactArgsSize;
+        const ProtectedVariable* const pvar = getProtectVar();
+        ms.ptr = pvar->shm.ptr + interactArgsSize;
         ms.write(stat);
         char* const ptr = ms.ptr;
         ms.write(TimeUsage {});
         ms.write(MemoryUsage {});
         ms.write(apdebug::System::eof);
         const auto [ct, cm] = getUsage();
-        const TimeUsage t = ct - protectVar->startTime;
+        const TimeUsage t = ct - pvar->startTime;
         ms.ptr = ptr;
         ms.write(t);
         ms.write(cm);
@@ -145,16 +150,16 @@ namespace Judger
     }
     extern "C" int judgeMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[])
     {
-        createPageAt(reinterpret_cast<void*>(protectBase), sizeof(ProtectedVariable));
-        new (protectVar) ProtectedVariable {
+        ProtectedVariable* const pvar = getProtectVar();
+        new (pvar) ProtectedVariable {
             { argv[argc - 1] }, {}
         };
         registerHandler();
         std::atexit(finishProgram);
         try
         {
-            protectVar->startTime = getTimeUsage();
-            protectPage(reinterpret_cast<void*>(protectBase), sizeof(ProtectedVariable), false);
+            pvar->startTime = getTimeUsage();
+            protectPage(pvar, sizeof(ProtectedVariable), false);
             userMain(argc - 1, argv);
             finishProgram();
         }
@@ -196,11 +201,11 @@ namespace Interactor
     }
     extern "C" int interactorMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[])
     {
-        createPageAt(reinterpret_cast<void*>(protectBase), sizeof(ProtectedVariable));
-        new (protectVar) ProtectedVariable {
+        ProtectedVariable* const pvar = getProtectVar();
+        new (pvar) ProtectedVariable {
             { argv[argc - 1] }, {}
         };
-        ms.ptr = protectVar->shm.ptr;
+        ms.ptr = pvar->shm.ptr;
         ms.read(judged.nativeHandle);
         return userMain(argc - 1, argv);
     }

@@ -341,10 +341,6 @@ namespace apdebug::System
         close(write);
     }
 
-    bool createPageAt(void* const address, const size_t len)
-    {
-        return mmap(address, len, PROT_READ | PROT_WRITE, MAP_ANON | MAP_FIXED | MAP_PRIVATE, -1, 0) != MAP_FAILED;
-    }
     void protectPage(void* const address, const size_t len, const bool write)
     {
         mprotect(address, len, write ? PROT_READ | PROT_WRITE : PROT_READ);
