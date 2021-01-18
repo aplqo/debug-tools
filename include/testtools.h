@@ -25,12 +25,12 @@ namespace apdebug::TestTools
         bool enable = false;
         unsigned int size = 200;
 
+        const char* differTemplate = nullptr;
+        std::vector<const char*>* fileTemplate = nullptr;
+
     private:
         bool verbose = false, redirect;
         std::vector<std::filesystem::path> file;
-
-        std::vector<const char*>* fileTemplate = nullptr;
-        const char* differTemplate = nullptr;
     };
     class TemporaryFile
     {
@@ -44,11 +44,11 @@ namespace apdebug::TestTools
         void parseArgument(int& argc, const char* const argv[]);
         void release(const Phase p, const bool pass, const bool accept);
 
+        std::vector<const char*>* filesTemplate[2][2][2] {};
+
     private:
         bool enable = false;
         std::vector<std::filesystem::path> files[2][2][2]; // 0: run, 1: test
-
-        std::vector<const char*>* filesTemplate[2][2][2] {};
     };
 }
 

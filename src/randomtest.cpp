@@ -96,7 +96,7 @@ void TestPointTemplate::globalInit()
         created = false;
     diff.enable = true;
     diff.size = 0;
-    diff.differ = "{input}.diff";
+    diff.differTemplate = "{input}.diff";
 }
 void TestPointTemplate::threadInit()
 {
@@ -196,6 +196,8 @@ bool TestPoint::generate()
     runResult[0] = finalResult = &judgeFail;
     testResult = &Testcase::ResultConstant::Skip;
     runPass = accept = false;
+    runTime = System::TimeUsage {};
+    runMemory = 0;
     output = "<null>";
     return false;
 }
