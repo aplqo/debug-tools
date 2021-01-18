@@ -27,6 +27,7 @@ namespace apdebug
                 AC,
                 WA,
                 Pass,
+                WAKilled,
                 RE,
                 Warn,
                 HardMLE,
@@ -42,14 +43,16 @@ namespace apdebug
         /*-----Result constants-----*/
         namespace ResultConstant
         {
-            inline const unsigned int TypeNumber = 13;
+            inline const unsigned int TypeNumber = 14;
             extern const char *name[TypeNumber], *color[TypeNumber];
             extern const Result hardTLE;
             extern const Result hardMLE;
             extern const Result TLE;
             extern const Result MLE;
             extern const Result Skip;
-            extern const Result Accept;
+            extern const Result TestAccept;
+            extern const Result InteractAccept;
+            extern const Result InteractRunWA;
         }
 
         struct LimitInfo

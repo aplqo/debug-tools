@@ -109,8 +109,9 @@ void TestPoint::execute(const bool verbose)
             printTestInfo(std::cout);
         std::cout.flush();
         test();
-        std::cout << testResult->color << testResult->verbose << SGR::None << "\n";
     }
+    if (testResult)
+        std::cout << testResult->color << testResult->verbose << SGR::None << "\n";
     else
         testResult = &Testcase::ResultConstant::Skip;
     release();

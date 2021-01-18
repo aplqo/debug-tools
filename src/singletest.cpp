@@ -47,8 +47,9 @@ int main(int argc, char* argv[])
     {
         cout << SGR::TextBlue << "[info] Start testing" << SGR::None << std::endl;
         test.test();
-        std::cout << test.testResult->color << test.testResult->verbose << "\n";
     }
+    if (test.testResult)
+        std::cout << test.testResult->color << test.testResult->verbose << "\n";
     test.release();
     std::cout << SGR::None << "\n";
     return 0;

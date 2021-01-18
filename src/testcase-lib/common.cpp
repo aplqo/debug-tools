@@ -11,27 +11,27 @@ namespace apdebug::Testcase
     /*----- Result constants-----*/
     namespace ResultConstant
     {
-        const char* name[13] = {
-            "TLE", "MLE", "AC", "WA", "Pass",
+        const char* name[14] = {
+            "TLE", "MLE", "AC", "WA", "Pass", "Killed(WA)",
             "RE", "Warn", "Hard MLE", "Hard TLE", "PV",
             "Other", "Unknown", "Skip"
         };
-        const char* color[13] = {
+        const char* color[14] = {
             SGR::TextYellow, SGR::TextYellow, SGR::TextGreen, SGR::TextRed, SGR::TextGreen,
-            SGR::TextPurple, SGR::TextYellow, SGR::TextRed, SGR::TextRed, SGR::TextRed,
-            SGR::None, SGR::None, SGR::None
+            SGR::TextRed, SGR::TextPurple, SGR::TextYellow, SGR::TextRed, SGR::TextRed,
+            SGR::TextRed, SGR::None, SGR::None, SGR::None
         };
         const Result hardTLE {
             .type = Result::Type::HardTLE,
             .name = "Hard TLE",
             .color = Output::SGR::TextRed,
-            .verbose = "[Hard TLE] Hard time limit exceed"
+            .verbose = "[Hard TLE] Killed: Hard time limit exceed."
         };
         const Result hardMLE {
             .type = Result::Type::HardMLE,
             .name = "Hard MLE",
             .color = Output::SGR::TextRed,
-            .verbose = "[Hard MLE] Hard memory limit exceed"
+            .verbose = "[Hard MLE] Killed: Hard memory limit exceed."
         };
         const Result TLE {
             .type = Result::Type::TLE,
@@ -50,11 +50,23 @@ namespace apdebug::Testcase
             .name = "skip",
             .color = ""
         };
-        const Result Accept {
+        const Result TestAccept {
             .type = Result::Type::AC,
             .name = "AC",
             .color = Output::SGR::TextGreen,
             .verbose = "[AC] Test program return code 0"
+        };
+        const Result InteractAccept {
+            .type = Result::Type::AC,
+            .name = "AC",
+            .color = Output::SGR::TextGreen,
+            .verbose = "[AC] Grader report test passed."
+        };
+        const Result InteractRunWA {
+            .type = Result::Type::WAKilled,
+            .name = "Killed",
+            .color = Output::SGR::TextRed,
+            .verbose = "[WA] Killed: Grader report wrong answer"
         };
     }
 

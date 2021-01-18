@@ -148,7 +148,8 @@ namespace apdebug
             switch (stat)
             {
             case RStatus::Accept:
-                testPass = true;
+                testResult = &ResultConstant::InteractAccept;
+                [[fallthrough]];
             case RStatus::Return:
                 if (runTime.real > timeLimit)
                 {
@@ -187,13 +188,15 @@ namespace apdebug
                 runResult[0] = cur++;
                 goto err;
             case RStatus::WrongAnswer:
+                runResult[0] = &ResultConstant::InteractRunWA;
                 *cur = Result {
                     .type = Result::Type::WA,
                     .name = "WA",
                     .color = SGR::TextRed,
                     .verbose = "[WA] Wrong answer. Message: " + Logfile::readString(ms)
                 };
-                runResult[0] = cur++;
+                testPass = false;
+                testResult = cur++;
                 goto err;
             default:
                 *cur = Result {
@@ -211,7 +214,10 @@ namespace apdebug
                 break;
             }
             tmpfiles.release(TemporaryFile::Run, runPass, accept);
-            finalResult = runResult[0];
+            if (!testResult || (testPass && !accept) || !runPass)
+                finalResult = runResult[0];
+            else
+                finalResult = testResult;
         }
         void BasicTest::test()
         {
@@ -236,7 +242,7 @@ namespace apdebug
             }
             else
             {
-                testResult = &ResultConstant::Accept;
+                testResult = &ResultConstant::TestAccept;
                 if (accept)
                     finalResult = testResult;
             }
