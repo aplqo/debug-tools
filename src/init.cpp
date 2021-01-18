@@ -1,7 +1,7 @@
 #include "include/init.h"
 #include "include/io.h"
 #include "include/utility.h"
-#include"system.h"
+#include "system.h"
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -140,6 +140,7 @@ namespace apdebug::init
     }
     void update(const path& src, const path& dest)
     {
+        writeFile(dest / ".config" / "src", src.string());
         PublicFiles::update(src, dest);
         select->update(src, dest);
     }
@@ -151,6 +152,7 @@ namespace apdebug::init
     }
     void init(const path& src, const path& dest)
     {
+        writeFile(dest / ".config" / "src", src.string());
         PublicFiles::init(src, dest);
         select->init(src, dest);
     }
