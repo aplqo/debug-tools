@@ -192,13 +192,20 @@ namespace apdebug::System
         }
         return os;
     }
+    void Command::release()
+    {
+        for (unsigned int i = 0; i < 3; ++i)
+        {
+            if (created[i])
+                close(fd[i]);
+            created[i] = false;
+        }
+    }
     Command::~Command()
     {
         if (!instantiated)
             return;
-        for (unsigned int i = 0; i < 3; ++i)
-            if (created[i])
-                close(fd[i]);
+        release();
         const unsigned int cnt = templateArgs ? templateArgs->size() : 0;
         for (unsigned int i = 1; i <= cnt; ++i)
             delete[] args[i];

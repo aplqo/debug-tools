@@ -414,6 +414,6 @@ int main(int argc, char* argv[])
         std::cout << SGR::TextCyan << "\n[Info] Test passed removed temporary directory.";
         remove_all(global.tmpdir);
     }
-    std::cout.put('\n');
+    std::cout << SGR::None << "\n";
     return 0;
 }

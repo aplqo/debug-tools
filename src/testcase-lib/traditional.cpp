@@ -118,6 +118,7 @@ namespace apdebug
             platform->memoryProtect.addProcess(p);
             exitStatus = platform->timeProtect.waitFor(p).second;
             parse();
+            program.release();
         }
 #endif
         void BasicTest::parse()

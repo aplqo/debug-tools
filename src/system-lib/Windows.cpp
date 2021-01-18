@@ -117,16 +117,29 @@ namespace apdebug::System
     Command& Command::setRedirect(RedirectType typ, const std::filesystem::path& file)
     {
         info.dwFlags = STARTF_USESTDHANDLES;
+        SECURITY_ATTRIBUTES sec = attrInherit;
         switch (typ)
         {
         case RedirectType::StdIn:
-            info.hStdInput = openFile[0] = open(file.c_str(), GENERIC_READ, OPEN_EXISTING);
+            info.hStdInput = openFile[0] = CreateFileW(file.c_str(),
+                GENERIC_READ,
+                FILE_SHARE_READ | FILE_SHARE_DELETE,
+                &sec, OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
             break;
         case RedirectType::StdOut:
-            info.hStdOutput = openFile[1] = open(file.c_str(), GENERIC_WRITE, CREATE_ALWAYS);
+            info.hStdOutput = openFile[1] = CreateFileW(file.c_str(),
+                GENERIC_WRITE,
+                FILE_SHARE_READ | FILE_SHARE_DELETE,
+                &sec, CREATE_ALWAYS,
+                FILE_ATTRIBUTE_TEMPORARY, NULL);
             break;
         case RedirectType::StdErr:
-            info.hStdError = openFile[2] = open(file.c_str(), GENERIC_WRITE, CREATE_ALWAYS);
+            info.hStdError = openFile[2] = CreateFileW(file.c_str(),
+                GENERIC_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE,
+                FILE_SHARE_READ | FILE_SHARE_DELETE,
+                &sec, CREATE_ALWAYS,
+                FILE_ATTRIBUTE_TEMPORARY, NULL);
             break;
         }
         return *this;
@@ -180,11 +193,21 @@ namespace apdebug::System
             os << " " << c.cmdline;
         return os;
     }
+    void Command::release()
+    {
+        for (auto& i : openFile)
+        {
+            if (i != INVALID_HANDLE_VALUE)
+            {
+                FlushFileBuffers(i);
+                CloseHandle(i);
+            }
+            i = INVALID_HANDLE_VALUE;
+        }
+    }
     Command::~Command()
     {
-        for (auto i : openFile)
-            if (i != INVALID_HANDLE_VALUE)
-                CloseHandle(i);
+        release();
     }
 
     std::pair<bool, int> TimeLimit::waitFor(const Process& p)

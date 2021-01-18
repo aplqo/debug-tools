@@ -58,6 +58,7 @@ namespace apdebug::System
         Command& setRedirect(RedirectType typ, const std::filesystem::path& file);
         Command& setRedirect(RedirectType typ, HANDLE had);
         void parseArgument(int&, const char* const argv[]);
+        void release();
         friend std::ostream& operator<<(std::ostream& os, const Command& cmd);
         ~Command();
 
