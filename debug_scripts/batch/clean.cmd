@@ -5,3 +5,4 @@ del *.obj
 del *.pdb
 del *.exe
 del *.out
+del *.diff
