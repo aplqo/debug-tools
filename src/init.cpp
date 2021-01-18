@@ -87,7 +87,7 @@ namespace apdebug::init
                 break;
             case Operate::Init:
                 readCommandFile<true>(config / "pre-init", preScript());
-                readCommandFile<false>(config / "post-config", postScript());
+                readCommandFile<false>(config / "post-init", postScript());
                 break;
             case Operate::Deinit:
                 readCommandFile<false>(config / "pre-deinit", preScript());
