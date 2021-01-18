@@ -75,6 +75,7 @@ namespace apdebug::TestTools
                 std::cout << SGR::TextBlue << "Autodiff: Test command " << cmd << SGR::None << std::endl;
             }
             cmd.setRedirect(System::RedirectType::StdOut, differ);
+            redirect = true;
         }
         else
         {
