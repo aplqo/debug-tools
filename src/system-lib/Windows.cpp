@@ -104,16 +104,6 @@ namespace apdebug::System
         ret.owns = true;
         return ret;
     }
-    static inline HANDLE open(const wchar_t* file, const DWORD perm, const DWORD opt)
-    {
-        SECURITY_ATTRIBUTES sec = attrInherit;
-        return CreateFileW(file,
-            perm,
-            FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
-            &sec,
-            opt,
-            FILE_ATTRIBUTE_NORMAL, NULL);
-    }
     Command& Command::setRedirect(RedirectType typ, const std::filesystem::path& file)
     {
         info.dwFlags = STARTF_USESTDHANDLES;
