@@ -100,9 +100,9 @@ namespace apdebug::TestTools
             redirect = exceed;
             if (exceed)
                 cmd.setRedirect(System::RedirectType::StdOut, differ);
-            else
-                differ = "<unused>";
         }
+        if (!redirect)
+            differ = "<unused>";
     }
     void AutoDiff::release()
     {
