@@ -108,7 +108,12 @@ namespace apdebug::TestTools
     {
         if (!enable)
             return;
-        if (redirect && Utility::removeFile(differ) && verbose)
-            std::cout << SGR::TextGreen << "Autodiff: Test passed removed output file." << SGR::None << "\n";
+        if (redirect)
+        {
+            if (Utility::removeFile(differ) && verbose)
+                std::cout << SGR::TextGreen << "Autodiff: Test passed removed output file." << SGR::None << "\n";
+        }
+        else
+            differ = "<unused>";
     }
 }

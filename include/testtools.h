@@ -29,7 +29,7 @@ namespace apdebug::TestTools
         std::vector<const char*>* fileTemplate = nullptr;
 
     private:
-        bool verbose = false, redirect;
+        bool verbose = false, redirect = false;
         std::vector<std::filesystem::path> file;
     };
     class TemporaryFile
