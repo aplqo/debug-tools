@@ -11,7 +11,7 @@
 #include <exception>
 using namespace apdebug::System;
 using namespace apdebug::Logfile;
-static constexpr unsigned int maxStackDumpDepth = 40; 
+static constexpr unsigned int maxStackDumpDepth = 40;
 
 struct ProtectedVariable
 {
@@ -51,7 +51,7 @@ namespace Judger
     std::string findUserMain(const boost::stacktrace::stacktrace& st)
     {
         for (auto i = st.rbegin(); i != st.rend(); ++i)
-            if (i->name() == "user::main")
+            if (i->name().starts_with("_User::main"))
                 return i->source_file();
         return "";
     }

@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace user
+namespace _User
 {
     int main(int, const char* const[]);
 }
@@ -41,12 +41,12 @@ namespace apdebug
 int main(int argc, const char* const argv[])
 {
 #ifndef Interactive
-    return apdebug::Judger::judgeMain(user::main, argc, argv);
+    return apdebug::Judger::judgeMain(_User::main, argc, argv);
 #else
-    return apdebug::Interactor::interactorMain(user::main, argc, argv);
+    return apdebug::Interactor::interactorMain(_User::main, argc, argv);
 #endif
 }
 
-#define main(...) user::main(int argc, const char* const argv[])
+#define main(...) _User::main(int argc, const char* const argv[])
 
 #endif
