@@ -6,4 +6,4 @@ param(
     [String]$tmpdir,
     [String]$time
 )
-& ./bin/random-$env:type -program $pro -tmpdir "$tmpdir" -generator "$generator" -genargs $genarg -times $time -stop-on-error  -test fc -test-args [ "{output}" "{answer}" ] 
+& ./bin/random-$env:type -program $pro -tmpdir "$tmpdir" -generator "$generator" -gen-args $genarg -times $time -stop-on-error  -test fc -test-args [ "{output}" "{answer}" ] 
