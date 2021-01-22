@@ -6,7 +6,7 @@ readonly args="-std=c++11 -Wall -Wextra -Weffc++ -Wdisabled-optimization"
 
 if [ "$2" = 'test' ]
 then
-	$CXX -DAPTEST -L. -ljudge-lib -I. $args "$fdir/$base.cpp" -o "$fdir/$base"
+	$CXX -DAPTEST "$fdir/$base.cpp" $args -I. -L./lib -ljudge-lib -lsystem-lib -lrt -lbacktrace -ldl -o "$fdir/$base"
 else
 	$CXX -DAPDEBUG $args "$fdir/$base.cpp" -g  -o "$fdir/$base"
 fi
