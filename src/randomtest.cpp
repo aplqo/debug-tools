@@ -26,7 +26,7 @@ namespace SGR = Output::SGR;
 typedef Testcase::BasicTemplate TestTemplateBase;
 typedef Testcase::BasicTest TestcaseType;
 
-const std::chrono::milliseconds print_duration(100);
+const std::chrono::milliseconds print_duration(400);
 const unsigned int maxStdRetries = 20, maxVaRetries = 20;
 typedef Table::Table<12> ResultTable;
 ResultTable results(std::array<const char*, 12> {
