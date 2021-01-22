@@ -1,6 +1,7 @@
 aux_source_directory(./testcase-lib testsrc)
 aux_source_directory(./testtools-lib toolsrc)
 aux_source_directory(./judge-lib judgesrc)
+aux_source_directory(./system-lib/${CMAKE_SYSTEM_NAME} systemsrc)
 
 find_package(fmt CONFIG REQUIRED)
 link_libraries(fmt::fmt-header-only)
@@ -14,7 +15,7 @@ else()
 	find_package(Boost REQUIRED COMPONENTS stacktrace_windbg thread)
 endif()
 
-add_library(system-lib STATIC ./system-lib/${CMAKE_SYSTEM_NAME}.cpp ./system-lib/common.cpp)
+add_library(system-lib STATIC ${systemsrc} ./system-lib/common.cpp)
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	target_link_libraries(system-lib PUBLIC rt pthread)
 endif()
