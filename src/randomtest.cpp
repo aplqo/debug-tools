@@ -221,7 +221,7 @@ void TestPoint::printTable(ResultTable& dest)
 {
     dest.newColumn(finalResult->color);
     dest.writeColumnList<ResultColumn, std::string&&>({ { ResultColumn::id, fmt::format("{}.{}", tid, id) },
-        { ResultColumn::runState, std::string(runResult[0]->name) + (runResult[1] ? runResult[1]->name : "") },
+        { ResultColumn::runState, std::string(runResult[0]->name) + (runResult[1] ? std::string(" ") + runResult[1]->name : "") },
         { ResultColumn::input, input.string() },
         { ResultColumn::output, output.string() },
         { ResultColumn::answer, answer.string() },
