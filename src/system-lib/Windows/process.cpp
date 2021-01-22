@@ -1,22 +1,8 @@
 #include "include/io.h"
 #include "system.h"
 
-#include <Psapi.h>
-#include <windows.h>
-
-#include <charconv>
-#include <cstring>
-#include <iomanip>
-#include <thread>
-
 namespace apdebug::System
 {
-    static const size_t sharedMemorySize = 1 * 1024 * 1024; // 1 MiB
-    static const SECURITY_ATTRIBUTES attrInherit {
-        .nLength = sizeof(SECURITY_ATTRIBUTES),
-        .lpSecurityDescriptor = nullptr,
-        .bInheritHandle = true
-    };
     static HANDLE stdIO[3];
 
     Process::Process(NativeHandle v)
@@ -44,24 +30,6 @@ namespace apdebug::System
     {
         TerminateProcess(nativeHandle, 9);
         WaitForSingleObject(nativeHandle, INFINITE);
-    }
-
-    SharedMemory::SharedMemory()
-    {
-        SECURITY_ATTRIBUTES sec = attrInherit;
-        fd = CreateFileMapping(INVALID_HANDLE_VALUE, &sec, PAGE_READWRITE, 0, sharedMemorySize, NULL);
-        ptr = reinterpret_cast<char*>(MapViewOfFile(fd, FILE_MAP_ALL_ACCESS, 0, 0, sharedMemorySize));
-        *fmt::format_to(name, "{}", reinterpret_cast<unsigned long long>(fd)) = '\0';
-    }
-    SharedMemory::SharedMemory(const char* name)
-    {
-        fd = reinterpret_cast<HANDLE>(std::stoull(name));
-        ptr = reinterpret_cast<char*>(MapViewOfFile(fd, FILE_MAP_ALL_ACCESS, 0, 0, sharedMemorySize));
-    }
-    SharedMemory::~SharedMemory()
-    {
-        UnmapViewOfFile(ptr);
-        CloseHandle(fd);
     }
 
     static inline void initStartInfo(STARTUPINFO& inf)
@@ -107,7 +75,11 @@ namespace apdebug::System
     Command& Command::setRedirect(RedirectType typ, const std::filesystem::path& file)
     {
         info.dwFlags = STARTF_USESTDHANDLES;
-        SECURITY_ATTRIBUTES sec = attrInherit;
+        SECURITY_ATTRIBUTES sec {
+            .nLength = sizeof(SECURITY_ATTRIBUTES),
+            .lpSecurityDescriptor = nullptr,
+            .bInheritHandle = true
+        };
         switch (typ)
         {
         case RedirectType::StdIn:
@@ -200,134 +172,10 @@ namespace apdebug::System
         release();
     }
 
-    std::pair<bool, int> TimeLimit::waitFor(const Process& p)
-    {
-        if (WaitForSingleObject(p.nativeHandle, time) == WAIT_TIMEOUT)
-        {
-            p.terminate();
-            exceed = true;
-            return std::make_pair(true, 9);
-        }
-        exceed = false;
-        DWORD ret;
-        GetExitCodeProcess(p.nativeHandle, &ret);
-        return std::make_pair(false, ret);
-    }
-
-    void watchThread(KillParam* const kp)
-    {
-        ULONG_PTR key;
-        LPOVERLAPPED over;
-        DWORD msg;
-        while (GetQueuedCompletionStatus(kp->iocp, &msg, &key, &over, INFINITE))
-        {
-            if (msg == JOB_OBJECT_MSG_JOB_MEMORY_LIMIT)
-            {
-                TerminateJobObject(kp->job, 9);
-                ++(kp->exceed);
-            }
-            else if (key)
-                return;
-        }
-    }
-    MemoryLimit::MemoryLimit()
-    {
-        job = CreateJobObject(NULL, NULL);
-        iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 1);
-        cntrl = KillParam {
-            .job = job,
-            .iocp = iocp,
-            .exceed = 0
-        };
-        {
-            JOBOBJECT_ASSOCIATE_COMPLETION_PORT ass {
-                .CompletionKey = 0, .CompletionPort = iocp
-            };
-            SetInformationJobObject(job, JobObjectAssociateCompletionPortInformation, &ass, sizeof(ass));
-        }
-        exceed = 0;
-        watch = std::thread(watchThread, &cntrl);
-    }
-    void MemoryLimit::setLimit(const MemoryUsage kb)
-    {
-
-        JOBOBJECT_EXTENDED_LIMIT_INFORMATION lim {
-            .BasicLimitInformation = JOBOBJECT_BASIC_LIMIT_INFORMATION {
-                .LimitFlags = JOB_OBJECT_LIMIT_JOB_MEMORY },
-            .JobMemoryLimit = kb * 1024
-        };
-        SetInformationJobObject(job, JobObjectExtendedLimitInformation, &lim, sizeof(lim));
-    }
-    void MemoryLimit::addProcess(const Process& p)
-    {
-        AssignProcessToJobObject(job, p.nativeHandle);
-    }
-    bool MemoryLimit::isExceed()
-    {
-        const unsigned int old = exceed;
-        exceed = cntrl.exceed;
-        return exceed > old;
-    }
-    MemoryLimit::~MemoryLimit()
-    {
-        PostQueuedCompletionStatus(iocp, 0, 1, 0);
-        watch.join();
-        CloseHandle(iocp);
-        CloseHandle(job);
-    }
-
-    Pipe::Pipe()
-    {
-        SECURITY_ATTRIBUTES sec = attrInherit;
-        CreatePipe(&read, &write, &sec, 0);
-    }
-    Pipe::~Pipe()
-    {
-        CloseHandle(read);
-        CloseHandle(write);
-    }
-    TimeUsage getTimeUsage()
-    {
-        static LARGE_INTEGER dur {};
-        if (!dur.QuadPart)
-            QueryPerformanceFrequency(&dur);
-        FILETIME create, exit, user, sys;
-        LARGE_INTEGER cur;
-        QueryPerformanceCounter(&cur);
-        GetProcessTimes(GetCurrentProcess(), &create, &exit, &sys, &user);
-        return TimeUsage {
-            .real = static_cast<unsigned long long>(cur.QuadPart / (dur.QuadPart / 1000000)),
-            .user = ((static_cast<unsigned long long>(user.dwHighDateTime) << std::numeric_limits<DWORD>::digits) | user.dwLowDateTime) / 10,
-            .sys = ((static_cast<unsigned long long>(sys.dwHighDateTime) << std::numeric_limits<DWORD>::digits) | sys.dwLowDateTime) / 10
-        };
-    }
-    static MemoryUsage getMemoryUsage()
-    {
-        PROCESS_MEMORY_COUNTERS val;
-        GetProcessMemoryInfo(GetCurrentProcess(), &val, sizeof(val));
-        return val.PeakWorkingSetSize / 1024;
-    }
-    std::pair<TimeUsage, MemoryUsage> getUsage()
-    {
-        const TimeUsage tu = getTimeUsage();
-        return std::pair(tu, getMemoryUsage());
-    }
-
     void systemInit()
     {
         stdIO[0] = GetStdHandle(STD_INPUT_HANDLE);
         stdIO[1] = GetStdHandle(STD_OUTPUT_HANDLE);
         stdIO[2] = GetStdHandle(STD_ERROR_HANDLE);
-    }
-    void consoleInit()
-    {
-        SetConsoleOutputCP(CP_UTF8);
-        SetConsoleCP(CP_UTF8);
-    }
-
-    void protectPage(void* const address, const size_t size, const bool write)
-    {
-        DWORD old;
-        VirtualProtect(address, size, write ? PAGE_READWRITE : PAGE_READONLY, &old);
     }
 }
