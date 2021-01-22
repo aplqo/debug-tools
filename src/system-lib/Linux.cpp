@@ -119,7 +119,7 @@ namespace apdebug::System
     }
     Process Command::execute() const
     {
-        const pid_t p = fork();
+        const pid_t p = vfork();
         if (!p)
         {
             if (fd[0] != -1)
