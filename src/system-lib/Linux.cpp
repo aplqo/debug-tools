@@ -37,7 +37,7 @@ namespace apdebug::System
     {
         int status;
         waitpid(nativeHandle, &status, 0);
-        return WEXITSTATUS(status);
+        return status;
     }
     void Process::terminate() const
     {
@@ -243,7 +243,7 @@ namespace apdebug::System
         waitpid(p.nativeHandle, &stat, 0);
         if (!cntrl.killed)
             timer_settime(timer, 0, &stop, nullptr);
-        return std::make_pair(cntrl.killed, WEXITSTATUS(stat));
+        return std::make_pair(cntrl.killed, stat);
     }
     bool TimeLimit::isExceed() { return cntrl.killed; }
     TimeLimit::~TimeLimit()
