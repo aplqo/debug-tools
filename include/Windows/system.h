@@ -17,7 +17,7 @@
 
 namespace apdebug::System
 {
-    const unsigned int shmNameLength = 30;
+    const unsigned int shmNameLength = 10;
 
     struct Process
     {
@@ -68,8 +68,7 @@ namespace apdebug::System
         bool instantiated = false;
         std::string cmdline;
         const std::string* templateCmdline = nullptr;
-        STARTUPINFOA info;
-        HANDLE openFile[3] = { INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE };
+        HANDLE openFile[3] = { INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE }, stdioHandle[3];
     };
     class TimeLimit
     {

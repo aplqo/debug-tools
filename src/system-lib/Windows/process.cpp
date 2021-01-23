@@ -1,6 +1,8 @@
 #include "include/io.h"
 #include "system.h"
 
+#include <processthreadsapi.h>
+
 namespace apdebug::System
 {
     static HANDLE stdIO[3];
@@ -32,14 +34,6 @@ namespace apdebug::System
         WaitForSingleObject(nativeHandle, INFINITE);
     }
 
-    static inline void initStartInfo(STARTUPINFO& inf)
-    {
-        ZeroMemory(&inf, sizeof(inf));
-        inf.cb = sizeof(inf);
-        inf.hStdInput = stdIO[0];
-        inf.hStdOutput = stdIO[1];
-        inf.hStdError = stdIO[2];
-    }
     Command& Command::appendArgument(const std::string_view arg)
     {
         instantiated = true;
@@ -51,7 +45,7 @@ namespace apdebug::System
         instantiated = true;
         if (templateCmdline)
             cmdline = fmt::vformat(*templateCmdline, args);
-        initStartInfo(info);
+        std::copy(stdIO, stdIO + 3, stdioHandle);
         return *this;
     }
     Command& Command::instantiate()
@@ -59,22 +53,43 @@ namespace apdebug::System
         instantiated = true;
         if (templateCmdline)
             cmdline = *templateCmdline;
-        initStartInfo(info);
+        std::copy(stdIO, stdIO + 3, stdioHandle);
         return *this;
     }
     Process Command::execute()
     {
+        size_t size;
+        InitializeProcThreadAttributeList(NULL, 1, 0, &size);
+        STARTUPINFOEXA info {
+            .StartupInfo {
+                .cb = sizeof(STARTUPINFOEXA),
+                .dwFlags = STARTF_USESTDHANDLES,
+                .hStdInput = stdioHandle[0],
+                .hStdOutput = stdioHandle[1],
+                .hStdError = stdioHandle[2] },
+            .lpAttributeList = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(new unsigned char[size])
+        };
         PROCESS_INFORMATION pinfo;
         cmdline = path.data() + (" " + cmdline);
-        CreateProcessA(NULL, const_cast<char*>(cmdline.data()), NULL, NULL, true, 0, NULL, NULL, &info, &pinfo);
+        InitializeProcThreadAttributeList(info.lpAttributeList, 1, 0, &size);
+        UpdateProcThreadAttribute(info.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, stdioHandle, sizeof(stdioHandle), NULL, NULL);
+
+        CreateProcessA(
+            NULL, const_cast<char*>(cmdline.data()),
+            NULL, NULL, true,
+            EXTENDED_STARTUPINFO_PRESENT, NULL, NULL,
+            reinterpret_cast<STARTUPINFOA*>(&info), &pinfo);
+
+        DeleteProcThreadAttributeList(info.lpAttributeList);
+        delete[] reinterpret_cast<unsigned char*>(info.lpAttributeList);
         CloseHandle(pinfo.hThread);
+
         Process ret(pinfo.hProcess);
         ret.owns = true;
         return ret;
     }
     Command& Command::setRedirect(RedirectType typ, const std::filesystem::path& file)
     {
-        info.dwFlags = STARTF_USESTDHANDLES;
         SECURITY_ATTRIBUTES sec {
             .nLength = sizeof(SECURITY_ATTRIBUTES),
             .lpSecurityDescriptor = nullptr,
@@ -83,21 +98,21 @@ namespace apdebug::System
         switch (typ)
         {
         case RedirectType::StdIn:
-            info.hStdInput = openFile[0] = CreateFileW(file.c_str(),
+            stdioHandle[0] = openFile[0] = CreateFileW(file.c_str(),
                 GENERIC_READ,
                 FILE_SHARE_READ | FILE_SHARE_DELETE,
                 &sec, OPEN_EXISTING,
                 FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
             break;
         case RedirectType::StdOut:
-            info.hStdOutput = openFile[1] = CreateFileW(file.c_str(),
-                GENERIC_WRITE,
-                FILE_SHARE_READ | FILE_SHARE_DELETE,
+            stdioHandle[1] = openFile[1] = CreateFileW(file.c_str(),
+                GENERIC_READ | GENERIC_WRITE,
+                FILE_SHARE_DELETE,
                 &sec, CREATE_ALWAYS,
                 FILE_ATTRIBUTE_TEMPORARY, NULL);
             break;
         case RedirectType::StdErr:
-            info.hStdError = openFile[2] = CreateFileW(file.c_str(),
+            stdioHandle[2] = openFile[2] = CreateFileW(file.c_str(),
                 GENERIC_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE,
                 FILE_SHARE_READ | FILE_SHARE_DELETE,
                 &sec, CREATE_ALWAYS,
@@ -108,17 +123,16 @@ namespace apdebug::System
     }
     Command& Command::setRedirect(RedirectType typ, HANDLE had)
     {
-        info.dwFlags = STARTF_USESTDHANDLES;
         switch (typ)
         {
         case RedirectType::StdIn:
-            info.hStdInput = had;
+            stdioHandle[0] = had;
             break;
         case RedirectType::StdOut:
-            info.hStdOutput = had;
+            stdioHandle[1] = had;
             break;
         case RedirectType::StdErr:
-            info.hStdError = had;
+            stdioHandle[2] = had;
             break;
         }
         return *this;
@@ -158,14 +172,11 @@ namespace apdebug::System
     void Command::release()
     {
         for (auto& i : openFile)
-        {
             if (i != INVALID_HANDLE_VALUE)
             {
-                FlushFileBuffers(i);
                 CloseHandle(i);
+                i = INVALID_HANDLE_VALUE;
             }
-            i = INVALID_HANDLE_VALUE;
-        }
     }
     Command::~Command()
     {

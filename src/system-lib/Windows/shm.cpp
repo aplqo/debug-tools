@@ -6,18 +6,14 @@ namespace apdebug::System
 
     SharedMemory::SharedMemory()
     {
-        SECURITY_ATTRIBUTES sec {
-            .nLength = sizeof(SECURITY_ATTRIBUTES),
-            .lpSecurityDescriptor = nullptr,
-            .bInheritHandle = true
-        };
-        fd = CreateFileMapping(INVALID_HANDLE_VALUE, &sec, PAGE_READWRITE, 0, sharedMemorySize, NULL);
+        randomName(name, shmNameLength);
+        name[shmNameLength] = '\0';
+        fd = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sharedMemorySize, name);
         ptr = reinterpret_cast<char*>(MapViewOfFile(fd, FILE_MAP_ALL_ACCESS, 0, 0, sharedMemorySize));
-        *fmt::format_to(name, "{}", reinterpret_cast<unsigned long long>(fd)) = '\0';
     }
     SharedMemory::SharedMemory(const char* name)
     {
-        fd = reinterpret_cast<HANDLE>(std::stoull(name));
+        fd = OpenFileMappingA(FILE_MAP_ALL_ACCESS, false, name);
         ptr = reinterpret_cast<char*>(MapViewOfFile(fd, FILE_MAP_ALL_ACCESS, 0, 0, sharedMemorySize));
     }
     SharedMemory::~SharedMemory()
