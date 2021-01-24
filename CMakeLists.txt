@@ -13,8 +13,10 @@ else()
 	link_libraries(stdc++fs)
 endif()
 
-cmake_policy(SET CMP0069 NEW)
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION true)
+if (CMAKE_BUILD_TYPE EQUAL "Release")
+	cmake_policy(SET CMP0069 NEW)
+	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION true)
+endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 
