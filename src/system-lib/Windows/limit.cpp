@@ -4,7 +4,7 @@ namespace apdebug::System
 {
     std::pair<bool, int> TimeLimit::waitFor(const Process& p)
     {
-        if (WaitForSingleObject(p.nativeHandle, time) == WAIT_TIMEOUT)
+        if (WaitForSingleObject(p.handle, time) == WAIT_TIMEOUT)
         {
             p.terminate();
             exceed = true;
@@ -12,7 +12,7 @@ namespace apdebug::System
         }
         exceed = false;
         DWORD ret;
-        GetExitCodeProcess(p.nativeHandle, &ret);
+        GetExitCodeProcess(p.handle, &ret);
         return std::make_pair(false, ret);
     }
 
@@ -62,7 +62,7 @@ namespace apdebug::System
     }
     void MemoryLimit::addProcess(const Process& p)
     {
-        AssignProcessToJobObject(job, p.nativeHandle);
+        AssignProcessToJobObject(job, p.handle);
     }
     bool MemoryLimit::isExceed()
     {
