@@ -205,8 +205,10 @@ namespace Interactor
         new (pvar) ProtectedVariable {
             { argv[argc - 1] }, {}
         };
+        Process::Pid p;
         ms.ptr = pvar->shm.ptr;
-        ms.read(judged.nativeHandle);
+        ms.read(p);
+        judged = Process { p };
         return userMain(argc - 1, argv);
     }
 }

@@ -59,7 +59,7 @@ namespace apdebug::System
     }
     void MemoryLimit::addProcess(const Process& p)
     {
-        Output::writeFile(cgroup / "cgroup.procs", p.nativeHandle);
+        Output::writeFile(cgroup / "cgroup.procs", p.pid);
     }
     bool MemoryLimit::isExceed()
     {

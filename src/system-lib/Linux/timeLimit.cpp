@@ -31,10 +31,10 @@ namespace apdebug::System
     std::pair<bool, int> TimeLimit::waitFor(const Process& p)
     {
         static const itimerspec stop {};
-        cntrl = killParam { .pid = p.nativeHandle, .killed = false };
+        cntrl = killParam { .pid = p.pid, .killed = false };
         timer_settime(timer, 0, &spec, nullptr);
         int stat;
-        waitpid(p.nativeHandle, &stat, 0);
+        waitpid(p.pid, &stat, 0);
         if (!cntrl.killed)
             timer_settime(timer, 0, &stop, nullptr);
         return std::make_pair(cntrl.killed, stat);

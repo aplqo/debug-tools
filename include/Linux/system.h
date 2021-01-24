@@ -23,19 +23,11 @@ namespace apdebug::System
 
     struct Process
     {
-        typedef pid_t NativeHandle;
-        Process() = default;
-        Process(const NativeHandle v);
-        Process(const Process&) = delete;
-        Process(Process&&) = default;
-        Process& operator=(const Process&) = delete;
-
         int wait() const;
         void terminate() const;
 
-        NativeHandle nativeHandle;
-
-    private:
+        typedef pid_t Pid;
+        Pid pid;
     };
 
     class SharedMemory
@@ -138,7 +130,7 @@ namespace apdebug::System
 
     void protectPage(void* const address, const size_t size, const bool write);
 
-    static const unsigned int interactArgsSize = sizeof(Process::NativeHandle);
+    static const unsigned int interactArgsSize = sizeof(Process::Pid);
 }
 
 #endif
