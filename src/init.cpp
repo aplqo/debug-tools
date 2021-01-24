@@ -32,7 +32,11 @@ namespace apdebug::init
             copy(c / "bin", dest / "bin", copyOpt);
             copy(c / "lib", dest / "lib", copyOpt);
 #ifdef STATIC_LINK
+#ifdef Linux
             copy(c / "lib" / "libjudge.so", dest, copyOpt);
+#else
+            copy(c / "lib" / "judge.dll", dest, copyOpt);
+#endif
 #endif
             copy(c / "debug_tools", dest / "debug_tools", copyOpt);
             copy(c / "config" / ".clang-format", dest, copyOpt);
@@ -57,7 +61,11 @@ namespace apdebug::init
             remove_all(dest / "scripts");
             remove(dest / ".clang-format");
 #ifdef STATIC_LINK
+#ifdef Linux
             remove(dest / "libjudge.so");
+#else
+            remove(dest / "judge.dll");
+#endif
 #endif
         }
         void install(const path& src, const path& dest)

@@ -1,0 +1,13 @@
+LIBRARY judge
+VERSION 3.0
+EXPORTS
+	writeName
+	writeLog
+	writeString
+	stopWatch
+	abortProgram
+	judgeMain
+	beginReportFail
+	endReportFail
+	reportAccept
+	interactorMain

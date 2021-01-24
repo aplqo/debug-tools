@@ -14,8 +14,8 @@
                 "/Zc:__cplusplus",
                 "/Fe:",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
-                "${workspaceFolder}\\lib\\judge-lib.lib",
-                "${workspaceFolder}\\lib\\system-lib.lib",
+                "${workspaceFolder}\\lib\\judge.lib",
+                "${workspaceFolder}\\lib\\system_min.lib",
                 "${file}"
             ],
             "options": {
