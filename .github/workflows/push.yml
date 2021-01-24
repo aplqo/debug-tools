@@ -45,11 +45,13 @@ jobs:
         static_link:
           - {
               enable: on,
-              name: static
+              name: static,
+              triplet: x64-windows-static
             }
           - {
               enable: off,
-              name: shared
+              name: shared,
+              triplet: x64-windows
             }
     steps:
       - uses: actions/checkout@v2
@@ -61,11 +63,18 @@ jobs:
         if: ${{ !contains(github.ref,'tags/v') }}
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Install dep
-        run: vcpkg install fmt:x64-windows boost-thread:x64-windows boost-stacktrace:x64-windows
+        run: vcpkg install fmt:${{ matrix.static_link.triplet }} boost-thread:${{ matrix.static_link.triplet }} boost-stacktrace:${{ matrix.static_link.triplet }}
       - name: build
         run: |
           mkdir build
-          cmake -G "NMake Makefiles" -DCMAKE_POLICY_DEFAULT_CMP0069=NEW -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET='x64-windows' -DCMAKE_BUILD_TYPE="Release" -Dstatic_link="${{ matrix.static_link.enable }}" -Dver="${{ env.version }}" -S . -B build
+          cmake -G "NMake Makefiles" 
+            -DCMAKE_BUILD_TYPE="Release" \
+            -DCMAKE_POLICY_DEFAULT_CMP0069=NEW \
+            -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" \ 
+            -DVCPKG_TARGET_TRIPLET='${{ matrix.static_link.triplet }}' \
+            -Dstatic_link="${{ matrix.static_link.enable }}" \
+            -Dver="${{ env.version }}" \
+            -S . -B build
           cd build
           nmake package
       - name: Download URL
@@ -127,7 +136,15 @@ jobs:
       - name: build
         run: |
           mkdir build
-          cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE="Release" -DCMAKE_POLICY_DEFAULT_CMP0069=NEW -DCMAKE_TOOLCHAIN_FILE="/usr/local/share/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET='x64-linux' -Dver="${{ env.version }}" -DcgroupVersion=${{ matrix.cgroup }} -Dstatic_link=${{ matrix.static_link.enable }} -S . -B build
+          cmake -G "Unix Makefiles" \
+            -DCMAKE_BUILD_TYPE="Release" \
+            -DCMAKE_POLICY_DEFAULT_CMP0069=NEW \
+            -DCMAKE_TOOLCHAIN_FILE="/usr/local/share/vcpkg/scripts/buildsystems/vcpkg.cmake" \
+            -DVCPKG_TARGET_TRIPLET='x64-linux' \
+            -Dver="${{ env.version }}" \
+            -DcgroupVersion=${{ matrix.cgroup }} \
+            -Dstatic_link=${{ matrix.static_link.enable }} \
+            -S . -B build
           cd build
           make package -j2
         env:
