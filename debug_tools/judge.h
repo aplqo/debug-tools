@@ -20,7 +20,7 @@ namespace apdebug
         extern void writeString(const char* str);
         namespace Judger
         {
-            extern void stopWatch(const apdebug::Logfile::RStatus stat);
+            extern void stopWatch(const uint32_t stat);
             extern void abortProgram();
             extern int judgeMain(int (*userMain)(int, const char* const[]), int argc, const char* const argv[]);
         }

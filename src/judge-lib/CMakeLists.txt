@@ -1,0 +1,20 @@
+aux_source_directory(. judgesrc)
+
+if (static_link)
+    add_library(judge SHARED ${judgesrc})
+else()
+    add_library(judge STATIC ${judgesrc})
+endif()
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_compile_definitions(judge PUBLIC BOOST_STACKTRACE_USE_BACKTRACE)
+    target_link_options(judge PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/judge.version")
+    if (static_link)
+        target_link_options(judge PRIVATE "-static-libstdc++" "-static-libgcc")
+    else()
+        target_link_libraries(judge PRIVATE staticLibConfig)
+    endif()
+endif()
+
+target_link_libraries(judge PRIVATE Boost::boost system_min)
+install(TARGETS judge DESTINATION lib)

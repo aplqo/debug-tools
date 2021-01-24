@@ -1,0 +1,15 @@
+judge_3.0 {
+    global: 
+        writeName;
+        writeLog;
+        writeString;
+        stopWatch;
+        abortProgram;
+        judgeMain;
+        beginReportFail;
+        endReportFail;
+        reportAccept;
+        interactorMain;
+    local:
+        *;
+};

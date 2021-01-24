@@ -18,44 +18,40 @@ struct ProtectedVariable
     SharedMemory shm;
     TimeUsage startTime;
 };
-unsigned char protectMemory[pageSize * 3];
+static unsigned char protectMemory[pageSize * 3];
 
 static MemoryStream ms;
 
-void writeString(const std::string& s)
+static void writeString(const std::string& s)
 {
     ms.write(s.length());
     ms.write(s.data(), s.length());
 }
-extern "C" void writeLog(const char* obj, const size_t size)
-{
-    ms.write(obj, size);
-}
+
+/*-----Exported functions (don't use internal)------*/
+extern "C" void writeLog(const char* obj, const size_t size) { ms.write(obj, size); }
 extern "C" void writeString(const char* str)
 {
     ms.write(strlen(str));
     ms.write(str, std::strlen(str));
 }
-extern "C" void writeName(const char* name)
-{
-    writeString(boost::core::demangle(name));
-}
+extern "C" void writeName(const char* name) { writeString(boost::core::demangle(name)); }
 
-inline ProtectedVariable* getProtectVar()
+inline static ProtectedVariable* getProtectVar()
 {
     return reinterpret_cast<ProtectedVariable*>(roundToPage(&protectMemory));
 }
 
 namespace Judger
 {
-    std::string findUserMain(const boost::stacktrace::stacktrace& st)
+    static std::string findUserMain(const boost::stacktrace::stacktrace& st)
     {
         for (auto i = st.rbegin(); i != st.rend(); ++i)
             if (i->name().starts_with("_User::main"))
                 return i->source_file();
         return "";
     }
-    extern "C" void abortProgram()
+    static void abortProgramImpl()
     {
         using namespace boost::stacktrace;
         char* const ptr = ms.ptr;
@@ -76,7 +72,11 @@ namespace Judger
         ms.write(uint32_t(0));
         std::_Exit(1);
     }
-    extern "C" void stopWatch(const RStatus stat)
+    extern "C" void abortProgram() // Don't use internal
+    {
+        abortProgramImpl();
+    }
+    static void stopWatchImpl(const uint32_t stat)
     {
         const ProtectedVariable* const pvar = getProtectVar();
         ms.ptr = pvar->shm.ptr + interactArgsSize;
@@ -91,12 +91,20 @@ namespace Judger
         ms.write(t);
         ms.write(cm);
     }
-    void finishProgram()
+    static void inline stopWatch(const RStatus s)
+    {
+        stopWatchImpl(static_cast<uint32_t>(s));
+    }
+    extern "C" void stopWatch(const uint32_t s) // Don't use internal
+    {
+        stopWatchImpl(s);
+    }
+    static void finishProgram()
     {
         stopWatch(RStatus::Return);
     }
 
-    void signalHandler(int sig)
+    static void signalHandler(int sig)
     {
         stopWatch(RStatus::RuntimeError);
         ms.write(RtError::Signal);
@@ -115,9 +123,9 @@ namespace Judger
             ms.write(Signal::Sigterm);
             break;
         }
-        abortProgram();
+        abortProgramImpl();
     }
-    void fpeHandler(int)
+    static void fpeHandler(int)
     {
         stopWatch(RStatus::RuntimeError);
         ms.write(RtError::Sigfpe);
@@ -133,9 +141,9 @@ namespace Judger
         if (fetestexcept(FE_UNDERFLOW))
             v |= FPE::FE_Underflow;
         ms.write(v);
-        abortProgram();
+        abortProgramImpl();
     }
-    void registerHandler()
+    static void registerHandler()
     {
 #ifdef _WIN32
         _controlfp(EM_INEXACT, _MCW_EM); // Replace EM_INEXACT with 0 to enable all exceptions.
@@ -167,7 +175,7 @@ namespace Judger
         {
             stopWatch(RStatus::RuntimeError);
             ms.write(RtError::STDExcept);
-            writeName(typeid(e).name());
+            writeString(boost::core::demangle(typeid(e).name()));
             writeString(e.what());
             std::_Exit(1);
         }
@@ -182,7 +190,7 @@ namespace Judger
 }
 namespace Interactor
 {
-    Process judged;
+    static Process judged;
 
     extern "C" void beginReportFail(const uint32_t id)
     {
