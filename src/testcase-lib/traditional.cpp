@@ -1,8 +1,11 @@
 #include "include/color.h"
 #include "include/logfile.h"
+#include "include/pathFormat.h"
+#include "include/replace.h"
 #include "include/testcase.h"
 #include "include/utility.h"
 #include "system.h"
+
 #include <cstring>
 #include <filesystem>
 #include <initializer_list>
@@ -65,7 +68,7 @@ namespace apdebug
             , answer(answer)
         {
             using namespace fmt::literals;
-            System::ReplaceStrict(
+            Replace::ReplaceStrict(
                 fmt::make_format_args(
                     "input"_a = this->input,
                     "output"_a = output,

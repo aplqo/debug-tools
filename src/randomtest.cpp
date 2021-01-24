@@ -1,6 +1,8 @@
 #include "include/color.h"
 #include "include/define.h"
 #include "include/io.h"
+#include "include/pathFormat.h"
+#include "include/replace.h"
 #include "include/table.h"
 #include "include/testcase.h"
 #include "include/utility.h"
@@ -158,7 +160,7 @@ TestPoint::TestPoint(const unsigned int tid, const unsigned int id, TestPointTem
 {
     using namespace fmt::literals;
     this->id = id;
-    System::ReplaceStrict(
+    Replace::ReplaceStrict(
         fmt::make_format_args(
             "input"_a = input,
             "output"_a = output,

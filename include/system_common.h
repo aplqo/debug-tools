@@ -3,11 +3,8 @@
 
 #include <cstdint>
 #include <cstring>
-#include <filesystem>
 #include <random>
 #include <string>
-
-#include <fmt/format.h>
 
 namespace apdebug::System
 {
@@ -40,7 +37,7 @@ namespace apdebug::System
     {
         unsigned long long real, user, sys;
 
-        TimeUsage operator-(const TimeUsage& r) const
+        inline TimeUsage operator-(const TimeUsage& r) const
         {
             return TimeUsage {
                 .real = real - r.real,
@@ -68,42 +65,6 @@ namespace apdebug::System
     std::string GetThreadId();
     void* roundToPage(void* p);
 
-    template <class T>
-    concept Replaceable = requires(fmt::format_args pat, T&& a) { { a.instantiate(pat) }; };
-    template <Replaceable T>
-    inline void ReplaceMaybe(fmt::format_args pat, T&& a)
-    {
-        a.instantiate(pat);
-    }
-    template <class T>
-    inline void ReplaceMaybe(fmt::format_args, T&&) { }
-    template <class T, class... Args>
-    inline void ReplaceMaybe(fmt::format_args pat, T&& one, Args&&... other)
-    {
-        ReplaceMaybe(pat, one);
-        ReplaceMaybe(pat, other...);
-    }
-    template <Replaceable... Args>
-    inline void ReplaceStrict(fmt::format_args pat, Args&&... other)
-    {
-        ReplaceMaybe(pat, other...);
-    }
 }
-template <>
-struct fmt::formatter<std::filesystem::path>
-{
-    inline constexpr auto parse(fmt::format_parse_context& c)
-    {
-        return c.begin();
-    }
-    template <class FormatContext>
-    inline auto format(const std::filesystem::path& str, FormatContext& ctx)
-    {
-        auto p = str.c_str();
-        while (*p)
-            *ctx.out() = *(p++);
-        return ctx.out();
-    }
-};
 
 #endif
