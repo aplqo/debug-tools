@@ -37,15 +37,15 @@ int main(int argc, char* argv[])
     tmpl.init();
     TestcaseType test(std::move(input), std::move(answer), tmpl);
     test.printRunInfo(cout);
-    test.printTestInfo(cout);
     cout << SGR::TextCyan << static_cast<Testcase::LimitInfo&>(tmpl) << SGR::TextBlue << "\n";
     cout << "[info] Start program" << SGR::None << std::endl;
     test.run();
     for (unsigned int i = 0; test.runResult[i]; ++i)
         std::cout << test.runResult[i]->color << test.runResult[i]->verbose << "\n";
-    if (test.runPass && !tmpl.tester.path.empty())
+    if (test.runPass && !test.tester.path.empty())
     {
         cout << SGR::TextBlue << "[info] Start testing" << SGR::None << std::endl;
+        test.printTestInfo(cout);
         test.test();
     }
     if (test.testResult)

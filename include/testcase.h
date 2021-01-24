@@ -110,10 +110,7 @@ namespace apdebug
             void printTestInfo(std::ostream& os);
 
             std::filesystem::path input, output, answer;
-            using BasicTemplate::diff;
-
-        protected:
-            using BasicTemplate::program, BasicTemplate::tester;
+            using BasicTemplate::diff, BasicTemplate::program, BasicTemplate::tester;
 
         private:
             void parse();
