@@ -24,6 +24,4 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 target_link_libraries(system_min PRIVATE staticLibConfig)
-if (NOT static_link)
-    install(TARGETS system_min DESTINATION lib/)
-endif()
+install(TARGETS system_min DESTINATION lib/)
