@@ -1,5 +1,5 @@
+cmake_minimum_required(VERSION 3.9)
 project(debug-tools)
-cmake_minimum_required(VERSION 3.7)
 
 if(CMAKE_CXX_COMPILER MATCHES "clang" )
 	add_compile_options("-stdlib=libc++")
@@ -15,7 +15,6 @@ endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
 	message(STATUS "LTO enabled")
-	cmake_policy(SET CMP0069 NEW)
 	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION true)
 endif()
 set(CMAKE_CXX_STANDARD 20)
