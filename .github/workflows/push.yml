@@ -67,7 +67,7 @@ jobs:
       - name: build
         run: |
           mkdir build
-          cmake -G "NMake Makefiles" 
+          cmake -G "NMake Makefiles" \
             -DCMAKE_BUILD_TYPE="Release" \
             -DCMAKE_POLICY_DEFAULT_CMP0069=NEW \
             -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" \ 
@@ -147,7 +147,6 @@ jobs:
             -S . -B build
           cd build
           make package -j2
-        shell: bash
         env:
           CC: gcc-10
           CXX: g++-10
