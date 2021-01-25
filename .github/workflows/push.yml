@@ -67,17 +67,9 @@ jobs:
       - name: build
         run: |
           mkdir build
-          cmake -G "NMake Makefiles" \
-            -DCMAKE_BUILD_TYPE="Release" \
-            -DCMAKE_POLICY_DEFAULT_CMP0069=NEW \
-            -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" \ 
-            -DVCPKG_TARGET_TRIPLET='${{ matrix.static_link.triplet }}' \
-            -Dstatic_link="${{ matrix.static_link.enable }}" \
-            -Dver="${{ env.version }}" \
-            -S . -B build
+          cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE="Release" -DCMAKE_POLICY_DEFAULT_CMP0069=NEW -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET='${{ matrix.static_link.triplet }}' -Dstatic_link="${{ matrix.static_link.enable }}" -Dver="${{ env.version }}" -S . -B build
           cd build
           nmake package
-        shell: bash
       - name: Download URL
         uses: actions/download-artifact@v1
         with:
