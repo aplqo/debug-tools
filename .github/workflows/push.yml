@@ -147,6 +147,7 @@ jobs:
             -S . -B build
           cd build
           make package -j2
+        shell: bash
         env:
           CC: gcc-10
           CXX: g++-10
