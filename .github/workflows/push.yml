@@ -101,7 +101,7 @@ jobs:
         
 
   build-Linux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: create-release
     strategy:
       fail-fast: false
