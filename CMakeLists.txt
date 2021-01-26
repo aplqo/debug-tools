@@ -87,6 +87,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	add_compile_definitions(cgroupVersion=${cgroupVersion})
 endif()
 
+option(outputLTO "Whether enable LTO on output library" ${static_link})
+if (outputLTO)
+	message(STATUS "LTO on output library enabled")
+endif()
+
 include_directories(".")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include/${CMAKE_SYSTEM_NAME}")
 include_directories(${CMAKE_BINARY_DIR})
