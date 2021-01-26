@@ -12,7 +12,7 @@
 				"-L${workspaceFolder}/lib",
 				"-Wl,--rpath=${workspaceFolder}",
 				"-ljudge",
-				"-lsystem_min",
+				"-lsystem_judge",
 				"-lrt",
 				"-lbacktrace",
 				"-ldl",

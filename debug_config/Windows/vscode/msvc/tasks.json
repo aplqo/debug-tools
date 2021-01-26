@@ -15,7 +15,7 @@
                 "/Fe:",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
                 "${workspaceFolder}\\lib\\judge.lib",
-                "${workspaceFolder}\\lib\\system_min.lib",
+                "${workspaceFolder}\\lib\\system_judge.lib",
                 "${file}"
             ],
             "options": {
