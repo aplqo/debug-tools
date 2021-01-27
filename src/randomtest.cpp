@@ -23,19 +23,19 @@
 
 using namespace apdebug;
 namespace fs = std::filesystem;
-namespace SGR = Output::SGR;
+namespace Escape = Output::Escape;
 
 typedef Testcase::BasicTemplate TestTemplateBase;
 typedef Testcase::BasicTest TestcaseType;
 
-const std::chrono::milliseconds print_duration(400);
+const std::chrono::milliseconds print_duration(500);
 const unsigned int maxStdRetries = 20, maxVaRetries = 20;
 typedef Table::Table<12> ResultTable;
 ResultTable results(std::array<const char*, 12> {
                         "Id", "State(Run)", "State(Test)",
                         "Input", "Output", "Answer", "Diff",
                         "Real", "User", "System", "Memory", "Details" },
-    SGR::None);
+    Escape::None);
 Testcase::Summary summary;
 
 enum class ResultColumn
@@ -82,7 +82,7 @@ protected:
 static const Testcase::Result judgeFail {
     .type = Testcase::Result::Type::Other,
     .name = "Fail",
-    .color = SGR::None,
+    .color = Escape::None,
     .details = "Generate data failed"
 };
 
@@ -129,7 +129,7 @@ bool TestPointTemplate::parseArgument(int& argc, const char* const argv[])
 }
 void TestPointTemplate::print(std::ostream& os) const
 {
-    os << SGR::None << SGR::TextCyan;
+    os << Escape::None << Escape::TextCyan;
     os << "[Info] Temporary directory: " << tmpdir;
     if (created)
         os << "(created)";
@@ -143,7 +143,7 @@ void TestPointTemplate::print(std::ostream& os) const
     if (!tester.path.empty())
         os << "[info] Test comman line: " << tester << "\n";
     os << static_cast<const Testcase::LimitInfo&>(*this) << "\n";
-    os << SGR::None;
+    os << Escape::None;
 }
 
 TestPoint::TestPoint(const unsigned int tid, const unsigned int id, TestPointTemplate& tp)
@@ -242,11 +242,31 @@ std::atomic_ulong testedCount; // test count
 std::atomic_bool fail = false;
 unsigned long times;
 bool stop = false, showall = true, realTime = false;
+unsigned long long begin, spentTime;
 
 inline bool isRun()
 {
     return testedCount.load() < times && !(stop && fail.load());
 }
+struct Status
+{
+    unsigned long lst;
+    unsigned long long lastTime;
+
+    bool printStatus()
+    {
+        const unsigned long curCount = testedCount;
+        if (curCount == lst)
+            return false;
+        const unsigned long long curTime = System::Usage::getRealTime();
+        const double period = (curTime - lastTime) / 1e6 / System::unit.real, total = (curTime - begin) / 1e6 / System::unit.real;
+        std::cout << Escape::ClearLine << Escape::TextBlue << "Testing " << lst << " data. Spent " << total << "s."
+                  << " Average " << curCount / total << "/sec Current " << (curCount - lst) / period << "/sec";
+        lastTime = curTime;
+        lst = curCount;
+        return true;
+    }
+};
 template <bool realTime>
 void PrintThread()
 {
@@ -261,34 +281,40 @@ void PrintThread()
         }
         std::cout.flush();
     }
+    Status stat { .lst = 0, .lastTime = begin };
     while (isRun())
     {
+        bool flush = false;
         if (!empty.test_and_set())
         {
             {
                 std::lock_guard lk(tableLock);
                 local.mergeData(std::move(results));
             }
+            std::cout << Escape::ClearLine << Escape::None;
             local.printAll(std::cout);
-            std::cout.flush();
+            flush = true;
         }
+        flush = stat.printStatus() || flush;
+        if (flush)
+            std::cout.flush();
         std::this_thread::sleep_for(print_duration);
     }
+    spentTime = System::Usage::getRealTime() - begin;
+    std::cout << Escape::None << "\n";
 }
 template <>
 void PrintThread<false>()
 {
-    unsigned long lst = 0;
+    Status stat { .lst = 0, .lastTime = begin };
     while (isRun())
     {
-        if (testedCount != lst)
-        {
-            lst = testedCount;
-            std::cout << SGR::TextBlue << "\rTesting " << lst << " data..." << std::flush;
-        }
+        if (stat.printStatus())
+            std::cout.flush();
         std::this_thread::sleep_for(print_duration);
     }
-    std::cout << SGR::None << "\n";
+    spentTime = System::Usage::getRealTime() - begin;
+    std::cout << Escape::None << "\n";
 }
 template <bool realTime>
 void threadMain(const unsigned int tid)
@@ -360,6 +386,7 @@ void runTest(const unsigned int parallel)
         setMinWidth();
         lat = new boost::latch(parallel);
     }
+    begin = System::Usage::getRealTime();
     for (unsigned int i = 0; i < parallel; ++i)
         th[i] = std::thread(threadMain<realTime>, i);
     PrintThread<realTime>();
@@ -397,7 +424,7 @@ int main(int argc, char* argv[])
         else if (!strcmp(argv[i], "-real-time"))
             realTime = true;
     }
-    std::cout << SGR::TextCyan;
+    std::cout << Escape::TextCyan;
     std::cout << "[Info] Test time: " << times << "\n";
     std::cout << "[Info] Parallelism: " << parallel << "\n";
     std::cout << "[Info] Stop on error: " << std::boolalpha << stop << "\n";
@@ -412,9 +439,13 @@ int main(int argc, char* argv[])
         runTest<false>(parallel);
     if (global.created && !fail)
     {
-        std::cout << SGR::TextCyan << "\n[Info] Test passed removed temporary directory.";
+        std::cout << Escape::TextCyan << "\n[Info] Test passed removed temporary directory.";
         remove_all(global.tmpdir);
     }
-    std::cout << SGR::None << "\n";
+    {
+        const double time = spentTime / 1e6 / System::unit.real;
+        std::cout << Escape::TextBlue << "\n[Info] Test finished in " << time << "s. Average " << testedCount.load() / time << "/sec";
+    }
+    std::cout << Escape::None << "\n";
     return 0;
 }
