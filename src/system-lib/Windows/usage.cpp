@@ -1,33 +1,53 @@
 #include "system.h"
 
-#include<Psapi.h>
+#include <Psapi.h>
 
 namespace apdebug::System
 {
-    TimeUsage getTimeUsage()
+    static inline unsigned long long getRealUnit()
     {
-        static LARGE_INTEGER dur {};
-        if (!dur.QuadPart)
-            QueryPerformanceFrequency(&dur);
-        FILETIME create, exit, user, sys;
-        LARGE_INTEGER cur;
-        QueryPerformanceCounter(&cur);
-        GetProcessTimes(GetCurrentProcess(), &create, &exit, &sys, &user);
-        return TimeUsage {
-            .real = static_cast<unsigned long long>(cur.QuadPart / (dur.QuadPart / 1000000)),
-            .user = ((static_cast<unsigned long long>(user.dwHighDateTime) << std::numeric_limits<DWORD>::digits) | user.dwLowDateTime) / 10,
-            .sys = ((static_cast<unsigned long long>(sys.dwHighDateTime) << std::numeric_limits<DWORD>::digits) | sys.dwLowDateTime) / 10
-        };
+        LARGE_INTEGER ret;
+        QueryPerformanceFrequency(&ret);
+        return ret.QuadPart / 1000000;
     }
-    static MemoryUsage getMemoryUsage()
+    const TimeUsage unit {
+        .real = getRealUnit(),
+        .user = 10,
+        .sys = 10
+    };
+
+    namespace Usage
     {
-        PROCESS_MEMORY_COUNTERS val;
-        GetProcessMemoryInfo(GetCurrentProcess(), &val, sizeof(val));
-        return val.PeakWorkingSetSize / 1024;
-    }
-    std::pair<TimeUsage, MemoryUsage> getUsage()
-    {
-        const TimeUsage tu = getTimeUsage();
-        return std::pair(tu, getMemoryUsage());
+        static constexpr unsigned long long toInterger(const FILETIME f)
+        {
+            return ((static_cast<unsigned long long>(f.dwHighDateTime) << std::numeric_limits<DWORD>::digits) | f.dwLowDateTime);
+        }
+        unsigned long long getRealTime()
+        {
+            LARGE_INTEGER ret;
+            QueryPerformanceCounter(&ret);
+            return ret.QuadPart;
+        }
+        TimeUsage getTimeUsage()
+        {
+            FILETIME create, exit, user, sys;
+            GetProcessTimes(GetCurrentProcess(), &create, &exit, &sys, &user);
+            return TimeUsage {
+                .real = getRealTime(),
+                .user = toInterger(user),
+                .sys = toInterger(sys)
+            };
+        }
+        static MemoryUsage getMemoryUsage()
+        {
+            PROCESS_MEMORY_COUNTERS val;
+            GetProcessMemoryInfo(GetCurrentProcess(), &val, sizeof(val));
+            return val.PeakWorkingSetSize / 1024;
+        }
+        std::pair<TimeUsage, MemoryUsage> getUsage()
+        {
+            const TimeUsage tu = getTimeUsage();
+            return std::pair(tu, getMemoryUsage());
+        }
     }
 }

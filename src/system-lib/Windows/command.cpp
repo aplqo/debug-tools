@@ -5,7 +5,11 @@
 
 namespace apdebug::System
 {
-    static HANDLE stdIO[3];
+    static HANDLE stdIO[3] = {
+        GetStdHandle(STD_INPUT_HANDLE),
+        GetStdHandle(STD_OUTPUT_HANDLE),
+        GetStdHandle(STD_ERROR_HANDLE)
+    };
 
     Command& Command::appendArgument(const std::string_view arg)
     {
@@ -151,12 +155,5 @@ namespace apdebug::System
     Command::~Command()
     {
         release();
-    }
-
-    void systemInit()
-    {
-        stdIO[0] = GetStdHandle(STD_INPUT_HANDLE);
-        stdIO[1] = GetStdHandle(STD_OUTPUT_HANDLE);
-        stdIO[2] = GetStdHandle(STD_ERROR_HANDLE);
     }
 }

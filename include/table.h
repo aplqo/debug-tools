@@ -12,7 +12,6 @@
 
 namespace apdebug::Table
 {
-    namespace Escape = Output::Escape;
     template <class T>
     concept ColumnId = std::convertible_to<T, unsigned int> || requires { typename std::is_enum<T>::value_type; };
     template <class T>
@@ -48,7 +47,7 @@ namespace apdebug::Table
                     os << "─";
                 os << "  ";
             }
-            os << Escape::None << "\n";
+            os << Output::Escape::None << "\n";
         }
         template <ColumnData T>
         inline void newColumn(T&& col)
@@ -97,7 +96,7 @@ namespace apdebug::Table
                 os.width(width[i]);
                 os << r[i] << "  ";
             }
-            os << Escape::None << "\n";
+            os << Output::Escape::None << "\n";
         }
 
         using row = std::array<std::string, siz + 1>;

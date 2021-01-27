@@ -3,8 +3,10 @@
 
 #include "include/system_common.h"
 
+#define WIN32_LEAN_AND_MEAN
+#define NOGDI
 #define NOMINMAX
-#include <windows.h>
+#include <Windows.h>
 
 #include <filesystem>
 #include <ostream>
@@ -121,9 +123,12 @@ namespace apdebug::System
 
         HANDLE read, write;
     };
-    std::pair<TimeUsage, MemoryUsage> getUsage();
-    TimeUsage getTimeUsage();
-    void systemInit();
+    namespace Usage
+    {
+        unsigned long long getRealTime();
+        std::pair<TimeUsage, MemoryUsage> getUsage();
+        TimeUsage getTimeUsage();
+    }
     void consoleInit();
 
     void protectPage(void* const address, const size_t size, const bool write);

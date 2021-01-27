@@ -5,12 +5,12 @@ add_library(system_full STATIC ${common} ${sys}) # full system library for testc
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_library(system_judge STATIC 
-        Linux/process.cpp Linux/shm.cpp Linux/protectPage.cpp Linux/usage.cpp roundToPage.cpp
+        Linux/process.cpp Linux/shm.cpp Linux/protectPage.cpp Linux/usage.cpp roundToPage.cpp timeUsage.cpp
     ) # min library for judge
     target_link_libraries(system_full PUBLIC rt pthread)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     add_library(system_judge STATIC
-        Windows/process.cpp Windows/protectPage.cpp Windows/shm.cpp Windows/usage.cpp roundToPage.cpp
+        Windows/process.cpp Windows/protectPage.cpp Windows/shm.cpp Windows/usage.cpp roundToPage.cpp timeUsage.cpp
     ) # min library for judge/init
 endif()
     

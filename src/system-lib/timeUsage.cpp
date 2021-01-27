@@ -13,5 +13,7 @@ namespace apdebug::System
     void TimeUsage::convert()
     {
         real /= unit.real;
+        user /= unit.user;
+        sys /= unit.sys;
     }
 }
