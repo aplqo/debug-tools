@@ -148,6 +148,7 @@ namespace apdebug
             ms.read(stat);
             ms.read(runTime);
             ms.read(runMemory);
+            runTime.convert();
             unsigned int runPtr = 0;
             switch (stat)
             {

@@ -88,7 +88,6 @@ static const Testcase::Result judgeFail {
 
 void TestPointTemplate::globalInit()
 {
-    System::systemInit();
     if (!fs::exists(tmpdir))
     {
         fs::create_directory(tmpdir);

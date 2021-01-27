@@ -85,7 +85,7 @@ namespace Judger
         ms.write(TimeUsage {});
         ms.write(MemoryUsage {});
         ms.write(apdebug::System::eof);
-        const auto [ct, cm] = getUsage();
+        const auto [ct, cm] = Usage::getUsage();
         const TimeUsage t = ct - pvar->startTime;
         ms.ptr = ptr;
         ms.write(t);
@@ -166,7 +166,7 @@ namespace Judger
         std::atexit(finishProgram);
         try
         {
-            pvar->startTime = getTimeUsage();
+            pvar->startTime = Usage::getTimeUsage();
             protectPage(pvar, sizeof(ProtectedVariable), false);
             userMain(argc - 1, argv);
             finishProgram();

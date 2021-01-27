@@ -5,22 +5,34 @@
 
 namespace apdebug::System
 {
-    std::pair<TimeUsage, MemoryUsage> getUsage()
+    const TimeUsage unit {
+        .real = 1000,
+        .user = 1,
+        .sys = 1
+    };
+    namespace Usage
     {
-        timespec tm;
-        rusage ru;
-        getrusage(RUSAGE_SELF, &ru);
-        clock_gettime(CLOCK_MONOTONIC, &tm);
-        return {
-            TimeUsage {
-                .real = tm.tv_sec * 1000000ull + tm.tv_nsec / 1000,
-                .user = ru.ru_utime.tv_sec * 1000000ull + ru.ru_utime.tv_usec,
-                .sys = ru.ru_stime.tv_sec * 1000000ull + ru.ru_stime.tv_usec },
-            MemoryUsage { ru.ru_maxrss }
-        };
-    }
-    TimeUsage getTimeUsage()
-    {
-        return getUsage().first;
+        unsigned long long getRealTime()
+        {
+            timespec tm;
+            clock_gettime(CLOCK_MONOTONIC, &tm);
+            return tm.tv_sec * 1000000000ull + tm.tv_nsec;
+        }
+        std::pair<TimeUsage, MemoryUsage> getUsage()
+        {
+            rusage ru;
+            getrusage(RUSAGE_SELF, &ru);
+            return {
+                TimeUsage {
+                    .real = getRealTime(),
+                    .user = ru.ru_utime.tv_sec * 1000000ull + ru.ru_utime.tv_usec,
+                    .sys = ru.ru_stime.tv_sec * 1000000ull + ru.ru_stime.tv_usec },
+                MemoryUsage { ru.ru_maxrss }
+            };
+        }
+        TimeUsage getTimeUsage()
+        {
+            return getUsage().first;
+        }
     }
 }

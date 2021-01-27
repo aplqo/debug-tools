@@ -37,16 +37,12 @@ namespace apdebug::System
     {
         unsigned long long real, user, sys;
 
-        inline TimeUsage operator-(const TimeUsage& r) const
-        {
-            return TimeUsage {
-                .real = real - r.real,
-                .user = user - r.user,
-                .sys = sys - r.sys
-            };
-        }
+        TimeUsage operator-(const TimeUsage& r) const;
+        void convert();
     };
+    extern const TimeUsage unit;
     typedef unsigned long long MemoryUsage;
+
     enum class RedirectType
     {
         StdIn,

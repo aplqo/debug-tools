@@ -123,9 +123,12 @@ namespace apdebug::System
 
         int read, write;
     };
-    TimeUsage getTimeUsage();
-    std::pair<TimeUsage, MemoryUsage> getUsage();
-    inline void systemInit() { }
+    namespace Usage
+    {
+        unsigned long long getRealTime();
+        TimeUsage getTimeUsage();
+        std::pair<TimeUsage, MemoryUsage> getUsage();
+    }
     inline void consoleInit() { }
 
     void protectPage(void* const address, const size_t size, const bool write);

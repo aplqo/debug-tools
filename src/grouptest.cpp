@@ -350,7 +350,6 @@ int main(int argc, char* argv[])
         gtable.printAll(std::cout);
         std::cout.put('\n');
     }
-    System::systemInit();
     platform.init();
     for (auto& i : grp)
     {
