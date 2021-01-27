@@ -1,9 +1,9 @@
 #ifndef COLOR_H
 #define COLOR_H
 
-/*-----ecma-48 SGR(Select Graphic Rendition)-----*/
-namespace apdebug::Output::SGR
+namespace apdebug::Output::Escape
 {
+    /*-----ecma-48 SGR(Select Graphic Rendition)-----*/
 #ifdef COLOR
 #define defSGR(name, code) const static inline char name[] = "\033[" #code "m"
 #else
@@ -20,6 +20,12 @@ namespace apdebug::Output::SGR
     defSGR(Underline, 4);
     defSGR(CrossOut, 9);
 #undef defColor
+
+#ifdef COLOR
+    const static inline char ClearLine[] = "\033[2K\033[G";
+#else
+    const static inline char ClearLine[] = "\r";
+#endif
 }
 
 #endif

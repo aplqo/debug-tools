@@ -17,7 +17,7 @@
 #include <fmt/format.h>
 
 namespace fs = std::filesystem;
-namespace SGR = apdebug::Output::SGR;
+namespace Escape = apdebug::Output::Escape;
 using namespace std::string_literals;
 using apdebug::TestTools::TemporaryFile;
 using std::regex;
@@ -169,7 +169,7 @@ namespace apdebug
                 *cur = Result {
                     .type = Result::Type::Pass,
                     .name = "Pass",
-                    .color = SGR::TextGreen,
+                    .color = Escape::TextGreen,
                     .verbose = fmt::format(FMT_COMPILE("[Pass] Program finished. \n\tTime(real/user/sys): {} / {} / {} ms ({} / {} / {} us) \n\tMemory: {} MiB ({} KiB)"),
                         runTime.real / 1000.0, runTime.user / 1000.0, runTime.sys / 1000.0,
                         runTime.real, runTime.user, runTime.sys,
@@ -187,7 +187,7 @@ namespace apdebug
                 *cur = Result {
                     .type = Result::Type::Protocol,
                     .name = "PV",
-                    .color = SGR::TextRed,
+                    .color = Escape::TextRed,
                     .verbose = "[PV] Protocol Violation. Mssage: " + Logfile::readString(ms)
                 };
                 runResult[0] = cur++;
@@ -197,7 +197,7 @@ namespace apdebug
                 *cur = Result {
                     .type = Result::Type::WA,
                     .name = "WA",
-                    .color = SGR::TextRed,
+                    .color = Escape::TextRed,
                     .verbose = "[WA] Wrong answer. Message: " + Logfile::readString(ms)
                 };
                 testPass = false;
@@ -207,7 +207,7 @@ namespace apdebug
                 *cur = Result {
                     .type = Result::Type::Unknown,
                     .name = "UKE",
-                    .color = SGR::None,
+                    .color = Escape::None,
                     .verbose = fmt::format(FMT_COMPILE("[UKE] Program return code {}"), exitStatus),
                     .details = fmt::format(FMT_COMPILE("Program return code {}"), exitStatus)
                 };
@@ -239,7 +239,7 @@ namespace apdebug
                 *cur = Result {
                     .type = Result::Type::WA,
                     .name = "WA",
-                    .color = SGR::TextRed,
+                    .color = Escape::TextRed,
                     .verbose = fmt::format(FMT_COMPILE("[WA] Test program return {}"), ret)
                 };
                 finalResult = testResult = cur++;
@@ -264,20 +264,20 @@ namespace apdebug
         }
         void BasicTest::printRunInfo(std::ostream& os)
         {
-            os << SGR::None << SGR::TextCyan << "[info] Input file: " << input << "\n";
+            os << Escape::None << Escape::TextCyan << "[info] Input file: " << input << "\n";
             os << "[info] Output file: " << output << "\n";
             os << "[info] Program command line: " << program;
 #ifdef Interact
             os << "\n[info] Interactor command line: " << interactor;
 #endif
-            os << SGR::None << "\n";
+            os << Escape::None << "\n";
         }
         void BasicTest::printTestInfo(std::ostream& os)
         {
-            os << SGR::None << SGR::TextCyan;
+            os << Escape::None << Escape::TextCyan;
             if (!answer.empty())
                 os << "[info] Answer file: " << answer << "\n";
-            os << "[info] Test command line: " << tester << SGR::None << "\n";
+            os << "[info] Test command line: " << tester << Escape::None << "\n";
         }
     }
 }

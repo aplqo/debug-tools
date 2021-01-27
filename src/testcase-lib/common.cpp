@@ -3,7 +3,7 @@
 #include <cstring>
 #include <ostream>
 
-namespace SGR = apdebug::Output::SGR;
+namespace Escape = apdebug::Output::Escape;
 using std::strcmp;
 
 namespace apdebug::Testcase
@@ -17,32 +17,32 @@ namespace apdebug::Testcase
             "Other", "Unknown", "Skip"
         };
         const char* color[14] = {
-            SGR::TextYellow, SGR::TextYellow, SGR::TextGreen, SGR::TextRed, SGR::TextGreen,
-            SGR::TextRed, SGR::TextPurple, SGR::TextYellow, SGR::TextRed, SGR::TextRed,
-            SGR::TextRed, SGR::None, SGR::None, SGR::None
+            Escape::TextYellow, Escape::TextYellow, Escape::TextGreen, Escape::TextRed, Escape::TextGreen,
+            Escape::TextRed, Escape::TextPurple, Escape::TextYellow, Escape::TextRed, Escape::TextRed,
+            Escape::TextRed, Escape::None, Escape::None, Escape::None
         };
         const Result hardTLE {
             .type = Result::Type::HardTLE,
             .name = "Hard TLE",
-            .color = Output::SGR::TextRed,
+            .color = Output::Escape::TextRed,
             .verbose = "[Hard TLE] Killed: Hard time limit exceed."
         };
         const Result hardMLE {
             .type = Result::Type::HardMLE,
             .name = "Hard MLE",
-            .color = Output::SGR::TextRed,
+            .color = Output::Escape::TextRed,
             .verbose = "[Hard MLE] Killed: Hard memory limit exceed."
         };
         const Result TLE {
             .type = Result::Type::TLE,
             .name = "TLE",
-            .color = Output::SGR::TextYellow,
+            .color = Output::Escape::TextYellow,
             .verbose = "[TLE] Time limit exceed"
         };
         const Result MLE {
             .type = Result::Type::MLE,
             .name = "MLE",
-            .color = Output::SGR::TextYellow,
+            .color = Output::Escape::TextYellow,
             .verbose = "[MLE] Memory limit exceed"
         };
         const Result Skip {
@@ -53,19 +53,19 @@ namespace apdebug::Testcase
         const Result TestAccept {
             .type = Result::Type::AC,
             .name = "AC",
-            .color = Output::SGR::TextGreen,
+            .color = Output::Escape::TextGreen,
             .verbose = "[AC] Test program return code 0"
         };
         const Result InteractAccept {
             .type = Result::Type::AC,
             .name = "AC",
-            .color = Output::SGR::TextGreen,
+            .color = Output::Escape::TextGreen,
             .verbose = "[AC] Grader report test passed."
         };
         const Result InteractRunWA {
             .type = Result::Type::WAKilled,
             .name = "Killed",
-            .color = Output::SGR::TextRed,
+            .color = Output::Escape::TextRed,
             .verbose = "[WA] Killed: Grader report wrong answer"
         };
     }

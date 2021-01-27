@@ -9,7 +9,7 @@ namespace apdebug::init
 {
     template <class T>
     list<T>::list(const char* typ)
-        : tab(std::array<const char*, 3> { "Id", typ, "Description" }, Output::SGR::None) {};
+        : tab(std::array<const char*, 3> { "Id", typ, "Description" }, Output::Escape::None) {};
     template <class T>
     void list<T>::append(T c)
     {

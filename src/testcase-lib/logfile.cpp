@@ -111,7 +111,7 @@ namespace apdebug::Logfile
         *cur = Result {
             .type = Result::Type::Warn,
             .name = "Warn",
-            .color = Output::SGR::TextYellow
+            .color = Output::Escape::TextYellow
         };
         Stacktrace st;
         st.parse(ms);
@@ -127,7 +127,7 @@ namespace apdebug::Logfile
     const static Result UnknownExcept {
         .type = Result::Type::RE,
         .name = "RE",
-        .color = Output::SGR::TextPurple,
+        .color = Output::Escape::TextPurple,
         .verbose = "[RE] Throw an unknown exception",
         .details = "Throw an unknown exception"
     };
@@ -139,7 +139,7 @@ namespace apdebug::Logfile
         st.parse(ms);
         cur->type = Result::Type::RE;
         cur->name = "RE";
-        cur->color = Output::SGR::TextPurple;
+        cur->color = Output::Escape::TextPurple;
         cur->verbose.reserve(300 + st.formatLength);
         cur->verbose = "[RE] Received SIGFPE  erroneous arithmetic operation such as divide by zero.";
         cur->details.reserve(300 + st.maxFile + st.maxName + 60);
@@ -185,7 +185,7 @@ namespace apdebug::Logfile
         st.parse(ms);
         cur->type = Result::Type::RE;
         cur->name = "RE";
-        cur->color = Output::SGR::TextPurple;
+        cur->color = Output::Escape::TextPurple;
         cur->details = fmt::format("Divide by zero on {} at {}", type, st.frames[st.userFrameDep]);
         cur->verbose.reserve(st.formatLength + 60);
         cur->verbose = "[RE] Divide by zero on" + type;
@@ -202,7 +202,7 @@ namespace apdebug::Logfile
         st.parse(ms);
         cur->type = Result::Type::RE;
         cur->name = "RE";
-        cur->color = Output::SGR::TextPurple;
+        cur->color = Output::Escape::TextPurple;
         cur->verbose.reserve(60 + st.formatLength);
         cur->verbose = "[RE] Received SIG";
         cur->details.reserve(60 + st.maxFile + st.maxName + 30);
@@ -244,7 +244,7 @@ namespace apdebug::Logfile
             *cur = Result {
                 .type = Result::Type::RE,
                 .name = "RE",
-                .color = Output::SGR::TextPurple,
+                .color = Output::Escape::TextPurple,
                 .verbose = fmt::format("[RE] Throw an exception of {} \n\t what(): {}", name, what),
                 .details = "Throw an exception of " + name
             };
@@ -262,7 +262,7 @@ namespace apdebug::Logfile
             *cur = Result {
                 .type = Result::Type::RE,
                 .name = "RE",
-                .color = Output::SGR::TextPurple,
+                .color = Output::Escape::TextPurple,
                 .verbose = "[RE] Unknown runtime error",
                 .details = "Unknown runtime error"
             };

@@ -12,7 +12,7 @@
 
 using std::strcmp;
 namespace fs = std::filesystem;
-namespace SGR = apdebug::Output::SGR;
+namespace Escape = apdebug::Output::Escape;
 
 namespace apdebug::TestTools
 {
@@ -72,8 +72,8 @@ namespace apdebug::TestTools
         {
             if (verbose)
             {
-                std::cout << SGR::TextCyan << "Autodiff: Redirect stdout to " << differ << "\n";
-                std::cout << SGR::TextBlue << "Autodiff: Test command " << cmd << SGR::None << std::endl;
+                std::cout << Escape::TextCyan << "Autodiff: Redirect stdout to " << differ << "\n";
+                std::cout << Escape::TextBlue << "Autodiff: Test command " << cmd << Escape::None << std::endl;
             }
             cmd.setRedirect(System::RedirectType::StdOut, differ);
             redirect = true;
@@ -92,11 +92,11 @@ namespace apdebug::TestTools
             }
             if (verbose)
             {
-                std::cout << SGR::TextCyan << "Autodiff: File size limit " << size << " byte\n";
+                std::cout << Escape::TextCyan << "Autodiff: File size limit " << size << " byte\n";
                 if (exceed)
                     std::cout << "Autodiff: File " << *exceed << " too large, redirect stdout to file\n"
                               << "Autodiff: Redirect stdout to " << differ << "\n";
-                std::cout << SGR::TextBlue << "Autodiff: Test command " << cmd << SGR::None << std::endl;
+                std::cout << Escape::TextBlue << "Autodiff: Test command " << cmd << Escape::None << std::endl;
             }
             redirect = exceed;
             if (exceed)
@@ -112,7 +112,7 @@ namespace apdebug::TestTools
         if (redirect)
         {
             if (Utility::removeFile(differ) && verbose)
-                std::cout << SGR::TextGreen << "Autodiff: Test passed removed output file." << SGR::None << "\n";
+                std::cout << Escape::TextGreen << "Autodiff: Test passed removed output file." << Escape::None << "\n";
         }
         else
             differ = "<unused>";

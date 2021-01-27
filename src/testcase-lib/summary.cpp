@@ -7,8 +7,6 @@
 
 #include <fmt/format.h>
 
-namespace SGR = apdebug::Output::SGR;
-
 namespace apdebug::Testcase
 {
     constexpr double roundWidth = 1e4;
@@ -90,7 +88,7 @@ namespace apdebug::Testcase
         {
             if (!entries[i].count)
                 continue;
-            tab.newColumn(i != TypeNumber ? color[i] : SGR::None);
+            tab.newColumn(i != TypeNumber ? color[i] : Output::Escape::None);
             tab.writeColumnList<int, std::string&&>({ { 0, i == TypeNumber ? std::string("All") : std::string(name[i]) },
                 { 1, fmt::format(FMT_STRING("{} ({}%)"), entries[i].count, round((entries[i].count * 100.0) / entries[TypeNumber].count)) },
                 { 2, entries[i].timeReal.format<1000>(entries[i].count) },

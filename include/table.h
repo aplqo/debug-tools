@@ -12,7 +12,7 @@
 
 namespace apdebug::Table
 {
-    namespace SGR = Output::SGR;
+    namespace Escape = Output::Escape;
     template <class T>
     concept ColumnId = std::convertible_to<T, unsigned int> || requires { typename std::is_enum<T>::value_type; };
     template <class T>
@@ -48,7 +48,7 @@ namespace apdebug::Table
                     os << "─";
                 os << "  ";
             }
-            os << SGR::None << "\n";
+            os << Escape::None << "\n";
         }
         template <ColumnData T>
         inline void newColumn(T&& col)
@@ -97,7 +97,7 @@ namespace apdebug::Table
                 os.width(width[i]);
                 os << r[i] << "  ";
             }
-            os << SGR::None << "\n";
+            os << Escape::None << "\n";
         }
 
         using row = std::array<std::string, siz + 1>;
@@ -106,7 +106,7 @@ namespace apdebug::Table
         std::list<row> q;
     };
     template <size_t siz, ColumnData T>
-    Table(const std::array<const char*, siz>&, T &&) -> Table<siz>;
+    Table(const std::array<const char*, siz>&, T&&) -> Table<siz>;
 }
 
 #endif

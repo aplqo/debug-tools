@@ -17,7 +17,7 @@
 using apdebug::regex_seq::RegexSeq;
 using namespace apdebug;
 namespace fs = std::filesystem;
-namespace SGR = Output::SGR;
+namespace Escape = Output::Escape;
 
 typedef Testcase::BasicTemplate TestTemplate;
 typedef Testcase::BasicTest TestcaseType;
@@ -95,27 +95,27 @@ private:
 };
 void TestPoint::execute(const bool verbose)
 {
-    std::cout << SGR::Underline << SGR::TextBlue << "[Info] Start program for test #" << gid << "." << id << SGR::None << "\n";
+    std::cout << Escape::Underline << Escape::TextBlue << "[Info] Start program for test #" << gid << "." << id << Escape::None << "\n";
     if (verbose)
         printRunInfo(std::cout);
     std::cout.flush();
     run();
     for (unsigned int i = 0; runResult[i]; ++i)
-        std::cout << runResult[i]->color << runResult[i]->verbose << SGR::None << "\n";
+        std::cout << runResult[i]->color << runResult[i]->verbose << Escape::None << "\n";
     if (runPass && !tester.path.empty())
     {
-        std::cout << SGR::TextBlue << "[Info] Start testing for test #" << gid << "." << id << SGR::None << "\n";
+        std::cout << Escape::TextBlue << "[Info] Start testing for test #" << gid << "." << id << Escape::None << "\n";
         if (verbose)
             printTestInfo(std::cout);
         std::cout.flush();
         test();
     }
     if (testResult)
-        std::cout << testResult->color << testResult->verbose << SGR::None << "\n";
+        std::cout << testResult->color << testResult->verbose << Escape::None << "\n";
     else
         testResult = &Testcase::ResultConstant::Skip;
     release();
-    std::cout << SGR::Underline << SGR::TextBlue << "[Info] Test #" << gid << "." << id << " finished.\n";
+    std::cout << Escape::Underline << Escape::TextBlue << "[Info] Test #" << gid << "." << id << " finished.\n";
 }
 void TestPoint::writeToTable(ResultTable& dest)
 {
@@ -169,7 +169,7 @@ private:
 
 TestGroup::TestGroup(const unsigned int id, int& argc, const char* const argv[])
     : gid(id)
-    , results(ResultHeader, SGR::None)
+    , results(ResultHeader, Escape::None)
 {
     parseArgument(argc, argv);
 }
@@ -223,7 +223,7 @@ void TestGroup::execute()
 {
     tmpl.platform = &platform;
     tmpl.init();
-    std::cout << SGR::TextBlue << SGR::Underline << "[Info] Start testing for group #" << gid;
+    std::cout << Escape::TextBlue << Escape::Underline << "[Info] Start testing for group #" << gid;
     for (unsigned int i = 0; i < tests.size(); ++i)
     {
         std::cout.put('\n');
@@ -232,14 +232,14 @@ void TestGroup::execute()
         tst.writeToTable(results);
         summary.insert(fmt::format(FMT_STRING("{}.{}"), gid, i), tst);
     }
-    std::cout << SGR::TextBlue << SGR::Underline << "[Info] Group #" << gid << " finished." << SGR::None << "\n\n";
+    std::cout << Escape::TextBlue << Escape::Underline << "[Info] Group #" << gid << " finished." << Escape::None << "\n\n";
 }
 void TestGroup::printResult(Testcase::Summary& totalSummary)
 {
-    std::cout << SGR::None << "Test result for group #" << gid << "\n";
+    std::cout << Escape::None << "Test result for group #" << gid << "\n";
     if (!tests.size())
     {
-        std::cout << SGR::TextRed << "[Err] Can't find any test data." << SGR::None << "\n";
+        std::cout << Escape::TextRed << "[Err] Can't find any test data." << Escape::None << "\n";
         return;
     }
     results.printHeader(std::cout);
@@ -309,7 +309,7 @@ void TestGroup::printConfig(GroupTable& dest)
 {
     static constexpr double ms = 1e3, sec = 1e6, mb = 1024.0, gb = mb * 1024;
     using namespace std::string_literals;
-    dest.newColumn(SGR::TextCyan);
+    dest.newColumn(Escape::TextCyan);
     dest.writeColumnList<GroupColumn, std::string&&>({ { GroupColumn::id, std::to_string(gid) },
         { GroupColumn::inDir, inrec ? indir.string() + "(recursive)" : indir.string() },
         { GroupColumn::ansDir, ansrec ? ansdir.string() + "(recursive)" : ansdir.string() },
@@ -341,9 +341,9 @@ int main(int argc, char* argv[])
             grp.emplace_back(grp[u], id++, ++p, argv);
         }
     }
-    std::cout << SGR::TextCyan << "[Info] Group config: \n";
+    std::cout << Escape::TextCyan << "[Info] Group config: \n";
     {
-        GroupTable gtable(GroupHeader, SGR::TextCyan);
+        GroupTable gtable(GroupHeader, Escape::TextCyan);
         for (auto& i : grp)
             i.printConfig(gtable);
         gtable.printHeader(std::cout);

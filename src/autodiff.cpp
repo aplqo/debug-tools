@@ -7,7 +7,7 @@
 #include <iostream>
 using apdebug::Output::PrintVersion;
 using std::cout;
-namespace SGR = apdebug::Output::SGR;
+namespace Escape = apdebug::Output::Escape;
 
 apdebug::System::Command exe;
 apdebug::TestTools::AutoDiff diff;
@@ -32,6 +32,6 @@ int main(int argc, char* argv[])
     if (!ret)
         diff.release();
     else
-        cout << SGR::TextYellow << "Autodiff: Test program return " << ret << SGR::None << "\n";
+        cout << Escape::TextYellow << "Autodiff: Test program return " << ret << Escape::None << "\n";
     return ret;
 }
