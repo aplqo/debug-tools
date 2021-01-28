@@ -73,7 +73,7 @@ namespace apdebug::System
                 dup2(fd[1], STDOUT_FILENO);
             if (fd[2] != -1)
                 dup2(fd[2], STDERR_FILENO);
-            execvp(args.front(), const_cast<char**>(args.data()));
+            execv(args.front(), const_cast<char**>(args.data()));
             exit(1);
         }
         return Process { p };
