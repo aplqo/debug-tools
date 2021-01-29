@@ -7,4 +7,4 @@ param(
     [String]$ansreg = '.*\.ans$'
 )
 
-& ./bin/group-$env:type -program "$pro"  -test-regex [ "$regex" -em 1 ';' ] -indir "$data"  -in-regex  [ "$inreg" -mm  ';' ]  -ansdir "$data" -ans-regex [ "$ansreg" -mm ';' ] -test "fc.exe" -test-args [ "{output}" "{answer}" ] -autodiff [ -diff '{input}.diff' -files [ '{output}' '{answer}' ] ] ';' 
+& ./bin/group-$env:type -program "$pro"  -test-regex [ "$regex" -em 1 ';' ] -indir "$data"  -in-regex  [ "$inreg" -mm  ';' ]  -ansdir "$data" -ans-regex [ "$ansreg" -mm ';' ] -test (Get-Command -Name fc.exe).Path -test-args [ "{output}" "{answer}" ] -autodiff [ -diff '{input}.diff' -files [ '{output}' '{answer}' ] ] ';' 

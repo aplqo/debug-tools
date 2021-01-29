@@ -52,7 +52,7 @@ namespace apdebug::System
         UpdateProcThreadAttribute(info.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, stdioHandle, sizeof(stdioHandle), NULL, NULL);
 
         CreateProcessA(
-            NULL, const_cast<char*>(cmdline.data()),
+            path.data(), const_cast<char*>(cmdline.data()),
             NULL, NULL, true,
             EXTENDED_STARTUPINFO_PRESENT, NULL, NULL,
             reinterpret_cast<STARTUPINFOA*>(&info), &pinfo);
