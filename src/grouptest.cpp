@@ -51,32 +51,17 @@ enum class GroupColumn
     id,
     inDir,
     ansDir,
-    arg,
-#ifdef Interact
-    interact,
-#endif
-    test,
     timeLimit,
     hardTimeLimit,
     memoryLimit,
     hardMemoryLimit,
     verbose
 };
-#ifdef Interact
-const std::array<const char*, 11> GroupHeader {
-    "Id", "InDir", "AnsDir", "Argument", "Interactor",
-    "Test command", "Time", "Hard time",
+const std::array<const char*, 8> GroupHeader {
+    "Id", "InDir", "AnsDir", "Time", "Hard time",
     "Memory", "Hard memory", "Verbose"
 };
-typedef Table::Table<11> GroupTable;
-#else
-const std::array<const char*, 10> GroupHeader {
-    "Id", "Input", "Answer", "Argument",
-    "Test command", "Time", "Hard time",
-    "Mmory", "Hard memory", "Verbose"
-};
-typedef Table::Table<10> GroupTable;
-#endif
+typedef Table::Table<8> GroupTable;
 
 class TestPoint : public TestcaseType
 {
@@ -313,11 +298,6 @@ void TestGroup::printConfig(GroupTable& dest)
     dest.writeColumnList<GroupColumn, std::string&&>({ { GroupColumn::id, std::to_string(gid) },
         { GroupColumn::inDir, inrec ? indir.string() + "(recursive)" : indir.string() },
         { GroupColumn::ansDir, ansrec ? ansdir.string() + "(recursive)" : ansdir.string() },
-        { GroupColumn::arg, Output::writeToString(tmpl.program) },
-#ifdef Interact
-        { GroupColumn::interact, Output::writeToString(tmpl.interactor) },
-#endif
-        { GroupColumn::test, Output::writeToString(tmpl.tester) },
         { GroupColumn::timeLimit, fmt::format("{} ms ({} s)", tmpl.timeLimit / ms, tmpl.timeLimit / sec) },
         { GroupColumn::hardTimeLimit, fmt::format("{} ms ({} s)", tmpl.hardTimeLimit / ms, tmpl.hardTimeLimit / sec) },
         { GroupColumn::memoryLimit, fmt::format("{} MiB ({} GiB)", tmpl.memoryLimit / mb, tmpl.memoryLimit / gb) },
