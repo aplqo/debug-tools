@@ -246,7 +246,7 @@ unsigned long long begin, spentTime;
 
 inline bool isRun()
 {
-    return testedCount.load() < times && !(stop && fail.load());
+    return testedCount.load(std::memory_order_consume) < times && !(stop && fail.load(std::memory_order_consume));
 }
 struct Status
 {
@@ -255,7 +255,7 @@ struct Status
 
     bool printStatus()
     {
-        const unsigned long curCount = testedCount;
+        const unsigned long curCount = testedCount.load(std::memory_order_consume);
         if (curCount == lst)
             return false;
         const unsigned long long curTime = System::Usage::getRealTime();
@@ -285,7 +285,7 @@ void PrintThread()
     while (isRun())
     {
         bool flush = false;
-        if (!empty.test_and_set())
+        if (!empty.test_and_set(std::memory_order_consume))
         {
             {
                 std::lock_guard lk(tableLock);
@@ -339,7 +339,7 @@ void threadMain(const unsigned int tid)
     Testcase::Summary localSummary;
     for (unsigned int i = 0; isRun(); ++i)
     {
-        ++testedCount;
+        testedCount.fetch_add(1, std::memory_order_relaxed);
         TestPoint tst(tid, i, tmpl);
         if (tst.generate())
             tst.run();
@@ -354,7 +354,7 @@ void threadMain(const unsigned int tid)
             {
                 results.mergeData(std::move(local));
                 tableLock.unlock();
-                empty.clear();
+                empty.clear(std::memory_order_relaxed);
             }
         }
     }
