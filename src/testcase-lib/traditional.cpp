@@ -101,7 +101,7 @@ namespace apdebug
                 .setRedirect(RedirectType::StdIn, pogi.read)
                 .setRedirect(RedirectType::StdOut, pigo.write);
             const auto p = program.execute();
-            *reinterpret_cast<System::Process::Pid*>(platform->sharedMemory.ptr) = p.pid;
+            std::memcpy(platform->sharedMemory.ptr, &p.pid, sizeof(p.pid));
             const auto i = interactor.execute();
             platform->memoryProtect.addProcess(p);
             exitStatus = platform->timeProtect.waitFor(p).second;
