@@ -83,10 +83,10 @@ namespace apdebug
             {
                 if (r == 0)
                 {
-                    Judger::stopWatch(Logfile::RStatus::RuntimeError);
+                    Judger::stopWatch(static_cast<uint32_t>(Logfile::RStatus::RuntimeError));
                     writeObject(Logfile::RtError::DivByZero);
                     writeName(typeid(T).name());
-                    Judger::abortProgram(dep);
+                    Judger::abortProgram();
                 }
                 return CheckedInteger(dat / r);
             }
@@ -193,7 +193,7 @@ namespace apdebug
         private:
             static void err(const char* op)
             {
-                Judger::stopWatch(Logfile::RStatus::Warn);
+                Judger::stopWatch(static_cast<uint32_t>(Logfile::RStatus::Warn));
                 writeObject(Logfile::Warning::Overflow);
                 writeName(typeid(T).name());
                 writeString(op);
