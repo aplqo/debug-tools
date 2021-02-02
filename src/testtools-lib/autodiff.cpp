@@ -142,4 +142,8 @@ namespace apdebug::TestTools
         else
             differ = "<unused>";
     }
+    AutoDiff::~AutoDiff()
+    {
+        file.release();
+    }
 }

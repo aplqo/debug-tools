@@ -22,6 +22,7 @@ namespace apdebug::TestTools
         void parseArgument(const YAML::Node& nod);
         void check(System::Command& cmd);
         void release();
+        ~AutoDiff();
 
         std::filesystem::path differ;
 
@@ -33,7 +34,7 @@ namespace apdebug::TestTools
 
     private:
         bool redirect = false;
-        DynArray::DynArray<std::filesystem::path> file;
+        DynArray::DynArray<std::filesystem::path> file {};
     };
     class TemporaryFile
     {
@@ -46,12 +47,13 @@ namespace apdebug::TestTools
         TemporaryFile& instantiate(fmt::format_args args);
         void parseArgument(const YAML::Node& nod);
         void release(const Phase p, const bool pass, const bool accept);
+        ~TemporaryFile();
 
         DynArray::DynArray<const char*> filesTemplate[2][2][2] {};
 
     private:
         bool enable = false;
-        DynArray::DynArray<std::filesystem::path> files[2][2][2]; // 0: run, 1: test
+        DynArray::DynArray<std::filesystem::path> files[2][2][2] {}; // 0: run, 1: test
     };
 }
 

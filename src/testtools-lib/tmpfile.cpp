@@ -48,5 +48,11 @@ namespace apdebug::TestTools
         for (const auto& i : files[p][pass][accept])
             fs::remove(i);
     }
-
+    TemporaryFile::~TemporaryFile()
+    {
+        for (auto& i : files)
+            for (auto& j : i)
+                for (auto& k : j)
+                    k.release();
+    }
 }

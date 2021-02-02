@@ -145,7 +145,7 @@ private:
     struct DataPath
     {
         fs::path path;
-        bool rec;
+        bool rec = false;
         RegexSeq* pattern;
 
         void parseArgument(const YAML::Node& node);
@@ -376,9 +376,9 @@ void parseArgument(int argc, const char* argv[])
             unsigned int gid = 0;
             for (const auto& git : it.second)
                 if (const YAML::Node& i = git["use"]; i)
-                    new (ptr++) TestGroup(grp.data[i.as<unsigned int>()], gid++, git.second);
+                    new (ptr++) TestGroup(grp.data[i.as<unsigned int>()], gid++, git);
                 else
-                    new (ptr++) TestGroup(gid++, git.second);
+                    new (ptr++) TestGroup(gid++, git);
         }
 }
 

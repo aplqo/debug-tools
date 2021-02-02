@@ -72,7 +72,7 @@ namespace apdebug::System
 
     private:
         int fd[3] { -1, -1, -1 };
-        bool created[3] {}, instantiated = false;
+        bool created[3] {}, instantiated = false, replaced = false;
         std::vector<const char*> args;
 
         DynArray::DynArray<const char*> templateArgs;

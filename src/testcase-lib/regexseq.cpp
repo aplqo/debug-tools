@@ -77,27 +77,31 @@ namespace apdebug::regex_seq
                 seq.allocate(it.second.size());
                 operate* ptr = seq.data;
                 for (const auto& sit : it.second)
-                    switch (operatePar.at(sit.first.Scalar()))
-                    {
-                    case Param::Type:
-                        ptr->typ = typMap.at(sit.second.Scalar());
-                        break;
-                    case Param::Exact:
-                        if (ptr->typ == operate::Type::Match)
-                            ptr->match.exact = sit.second.as<bool>();
-                        else
-                            ptr->extract.exact = sit.second.as<bool>();
-                        break;
-                    case Param::Format:
-                        ptr->replace.fmt = sit.second.Scalar().c_str();
-                        break;
-                    case Param::Time:
-                        ptr->replace.num = sit.second.as<unsigned int>();
-                        break;
-                    case Param::Position:
-                        ptr->extract.pos.parseArgument(sit.second);
-                        break;
-                    }
+                {
+                    for (const auto& key : sit)
+                        switch (operatePar.at(key.first.Scalar()))
+                        {
+                        case Param::Type:
+                            ptr->typ = typMap.at(key.second.Scalar());
+                            break;
+                        case Param::Exact:
+                            if (ptr->typ == operate::Type::Match)
+                                ptr->match.exact = key.second.as<bool>();
+                            else
+                                ptr->extract.exact = key.second.as<bool>();
+                            break;
+                        case Param::Format:
+                            ptr->replace.fmt = key.second.Scalar().c_str();
+                            break;
+                        case Param::Time:
+                            ptr->replace.num = key.second.as<unsigned int>();
+                            break;
+                        case Param::Position:
+                            ptr->extract.pos.parseArgument(key.second);
+                            break;
+                        }
+                    ++ptr;
+                }
             }
     }
     std::pair<bool, std::string> OperateSeq::eval(std::string& s) const

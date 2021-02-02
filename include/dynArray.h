@@ -15,7 +15,7 @@ namespace apdebug::DynArray
     template <class T>
     struct DynArray
     {
-        size_t size;
+        size_t size = 0;
         T* data = nullptr;
         const T* begin() const { return data; }
         const T* end() const { return data + size; }
@@ -25,6 +25,15 @@ namespace apdebug::DynArray
         {
             size = count;
             data = reinterpret_cast<T*>(std::malloc(sizeof(T) * size));
+        }
+        inline void release()
+        {
+            if (!data)
+                return;
+            for (T* i = data; i < data + size; ++i)
+                i->~T();
+            free(data);
+            data = nullptr;
         }
         template <class U>
         requires Function<U, T> void parseArgument(const YAML::Node& node, U param)

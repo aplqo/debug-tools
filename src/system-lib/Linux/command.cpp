@@ -36,11 +36,11 @@ namespace apdebug::System
     Command& Command::instantiate(fmt::format_args args)
     {
         this->args.push_back(path.data());
-        instantiated = true;
+        instantiated = replaced = true;
         if (templateArgs.data)
         {
             const size_t cnt = templateArgs.size;
-            this->args.reserve(cnt + 1);
+            this->args.reserve(cnt + 10);
             for (size_t i = 1; i <= cnt; ++i)
             {
                 char* buf = new char[maxArgsSize + 1];
@@ -145,8 +145,8 @@ namespace apdebug::System
         if (!instantiated)
             return;
         release();
-        const unsigned int cnt = templateArgs.size;
-        for (unsigned int i = 1; i <= cnt; ++i)
-            delete[] args[i];
+        if (replaced)
+            for (unsigned int i = 1; i <= templateArgs.size; ++i)
+                delete[] args[i];
     }
 }
