@@ -1,18 +1,10 @@
 general:
   tester: &tester
     path: /usr/bin/diff
-    argument:
-      - "{output}"
-      - "{answer}"
-      - -a
-      - -w
-      - -u
-      - --color
+    argument: ["{output}", "{answer}", "-a", "-w", "-u", "--color"]
   autodiff: &autodiff
     differ: "{input}.diff"
-    file:
-      - "{output}"
-      - "{answer}"
+    file: ["{output}", "{answer}"]
   program: &program
     path: null
   basic: &basic
@@ -28,10 +20,7 @@ group:
     - data:
         regex:
           - regex: '^(.*)\.[^\.]*'
-            operate:
-              - type: extract
-                exact: true
-                position: [1]
+            operate: [{ type: extract, exact: true, position: [1] }]
         input:
           regex:
             - regex: '.*\.in$'
@@ -47,9 +36,7 @@ random:
   testcase:
     data:
       standard:
-        argument:
-          - "{input}"
-          - "{answer}"
+        argument: ["{input}", "{answer}"]
     basic:
       program: *program
       test: *tester

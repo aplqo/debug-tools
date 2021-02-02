@@ -10,9 +10,7 @@ general:
       - "{answer}"
   autodiff: &autodiff
     differ: "{input}.diff"
-    file:
-      - "{output}"
-      - "{answer}"
+    file: ["{output}", "{answer}"]
   program: &program
     path: null
   basic: &basic
@@ -28,10 +26,7 @@ group:
     - data:
         regex:
           - regex: '^(.*)\.[^\.]*'
-            operate:
-              - type: extract
-                exact: true
-                position: [1]
+            operate: [{ type: extract, exact: true, position: [1] }]
         input:
           regex:
             - regex: '.*\.in$'
@@ -46,9 +41,7 @@ random:
   stop_on_error: true
   data:
     standard:
-      argument:
-        - "{input}"
-        - "{answer}"
+      argument: ["{input}", "{answer}"]
   basic:
     program: *program
     test: *tester
