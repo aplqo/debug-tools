@@ -2,6 +2,7 @@ aux_source_directory(./testcase-lib testsrc)
 aux_source_directory(./testtools-lib toolsrc)
 
 find_package(fmt CONFIG REQUIRED)
+find_package(yaml-cpp REQUIRED)
 link_libraries(fmt::fmt-header-only)
 
 set(Boost_USE_STATIC_LIBS ON)
@@ -15,7 +16,7 @@ add_subdirectory(system-lib)
 add_subdirectory(judge-lib)
 
 add_library(testtools-lib STATIC ${toolsrc})
-target_link_libraries(testtools-lib PUBLIC system_full)
+target_link_libraries(testtools-lib PUBLIC system_full yaml-cpp)
 target_link_libraries(testtools-lib PRIVATE staticLibConfig)
 
 add_library(testcase-tra STATIC ${testsrc})

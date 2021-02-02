@@ -15,11 +15,14 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <unordered_map>
 
 #include <fmt/compile.h>
 #include <fmt/format.h>
 
 #include <boost/thread/latch.hpp>
+
+#include <yaml-cpp/yaml.h>
 
 using namespace apdebug;
 namespace fs = std::filesystem;
@@ -61,7 +64,7 @@ struct TestPointTemplate : public TestTemplateBase
 
     void globalInit();
     void threadInit();
-    bool parseArgument(int& argc, const char* const argv[]);
+    void parseArgument(const YAML::Node& node);
     void print(std::ostream& os) const;
 } global;
 class TestPoint : public TestcaseType
@@ -86,6 +89,20 @@ static const Testcase::Result judgeFail {
     .details = "Generate data failed"
 };
 
+enum class TemplateParam
+{
+    Tmpdir,
+    Generator,
+    Standard,
+    Validator
+};
+static const std::unordered_map<std::string, TemplateParam> templatePar {
+    { "tmpdir", TemplateParam::Tmpdir },
+    { "generator", TemplateParam::Generator },
+    { "standard", TemplateParam::Standard },
+    { "validator", TemplateParam::Validator }
+};
+
 void TestPointTemplate::globalInit()
 {
     if (!fs::exists(tmpdir))
@@ -105,27 +122,30 @@ void TestPointTemplate::threadInit()
     platform->init();
     TestTemplateBase::init();
 }
-bool TestPointTemplate::parseArgument(int& argc, const char* const argv[])
+void TestPointTemplate::parseArgument(const YAML::Node& node)
 {
-    if (TestTemplateBase::parseArgument(argc, argv))
-        return true;
-    else if (!strcmp(argv[argc], "-tmpdir"))
-        tmpdir = argv[++argc];
-    else if (!strcmp(argv[argc], "-generator"))
-        generator.path = argv[++argc];
-    else if (!strcmp(argv[argc], "-gen-args"))
-        generator.parseArgument(++argc, argv);
-    else if (!strcmp(argv[argc], "-standard"))
-        standard.path = argv[++argc];
-    else if (!strcmp(argv[argc], "-std-args"))
-        standard.parseArgument(++argc, argv);
-    else if (!strcmp(argv[argc], "-validator"))
-        validor.path = argv[++argc];
-    else if (!strcmp(argv[argc], "-valargs"))
-        validor.parseArgument(++argc, argv);
-    else
-        return false;
-    return true;
+    for (const auto& it : node)
+        if (it.first.Scalar() == "basic")
+            TestTemplateBase::parseArgument(it.second);
+        else if (it.first.Scalar() == "data")
+        {
+            for (const auto& i : it.second)
+                switch (templatePar.at(i.second.Scalar()))
+                {
+                case TemplateParam::Tmpdir:
+                    tmpdir = i.second.Scalar().c_str();
+                    break;
+                case TemplateParam::Generator:
+                    generator.parseArgument(i.second);
+                    break;
+                case TemplateParam::Standard:
+                    standard.parseArgument(i.second);
+                    break;
+                case TemplateParam::Validator:
+                    validor.parseArgument(i.second);
+                    break;
+                }
+        }
 }
 void TestPointTemplate::print(std::ostream& os) const
 {
@@ -240,8 +260,8 @@ std::atomic_flag empty;
 boost::latch* lat;
 std::atomic_ulong testedCount; // test count
 std::atomic_bool fail = false;
-unsigned long times;
-bool stop = false, showall = true, realTime = false;
+unsigned long times, parallelism = std::thread::hardware_concurrency();
+bool stop = false, showall = true, realTime = false, version = true;
 unsigned long long begin, spentTime;
 
 inline bool isRun()
@@ -403,30 +423,67 @@ void runTest(const unsigned int parallel)
     summary.print(std::cout);
 }
 
-int main(int argc, char* argv[])
+enum class GeneralParam
+{
+    Version,
+    Time,
+    StopOnError,
+    Parallelism,
+    FailOnly,
+    RealTime,
+    Testcase
+};
+static const std::unordered_map<std::string, GeneralParam> generalPar {
+    { "version", GeneralParam::Version },
+    { "test_time", GeneralParam::Time },
+    { "stop_on_error", GeneralParam::StopOnError },
+    { "parallelism", GeneralParam::Parallelism },
+    { "fail_only", GeneralParam::FailOnly },
+    { "real_time", GeneralParam::RealTime },
+    { "testcase", GeneralParam::Testcase }
+};
+YAML::Node config, node;
+void parseArgument(const int argc, const char* argv[])
+{
+    node = YAML::LoadFile(argv[1]);
+    config = std::move(node["random"]);
+    for (const auto& it : config)
+        switch (generalPar.at(it.first.Scalar()))
+        {
+        case GeneralParam::Version:
+            version = it.second.as<bool>();
+            break;
+        case GeneralParam::Time:
+            times = it.second.as<decltype(times)>();
+            break;
+        case GeneralParam::StopOnError:
+            stop = it.second.as<bool>();
+            break;
+        case GeneralParam::Parallelism:
+            parallelism = it.second.as<unsigned int>();
+            break;
+        case GeneralParam::FailOnly:
+            fail = it.second.as<bool>();
+            break;
+        case GeneralParam::RealTime:
+            realTime = it.second.as<bool>();
+            break;
+        case GeneralParam::Testcase:
+            global.parseArgument(it.second);
+            break;
+        }
+}
+
+int main(int argc, const char* argv[])
 {
     System::consoleInit();
-    if (strcmp(argv[1], "-no-version"))
+    parseArgument(argc, argv);
+    if (version)
         Output::PrintVersion("random test runner", std::cout);
-    unsigned int parallel = std::thread::hardware_concurrency();
-    for (int i = 1; i < argc; ++i)
-    {
-        if (global.parseArgument(i, argv))
-            continue;
-        else if (!strcmp(argv[i], "-times"))
-            times = atoll(argv[++i]);
-        else if (!strcmp(argv[i], "-stop-on-error"))
-            stop = true;
-        else if (!strcmp(argv[i], "-parallelism"))
-            parallel = atoi(argv[++i]);
-        else if (!strcmp(argv[i], "-fail-only"))
-            showall = false;
-        else if (!strcmp(argv[i], "-real-time"))
-            realTime = true;
-    }
     std::cout << Escape::TextCyan;
+    std::cout << "[info] Config file: " << argv[1] << "\n";
     std::cout << "[Info] Test time: " << times << "\n";
-    std::cout << "[Info] Parallelism: " << parallel << "\n";
+    std::cout << "[Info] Parallelism: " << parallelism << "\n";
     std::cout << "[Info] Stop on error: " << std::boolalpha << stop << "\n";
     std::cout << "[Info] Show all test: " << std::boolalpha << showall << "\n";
     std::cout << "[info] Real time update table: " << std::boolalpha << realTime << "\n";
@@ -434,9 +491,9 @@ int main(int argc, char* argv[])
     global.print(std::cout);
     std::cout.flush();
     if (realTime)
-        runTest<true>(parallel);
+        runTest<true>(parallelism);
     else
-        runTest<false>(parallel);
+        runTest<false>(parallelism);
     if (global.created && !fail)
     {
         std::cout << Escape::TextCyan << "\n[Info] Test passed removed temporary directory.";

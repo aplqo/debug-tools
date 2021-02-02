@@ -12,6 +12,7 @@
 #include <regex>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 
 #include <fmt/compile.h>
 #include <fmt/format.h>
@@ -28,37 +29,55 @@ namespace apdebug
 {
     namespace Testcase
     {
+        enum class Param
+        {
+            Limit,
+            Test,
+            Program,
+            Autodiff,
+            Tmpfile,
+            Interactor
+        };
+        static const std::unordered_map<std::string, Param> par {
+            { "limit", Param::Limit },
+            { "test", Param::Test },
+            { "program", Param::Program },
+            { "autodiff", Param::Autodiff },
+            { "tmpfile", Param::Tmpfile },
+            { "interact", Param::Interactor }
+        };
         void BasicTemplate::init()
         {
             using namespace fmt::literals;
             platform->memoryProtect.setLimit(hardMemoryLimit);
             platform->timeProtect.setExpire(hardTimeLimit);
         }
-        bool BasicTemplate::parseArgument(int& argc, const char* const argv[])
+        void BasicTemplate::parseArgument(const YAML::Node& node)
         {
-            if (LimitInfo::parseArgument(argc, argv))
-                return true;
-            else if (!strcmp(argv[argc], "-program"))
-                program.path = argv[++argc];
-            else if (!strcmp(argv[argc], "-args"))
-                program.parseArgument(++argc, argv);
-            else if (!strcmp(argv[argc], "-test"))
-                tester.path = argv[++argc];
-            else if (!strcmp(argv[argc], "-test-args"))
-                tester.parseArgument(++argc, argv);
-            else if (!strcmp(argv[argc], "-autodiff"))
-                diff.parseArgument(++argc, argv);
-            else if (!strcmp(argv[argc], "-tmpfile"))
-                tmpfiles.parseArgument(++argc, argv);
+            for (const auto& it : node)
+                switch (par.at(it.first.Scalar()))
+                {
+                case Param::Limit:
+                    LimitInfo::parseArgument(it.second);
+                    break;
+                case Param::Test:
+                    tester.parseArgument(it.second);
+                    break;
+                case Param::Program:
+                    program.parseArgument(it.second);
+                    break;
+                case Param::Autodiff:
+                    diff.parseArgument(it.second);
+                    break;
+                case Param::Tmpfile:
+                    tmpfiles.parseArgument(it.second);
+                    break;
 #ifdef Interact
-            else if (!strcmp(argv[argc], "-interact"))
-                interactor.path = argv[++argc];
-            else if (!strcmp(argv[argc], "-interact-args"))
-                interactor.parseArgument(++argc, argv);
+                case Param::Interactor:
+                    interactor.parseArgument(it.second);
+                    break;
 #endif
-            else
-                return false;
-            return true;
+                }
         }
 
         BasicTest::BasicTest(fs::path&& input, fs::path&& answer, const BasicTemplate& te)

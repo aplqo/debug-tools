@@ -1,4 +1,5 @@
 #include "include/color.h"
+#include "include/convert.h"
 #include "include/pathFormat.h"
 #include "include/testtools.h"
 #include "include/utility.h"
@@ -7,6 +8,7 @@
 #include <initializer_list>
 #include <iomanip>
 #include <iostream>
+#include <unordered_map>
 
 #include <fmt/core.h>
 
@@ -16,17 +18,30 @@ namespace Escape = apdebug::Output::Escape;
 
 namespace apdebug::TestTools
 {
+    enum class Param
+    {
+        Verbose,
+        Limit,
+        Diff,
+        File
+    };
+    static const std::unordered_map<std::string, Param> par {
+        { "verbose", Param::Verbose },
+        { "limit", Param::Limit },
+        { "differ", Param::Diff },
+        { "file", Param::File }
+    };
 
     AutoDiff& AutoDiff::instantiate(fmt::format_args args)
     {
         if (!enable)
             return *this;
         using namespace fmt::literals;
-        if (fileTemplate)
+        if (fileTemplate.size)
         {
-            file.reserve(fileTemplate->size());
-            for (unsigned int i = 0; i < fileTemplate->size(); ++i)
-                file.emplace_back(fmt::vformat(fileTemplate->at(i), args));
+            file.allocate(fileTemplate.size);
+            for (unsigned int i = 0; i < fileTemplate.size; ++i)
+                new (file.data + i) fs::path(fmt::vformat(fileTemplate.data[i], args));
         }
         if (differTemplate)
             differ = fmt::vformat(differTemplate, args);
@@ -34,35 +49,42 @@ namespace apdebug::TestTools
     }
     AutoDiff& AutoDiff::instantiate()
     {
-        if (fileTemplate)
+        if (fileTemplate.size)
         {
-            file.reserve(fileTemplate->size());
-            for (unsigned int i = 0; i < fileTemplate->size(); ++i)
-                file.emplace_back(fileTemplate->at(i));
+            file.allocate(fileTemplate.size);
+            for (unsigned int i = 0; i < fileTemplate.size; ++i)
+                new (file.data + i) fs::path(fileTemplate.data[i]);
         }
         if (differTemplate)
             differ = differTemplate;
         return *this;
     }
-    void AutoDiff::parseArgument(int& argc, const char* const argv[])
+    void AutoDiff::parseArgument(const YAML::Node& nod)
     {
-        enable = true;
-        ++argc;
-        for (; strcmp(argv[argc], "]"); ++argc)
+        if (nod.IsNull())
         {
-            if (!strcmp(argv[argc], "-silent"))
-                verbose = false;
-            else if (!strcmp(argv[argc], "-verbose"))
-                verbose = true;
-            else if (!strcmp(argv[argc], "-limit"))
-                size = atoll(argv[++argc]);
-            else if (!strcmp(argv[argc], "-diff"))
-                differTemplate = argv[++argc];
-            else if (!strcmp(argv[argc], "-files"))
-                fileTemplate = new std::vector(Utility::parseCmdArray<const char*>(++argc, argv));
-            else if (!strcmp(argv[argc], "-disable"))
-                enable = false;
+            enable = false;
+            return;
         }
+        enable = true;
+        for (const auto& it : nod)
+            switch (par.at(it.first.Scalar()))
+            {
+            case Param::Verbose:
+                verbose = it.second.as<bool>();
+                break;
+            case Param::Limit:
+                size = it.second.as<size_t>();
+                break;
+            case Param::Diff:
+                differTemplate = it.second.Scalar().c_str();
+                break;
+            case Param::File:
+                fileTemplate.parseArgument(it.second, [](const char** dest, const YAML::Node& node) {
+                    *dest = node.Scalar().c_str();
+                });
+                break;
+            }
     }
     void AutoDiff::check(System::Command& cmd)
     {

@@ -5,7 +5,6 @@
 #include <cstring>
 #include <filesystem>
 namespace fs = std::filesystem;
-using apdebug::Utility::parseCmdArray;
 
 namespace apdebug::TestTools
 {
@@ -16,28 +15,30 @@ namespace apdebug::TestTools
         for (unsigned int i = 0; i < 2; ++i)
             for (unsigned int j = 0; j < 2; ++j)
                 for (unsigned int k = 0; k < 2; ++k)
-                    if (filesTemplate[i][j][k])
+                    if (filesTemplate[i][j][k].data)
                     {
                         auto& cur = files[i][j][k];
-                        const auto& pattern = *filesTemplate[i][j][k];
-                        cur.reserve(pattern.size());
-                        for (unsigned int i = 0; i < pattern.size(); ++i)
-                            cur.emplace_back(fmt::vformat(pattern[i], args));
+                        const auto& pattern = filesTemplate[i][j][k];
+                        cur.allocate(pattern.size);
+                        for (unsigned int i = 0; i < pattern.size; ++i)
+                            new (cur.data + i) fs::path(fmt::vformat(pattern.data[i], args));
                     }
         return *this;
     }
-    void TemporaryFile::parseArgument(int& argc, const char* const argv[])
+    void TemporaryFile::parseArgument(const YAML::Node& nod)
     {
-        enable = true;
-        for (; !strcmp(argv[argc], "]"); ++argc)
+        if (nod.IsNull())
         {
-            if (!strcmp(argv[argc], "-disable"))
-                enable = false;
-            else
-            {
-                const char* const cptr = argv[argc++];
-                filesTemplate[cptr[1] == 'T'][cptr[2] == 'P'][cptr[3] == 'P'] = new std::vector(parseCmdArray<const char*>(argc, argv));
-            }
+            enable = false;
+            return;
+        }
+        enable = true;
+        for (const auto& it : nod)
+        {
+            const std::string& s = it.first.Scalar();
+            filesTemplate[s[0] == 'T'][s[1] == 'P'][s[2] == 'P'].parseArgument(it.second, [](const char** dest, const YAML::Node& node) {
+                *dest = node.Scalar().c_str();
+            });
         }
     }
     void TemporaryFile::release(const Phase p, const bool pass, const bool accept)

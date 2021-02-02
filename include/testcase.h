@@ -11,6 +11,8 @@
 #include <string_view>
 #include <type_traits>
 
+#include <yaml-cpp/yaml.h>
+
 namespace apdebug
 {
     namespace Testcase
@@ -60,7 +62,7 @@ namespace apdebug
             unsigned long long timeLimit = defaultTime, hardTimeLimit = defaultTime * 10;
             System::MemoryUsage memoryLimit = defaultMemory, hardMemoryLimit = 1024 * 1024 * 3;
 
-            bool parseArgument(int& argc, const char* const argv[]);
+            void parseArgument(const YAML::Node& nod);
             friend std::ostream& operator<<(std::ostream& os, const LimitInfo& lim);
         };
         struct TestResult
@@ -95,7 +97,7 @@ namespace apdebug
             Platform* platform;
 
             void init();
-            bool parseArgument(int& argc, const char* const argv[]);
+            void parseArgument(const YAML::Node& node);
         };
         class BasicTest : public TestResult, private BasicTemplate
         {

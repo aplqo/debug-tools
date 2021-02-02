@@ -5,6 +5,9 @@
 #include <cstring>
 #include <filesystem>
 #include <iostream>
+#include <unordered_map>
+
+#include <yaml-cpp/yaml.h>
 using namespace apdebug;
 using std::cout;
 using std::strcmp;
@@ -13,28 +16,68 @@ namespace Escape = apdebug::Output::Escape;
 typedef Testcase::BasicTemplate TestTemplate;
 typedef Testcase::BasicTest TestcaseType;
 
-Testcase::Platform plat;
+enum class Param
+{
+    Version,
+    Data,
+    Testcase
+};
+static const std::unordered_map<std::string, Param> par {
+    { "version", Param::Version },
+    { "data", Param::Data },
+    { "basic", Param::Testcase }
+};
 
-int main(int argc, char* argv[])
+YAML::Node file, config;
+bool version;
+Testcase::Platform plat;
+std::string input, answer;
+TestTemplate tmpl;
+
+void parseArgument(int argc, const char* argv[])
+{
+    file = YAML::LoadFile(argv[1]);
+    config = file["single"];
+    for (const auto& i : config)
+        switch (par.at(i.first.Scalar()))
+        {
+        case Param::Version:
+            version = i.second.as<bool>();
+            break;
+        case Param::Data:
+        {
+            for (const auto& it : i.second)
+            {
+                if (it.first.Scalar() == "input")
+                    input = it.second.as<std::string>();
+                else if (it.first.Scalar() == "answer")
+                    answer = it.second.as<std::string>();
+            }
+            break;
+        }
+        case Param::Testcase:
+            tmpl.parseArgument(i.second);
+            break;
+        }
+    if (argc > 2)
+    {
+        input = argv[2];
+        if (argc > 3)
+            answer = argv[3];
+    }
+}
+
+int main(int argc, const char* argv[])
 {
     System::consoleInit();
-    if (strcmp(argv[1], "-no-version"))
+    parseArgument(argc, argv);
+    if (version)
         Output::PrintVersion("Single test runner", cout);
-    TestTemplate tmpl;
-    std::string input, answer;
-    for (int i = 1; i < argc; ++i)
-    {
-        if (!strcmp(argv[i], "-in"))
-            input = argv[++i];
-        else if (!strcmp(argv[i], "-ans"))
-            answer = argv[++i];
-        else if (tmpl.parseArgument(i, argv))
-            continue;
-    }
     tmpl.platform = &plat;
     plat.init();
     tmpl.init();
     TestcaseType test(std::move(input), std::move(answer), tmpl);
+    std::cout << Escape::TextCyan << "[info] Config file: " << argv[1] << "\n";
     test.printRunInfo(cout);
     cout << Escape::TextCyan << static_cast<Testcase::LimitInfo&>(tmpl) << Escape::TextBlue << "\n";
     cout << "[info] Start program" << Escape::None << std::endl;

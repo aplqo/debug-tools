@@ -123,8 +123,8 @@ void TestPoint::writeToTable(ResultTable& dest)
 class TestGroup
 {
 public:
-    TestGroup(const unsigned int id, int& argc, const char* const argv[]);
-    TestGroup(const TestGroup& p, const unsigned int id, int& argc, const char* const argv[]);
+    TestGroup(const unsigned int id, const YAML::Node& node);
+    TestGroup(const TestGroup& p, const unsigned int id, const YAML::Node& node);
     void findFile();
     void execute();
     void printConfig(GroupTable& t);
@@ -133,7 +133,7 @@ public:
 private:
     static const std::array<const char*, 12> colName;
 
-    void parseArgument(int& argc, const char* const argv[]);
+    void parseArgument(const YAML::Node& node);
     template <bool rec>
     void findInput();
     template <bool rec>
@@ -142,9 +142,16 @@ private:
     std::pair<bool, std::string> isInclude(const fs::path& p, const RegexSeq* r);
 
     unsigned int gid;
-    fs::path indir, ansdir;
-    bool inrec = false, ansrec = false, verbose = false;
-    RegexSeq *inputPattern, *answerPattern, *testPattern;
+    struct DataPath
+    {
+        fs::path path;
+        bool rec;
+        RegexSeq* pattern;
+
+        void parseArgument(const YAML::Node& node);
+    } input, answer;
+    bool verbose = false;
+    RegexSeq* testPattern;
     TestTemplate tmpl;
     ResultTable results;
     std::vector<std::pair<fs::path, fs::path>> tests;
@@ -152,57 +159,101 @@ private:
     Testcase::Summary summary;
 };
 
-TestGroup::TestGroup(const unsigned int id, int& argc, const char* const argv[])
+enum class DataParam
+{
+    TestRegex,
+    Input,
+    Answer
+};
+static const std::unordered_map<std::string, DataParam> dataPar {
+    { "regex", DataParam::TestRegex },
+    { "input", DataParam::Input },
+    { "answer", DataParam::Answer }
+};
+enum class GroupParam
+{
+    Verbose,
+    Data,
+    Basic,
+    Use
+};
+static const std::unordered_map<std::string, GroupParam> groupPar {
+    { "verbose", GroupParam::Verbose },
+    { "data", GroupParam::Data },
+    { "basic", GroupParam::Basic },
+    { "use", GroupParam::Use }
+};
+enum class DirParam
+{
+    Path,
+    Recursive,
+    Regex
+};
+static const std::unordered_map<std::string, DirParam> dirPar {
+    { "path", DirParam::Path },
+    { "recursive", DirParam::Recursive },
+    { "regex", DirParam::Regex }
+};
+
+void TestGroup::DataPath::parseArgument(const YAML::Node& node)
+{
+    for (const auto& it : node)
+        switch (dirPar.at(it.first.Scalar()))
+        {
+        case DirParam::Path:
+            path = it.second.as<std::string>();
+            break;
+        case DirParam::Recursive:
+            rec = it.second.as<bool>();
+            break;
+        case DirParam::Regex:
+            pattern = new RegexSeq(it.second);
+            break;
+        }
+}
+TestGroup::TestGroup(const unsigned int id, const YAML::Node& node)
     : gid(id)
     , results(ResultHeader, Escape::None)
 {
-    parseArgument(argc, argv);
+    parseArgument(node);
 }
-TestGroup::TestGroup(const TestGroup& p, const unsigned int id, int& argc, const char* const argv[])
+TestGroup::TestGroup(const TestGroup& p, const unsigned int id, const YAML::Node& node)
     : TestGroup(p)
 {
     gid = id;
-    parseArgument(argc, argv);
+    parseArgument(node);
 }
-void TestGroup::parseArgument(int& argc, const char* const argv[])
+void TestGroup::parseArgument(const YAML::Node& node)
 {
-    for (; strcmp(argv[argc], ";"); ++argc)
-    {
-        if (!strcmp(argv[argc], "-test-regex"))
-            testPattern = new RegexSeq(++argc, argv);
-        else if (!strcmp(argv[argc], "-indir"))
+    for (const auto& it : node)
+        switch (groupPar.at(it.first.Scalar()))
         {
-            if (!strcmp(argv[argc + 1], "-R"))
-            {
-                ++argc;
-                inrec = true;
-            }
-            else
-                inrec = false;
-            indir = argv[++argc];
-        }
-        else if (!strcmp(argv[argc], "-in-regex"))
-            inputPattern = new RegexSeq(++argc, argv);
-        else if (!strcmp(argv[argc], "-ansdir"))
+        case GroupParam::Verbose:
+            verbose = it.second.as<bool>();
+            break;
+        case GroupParam::Data:
         {
-            if (!strcmp(argv[argc + 1], "-R"))
-            {
-                ++argc;
-                ansrec = true;
-            }
-            else
-                ansrec = false;
-            ansdir = argv[++argc];
+            for (const auto& dit : it.second)
+                switch (dataPar.at(dit.first.Scalar()))
+                {
+                case DataParam::TestRegex:
+                    testPattern = new RegexSeq(dit.second);
+                    break;
+                case DataParam::Input:
+                    input.parseArgument(dit.second);
+                    break;
+                case DataParam::Answer:
+                    answer.parseArgument(dit.second);
+                    break;
+                }
+            break;
         }
-        else if (!strcmp(argv[argc], "-ans-regex"))
-            answerPattern = new RegexSeq(++argc, argv);
-        else if (!strcmp(argv[argc], "-verbose"))
-            verbose = true;
-        else if (!strcmp(argv[argc], "-silent"))
-            verbose = false;
-        else if (tmpl.parseArgument(argc, argv))
-            continue;
-    }
+        case GroupParam::Basic:
+            tmpl.parseArgument(it.second);
+            break;
+        default:
+            break;
+        }
 }
 void TestGroup::execute()
 {
@@ -236,11 +287,11 @@ void TestGroup::printResult(Testcase::Summary& totalSummary)
 }
 void TestGroup::findFile()
 {
-    if (inrec)
+    if (input.rec)
         findInput<true>();
     else
         findInput<false>();
-    if (ansrec)
+    if (answer.rec)
         findAnswer<true>();
     else
         findAnswer<false>();
@@ -250,11 +301,11 @@ template <bool rec>
 void TestGroup::findInput()
 {
     unsigned int cur = 0;
-    std::conditional_t<rec, fs::recursive_directory_iterator, fs::directory_iterator> init(indir);
+    std::conditional_t<rec, fs::recursive_directory_iterator, fs::directory_iterator> init(input.path);
     for (auto& i : init)
         if (i.is_regular_file())
         {
-            if (const auto [suc, hsh] = isInclude<rec>(i.path(), inputPattern); suc)
+            if (const auto [suc, hsh] = isInclude<rec>(i.path(), input.pattern); suc)
             {
                 tests.emplace_back(i.path(), "");
                 table[hsh] = cur;
@@ -265,12 +316,12 @@ void TestGroup::findInput()
 template <bool rec>
 void TestGroup::findAnswer()
 {
-    if (!exists(ansdir))
+    if (!exists(answer.path))
         return;
-    std::conditional_t<rec, fs::recursive_directory_iterator, fs::directory_iterator> ansit(ansdir);
+    std::conditional_t<rec, fs::recursive_directory_iterator, fs::directory_iterator> ansit(answer.path);
     for (auto& i : ansit)
         if (i.is_regular_file())
-            if (const auto [suc, hsh] = isInclude<rec>(i.path(), answerPattern); suc)
+            if (const auto [suc, hsh] = isInclude<rec>(i.path(), answer.pattern); suc)
                 if (auto it = table.find(hsh); it != table.end())
                     tests[it->second].second = i.path();
 }
@@ -296,31 +347,44 @@ void TestGroup::printConfig(GroupTable& dest)
     using namespace std::string_literals;
     dest.newColumn(Escape::TextCyan);
     dest.writeColumnList<GroupColumn, std::string&&>({ { GroupColumn::id, std::to_string(gid) },
-        { GroupColumn::inDir, inrec ? indir.string() + "(recursive)" : indir.string() },
-        { GroupColumn::ansDir, ansrec ? ansdir.string() + "(recursive)" : ansdir.string() },
+        { GroupColumn::inDir, input.rec ? input.path.string() + "(recursive)" : input.path.string() },
+        { GroupColumn::ansDir, answer.rec ? answer.path.string() + "(recursive)" : answer.path.string() },
         { GroupColumn::timeLimit, fmt::format("{} ms ({} s)", tmpl.timeLimit / ms, tmpl.timeLimit / sec) },
         { GroupColumn::hardTimeLimit, fmt::format("{} ms ({} s)", tmpl.hardTimeLimit / ms, tmpl.hardTimeLimit / sec) },
         { GroupColumn::memoryLimit, fmt::format("{} MiB ({} GiB)", tmpl.memoryLimit / mb, tmpl.memoryLimit / gb) },
         { GroupColumn::hardMemoryLimit, fmt::format("{} MiB ({} GiB)", tmpl.hardMemoryLimit / mb, tmpl.hardMemoryLimit / gb) },
         { GroupColumn::verbose, verbose ? "True"s : "False"s } });
 }
-std::vector<TestGroup> grp;
+DynArray::DynArray<TestGroup> grp;
+YAML::Node file, config;
+bool version = true;
 
-int main(int argc, char* argv[])
+void parseArgument(int argc, const char* argv[])
+{
+    file = YAML::LoadFile(argv[1]);
+    config = file["group"];
+    for (const auto& it : config)
+        if (it.first.Scalar() == "version")
+            version = it.second.as<bool>();
+        else if (it.first.Scalar() == "groups")
+        {
+            grp.allocate(it.second.size());
+            TestGroup* ptr = grp.data;
+            unsigned int gid = 0;
+            for (const auto& git : it.second)
+                if (const YAML::Node& i = git["use"]; i)
+                    new (ptr++) TestGroup(grp.data[i.as<unsigned int>()], gid++, git.second);
+                else
+                    new (ptr++) TestGroup(gid++, git.second);
+        }
+}
+
+int main(int argc, const char* argv[])
 {
     System::consoleInit();
-    if (strcmp(argv[1], "-no-version"))
+    parseArgument(argc, argv);
+    if (version)
         Output::PrintVersion("group test runner", std::cout);
-    for (int p = 1, id = 0; p < argc; ++p)
-    {
-        if (strcmp(argv[p], "-use"))
-            grp.emplace_back(id++, p, argv);
-        else
-        {
-            const unsigned int u = atoi(argv[++p]);
-            grp.emplace_back(grp[u], id++, ++p, argv);
-        }
-    }
     std::cout << Escape::TextCyan << "[Info] Group config: \n";
     {
         GroupTable gtable(GroupHeader, Escape::TextCyan);

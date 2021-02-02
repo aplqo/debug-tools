@@ -1,9 +1,12 @@
 #ifndef TESTTOOLS_H
 #define TESTTOOLS_H
 
+#include "include/dynArray.h"
 #include "system.h"
 
 #include <fmt/format.h>
+
+#include <yaml-cpp/yaml.h>
 
 #include <filesystem>
 #include <string>
@@ -16,21 +19,21 @@ namespace apdebug::TestTools
     public:
         AutoDiff& instantiate(fmt::format_args args);
         AutoDiff& instantiate();
-        void parseArgument(int& argc, const char* const argv[]);
+        void parseArgument(const YAML::Node& nod);
         void check(System::Command& cmd);
         void release();
 
         std::filesystem::path differ;
 
-        bool enable = false;
+        bool enable = false, verbose = false;
         unsigned int size = 200;
 
         const char* differTemplate = nullptr;
-        std::vector<const char*>* fileTemplate = nullptr;
+        DynArray::DynArray<const char*> fileTemplate;
 
     private:
-        bool verbose = false, redirect = false;
-        std::vector<std::filesystem::path> file;
+        bool redirect = false;
+        DynArray::DynArray<std::filesystem::path> file;
     };
     class TemporaryFile
     {
@@ -41,14 +44,14 @@ namespace apdebug::TestTools
             Test = 1
         };
         TemporaryFile& instantiate(fmt::format_args args);
-        void parseArgument(int& argc, const char* const argv[]);
+        void parseArgument(const YAML::Node& nod);
         void release(const Phase p, const bool pass, const bool accept);
 
-        std::vector<const char*>* filesTemplate[2][2][2] {};
+        DynArray::DynArray<const char*> filesTemplate[2][2][2] {};
 
     private:
         bool enable = false;
-        std::vector<std::filesystem::path> files[2][2][2]; // 0: run, 1: test
+        DynArray::DynArray<std::filesystem::path> files[2][2][2]; // 0: run, 1: test
     };
 }
 

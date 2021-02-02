@@ -1,6 +1,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+#include "include/dynArray.h"
 #include "include/system_common.h"
 
 #include <filesystem>
@@ -16,6 +17,8 @@
 #include <vector>
 
 #include <fmt/format.h>
+
+#include <yaml-cpp/yaml.h>
 
 namespace apdebug::System
 {
@@ -61,7 +64,7 @@ namespace apdebug::System
         Command& setRedirect(const RedirectType which, const int fd);
         Command& setRedirect(const RedirectType which, const std::filesystem::path& file);
         void release();
-        void parseArgument(int& argc, const char* const argv[]);
+        void parseArgument(const YAML::Node& nod);
         friend std::ostream& operator<<(std::ostream& os, const Command& c);
         ~Command();
 
@@ -72,7 +75,7 @@ namespace apdebug::System
         bool created[3] {}, instantiated = false;
         std::vector<const char*> args;
 
-        std::vector<const char*>* templateArgs = nullptr;
+        DynArray::DynArray<const char*> templateArgs;
     };
     struct killParam
     {

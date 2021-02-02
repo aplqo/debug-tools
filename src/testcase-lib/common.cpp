@@ -2,6 +2,7 @@
 #include "include/testcase.h"
 #include <cstring>
 #include <ostream>
+#include <unordered_map>
 
 namespace Escape = apdebug::Output::Escape;
 using std::strcmp;
@@ -70,19 +71,37 @@ namespace apdebug::Testcase
         };
     }
 
-    bool LimitInfo::parseArgument(int& argc, const char* const argv[])
+    enum class Param
     {
-        if (!strcmp(argv[argc], "-memory"))
-            memoryLimit = atoll(argv[++argc]) * 1024;
-        else if (!strcmp(argv[argc], "-hmem"))
-            hardMemoryLimit = atoll(argv[++argc]) * 1024;
-        else if (!strcmp(argv[argc], "-time"))
-            timeLimit = atoll(argv[++argc]) * 1000;
-        else if (!strcmp(argv[argc], "-htime"))
-            hardTimeLimit = atoll(argv[++argc]) * 1000;
-        else
-            return false;
-        return true;
+        Memory,
+        HardMemory,
+        Time,
+        HardTime
+    };
+    static const std::unordered_map<std::string, Param> par {
+        { "memory", Param::Memory },
+        { "hmemory", Param::HardMemory },
+        { "time", Param::Time },
+        { "htime", Param::HardTime }
+    };
+    void LimitInfo::parseArgument(const YAML::Node& nod)
+    {
+        for (const auto& it : nod)
+            switch (par.at(it.first.Scalar()))
+            {
+            case Param::Memory:
+                memoryLimit = it.second.as<decltype(memoryLimit)>() * 1024;
+                break;
+            case Param::HardMemory:
+                hardMemoryLimit = it.second.as<decltype(hardMemoryLimit)>() * 1024;
+                break;
+            case Param::Time:
+                timeLimit = it.second.as<decltype(timeLimit)>() * 1000;
+                break;
+            case Param::HardTime:
+                hardTimeLimit = it.second.as<decltype(hardTimeLimit)>() * 1000;
+                break;
+            }
     }
     std::ostream& operator<<(std::ostream& os, const LimitInfo& lim)
     {
