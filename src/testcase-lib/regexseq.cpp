@@ -44,26 +44,29 @@ namespace apdebug::regex_seq
         DynArray::DynArray<operate> seq;
     };
 
-    enum class Param
+    namespace
     {
-        Type,
-        Exact,
-        Format,
-        Time,
-        Position
-    };
-    static const std::unordered_map<std::string, Param> operatePar {
-        { "type", Param::Type },
-        { "exact", Param::Exact },
-        { "format", Param::Format },
-        { "time", Param::Time },
-        { "position", Param::Position }
-    };
-    static const std::unordered_map<std::string, operate::Type> typMap {
-        { "replace", operate::Type::Replace },
-        { "extract", operate::Type::Extract },
-        { "match", operate::Type::Match }
-    };
+        enum class Param
+        {
+            Type,
+            Exact,
+            Format,
+            Time,
+            Position
+        };
+        static const std::unordered_map<std::string, Param> operatePar {
+            { "type", Param::Type },
+            { "exact", Param::Exact },
+            { "format", Param::Format },
+            { "time", Param::Time },
+            { "position", Param::Position }
+        };
+        static const std::unordered_map<std::string, operate::Type> typMap {
+            { "replace", operate::Type::Replace },
+            { "extract", operate::Type::Extract },
+            { "match", operate::Type::Match }
+        };
+    }
     OperateSeq::OperateSeq(const YAML::Node& node)
     {
         for (const auto& it : node)

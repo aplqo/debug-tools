@@ -16,17 +16,20 @@ namespace Escape = apdebug::Output::Escape;
 typedef Testcase::BasicTemplate TestTemplate;
 typedef Testcase::BasicTest TestcaseType;
 
-enum class Param
+namespace
 {
-    Version,
-    Data,
-    Testcase
-};
-static const std::unordered_map<std::string, Param> par {
-    { "version", Param::Version },
-    { "data", Param::Data },
-    { "basic", Param::Testcase }
-};
+    enum class Param
+    {
+        Version,
+        Data,
+        Testcase
+    };
+    static const std::unordered_map<std::string, Param> par {
+        { "version", Param::Version },
+        { "data", Param::Data },
+        { "basic", Param::Testcase }
+    };
+}
 
 YAML::Node file, config;
 bool version;

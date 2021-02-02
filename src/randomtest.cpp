@@ -89,19 +89,22 @@ static const Testcase::Result judgeFail {
     .details = "Generate data failed"
 };
 
-enum class TemplateParam
+namespace
 {
-    Tmpdir,
-    Generator,
-    Standard,
-    Validator
-};
-static const std::unordered_map<std::string, TemplateParam> templatePar {
-    { "tmpdir", TemplateParam::Tmpdir },
-    { "generator", TemplateParam::Generator },
-    { "standard", TemplateParam::Standard },
-    { "validator", TemplateParam::Validator }
-};
+    enum class TemplateParam
+    {
+        Tmpdir,
+        Generator,
+        Standard,
+        Validator
+    };
+    static const std::unordered_map<std::string, TemplateParam> templatePar {
+        { "tmpdir", TemplateParam::Tmpdir },
+        { "generator", TemplateParam::Generator },
+        { "standard", TemplateParam::Standard },
+        { "validator", TemplateParam::Validator }
+    };
+}
 
 void TestPointTemplate::globalInit()
 {
@@ -423,25 +426,28 @@ void runTest(const unsigned int parallel)
     summary.print(std::cout);
 }
 
-enum class GeneralParam
+namespace
 {
-    Version,
-    Time,
-    StopOnError,
-    Parallelism,
-    FailOnly,
-    RealTime,
-    Testcase
-};
-static const std::unordered_map<std::string, GeneralParam> generalPar {
-    { "version", GeneralParam::Version },
-    { "test_time", GeneralParam::Time },
-    { "stop_on_error", GeneralParam::StopOnError },
-    { "parallelism", GeneralParam::Parallelism },
-    { "fail_only", GeneralParam::FailOnly },
-    { "real_time", GeneralParam::RealTime },
-    { "testcase", GeneralParam::Testcase }
-};
+    enum class GeneralParam
+    {
+        Version,
+        Time,
+        StopOnError,
+        Parallelism,
+        FailOnly,
+        RealTime,
+        Testcase
+    };
+    static const std::unordered_map<std::string, GeneralParam> generalPar {
+        { "version", GeneralParam::Version },
+        { "test_time", GeneralParam::Time },
+        { "stop_on_error", GeneralParam::StopOnError },
+        { "parallelism", GeneralParam::Parallelism },
+        { "fail_only", GeneralParam::FailOnly },
+        { "real_time", GeneralParam::RealTime },
+        { "testcase", GeneralParam::Testcase }
+    };
+}
 YAML::Node config, node;
 void parseArgument(const int argc, const char* argv[])
 {

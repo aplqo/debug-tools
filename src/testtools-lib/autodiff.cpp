@@ -18,19 +18,22 @@ namespace Escape = apdebug::Output::Escape;
 
 namespace apdebug::TestTools
 {
-    enum class Param
+    namespace
     {
-        Verbose,
-        Limit,
-        Diff,
-        File
-    };
-    static const std::unordered_map<std::string, Param> par {
-        { "verbose", Param::Verbose },
-        { "limit", Param::Limit },
-        { "differ", Param::Diff },
-        { "file", Param::File }
-    };
+        enum class Param
+        {
+            Verbose,
+            Limit,
+            Diff,
+            File
+        };
+        static const std::unordered_map<std::string, Param> par {
+            { "verbose", Param::Verbose },
+            { "limit", Param::Limit },
+            { "differ", Param::Diff },
+            { "file", Param::File }
+        };
+    }
 
     AutoDiff& AutoDiff::instantiate(fmt::format_args args)
     {

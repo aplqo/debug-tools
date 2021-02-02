@@ -159,41 +159,44 @@ private:
     Testcase::Summary summary;
 };
 
-enum class DataParam
+namespace
 {
-    TestRegex,
-    Input,
-    Answer
-};
-static const std::unordered_map<std::string, DataParam> dataPar {
-    { "regex", DataParam::TestRegex },
-    { "input", DataParam::Input },
-    { "answer", DataParam::Answer }
-};
-enum class GroupParam
-{
-    Verbose,
-    Data,
-    Basic,
-    Use
-};
-static const std::unordered_map<std::string, GroupParam> groupPar {
-    { "verbose", GroupParam::Verbose },
-    { "data", GroupParam::Data },
-    { "basic", GroupParam::Basic },
-    { "use", GroupParam::Use }
-};
-enum class DirParam
-{
-    Path,
-    Recursive,
-    Regex
-};
-static const std::unordered_map<std::string, DirParam> dirPar {
-    { "path", DirParam::Path },
-    { "recursive", DirParam::Recursive },
-    { "regex", DirParam::Regex }
-};
+    enum class DataParam
+    {
+        TestRegex,
+        Input,
+        Answer
+    };
+    static const std::unordered_map<std::string, DataParam> dataPar {
+        { "regex", DataParam::TestRegex },
+        { "input", DataParam::Input },
+        { "answer", DataParam::Answer }
+    };
+    enum class GroupParam
+    {
+        Verbose,
+        Data,
+        Basic,
+        Use
+    };
+    static const std::unordered_map<std::string, GroupParam> groupPar {
+        { "verbose", GroupParam::Verbose },
+        { "data", GroupParam::Data },
+        { "basic", GroupParam::Basic },
+        { "use", GroupParam::Use }
+    };
+    enum class DirParam
+    {
+        Path,
+        Recursive,
+        Regex
+    };
+    static const std::unordered_map<std::string, DirParam> dirPar {
+        { "path", DirParam::Path },
+        { "recursive", DirParam::Recursive },
+        { "regex", DirParam::Regex }
+    };
+}
 
 void TestGroup::DataPath::parseArgument(const YAML::Node& node)
 {

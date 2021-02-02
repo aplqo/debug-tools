@@ -70,20 +70,22 @@ namespace apdebug::Testcase
             .verbose = "[WA] Killed: Grader report wrong answer"
         };
     }
-
-    enum class Param
+    namespace
     {
-        Memory,
-        HardMemory,
-        Time,
-        HardTime
-    };
-    static const std::unordered_map<std::string, Param> par {
-        { "memory", Param::Memory },
-        { "hmemory", Param::HardMemory },
-        { "time", Param::Time },
-        { "htime", Param::HardTime }
-    };
+        enum class Param
+        {
+            Memory,
+            HardMemory,
+            Time,
+            HardTime
+        };
+        static const std::unordered_map<std::string, Param> par {
+            { "memory", Param::Memory },
+            { "hmemory", Param::HardMemory },
+            { "time", Param::Time },
+            { "htime", Param::HardTime }
+        };
+    }
     void LimitInfo::parseArgument(const YAML::Node& nod)
     {
         for (const auto& it : nod)

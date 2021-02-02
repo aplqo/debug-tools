@@ -13,17 +13,20 @@ using apdebug::Output::PrintVersion;
 using std::cout;
 namespace Escape = apdebug::Output::Escape;
 
-enum class Param
+namespace
 {
-    Version,
-    Autodiff,
-    Test
-};
-static const std::unordered_map<std::string, Param> par {
-    { "version", Param::Version },
-    { "autodiff", Param::Autodiff },
-    { "test", Param::Test }
-};
+    enum class Param
+    {
+        Version,
+        Autodiff,
+        Test
+    };
+    static const std::unordered_map<std::string, Param> par {
+        { "version", Param::Version },
+        { "autodiff", Param::Autodiff },
+        { "test", Param::Test }
+    };
+}
 
 YAML::Node config, file;
 apdebug::System::Command exe;

@@ -29,23 +29,26 @@ namespace apdebug
 {
     namespace Testcase
     {
-        enum class Param
+        namespace
         {
-            Limit,
-            Test,
-            Program,
-            Autodiff,
-            Tmpfile,
-            Interactor
-        };
-        static const std::unordered_map<std::string, Param> par {
-            { "limit", Param::Limit },
-            { "test", Param::Test },
-            { "program", Param::Program },
-            { "autodiff", Param::Autodiff },
-            { "tmpfile", Param::Tmpfile },
-            { "interact", Param::Interactor }
-        };
+            enum class Param
+            {
+                Limit,
+                Test,
+                Program,
+                Autodiff,
+                Tmpfile,
+                Interactor
+            };
+            static const std::unordered_map<std::string, Param> par {
+                { "limit", Param::Limit },
+                { "test", Param::Test },
+                { "program", Param::Program },
+                { "autodiff", Param::Autodiff },
+                { "tmpfile", Param::Tmpfile },
+                { "interact", Param::Interactor }
+            };
+        }
         void BasicTemplate::init()
         {
             using namespace fmt::literals;
