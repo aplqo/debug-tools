@@ -38,6 +38,7 @@ namespace apdebug::init
             copy(c / "lib" / "judge.dll", dest, copyOpt);
 #endif
 #endif
+            copy(c / "config" / "config", dest / "config", copyOpt);
             copy(c / "debug_tools", dest / "debug_tools", copyOpt);
             copy(c / "config" / ".clang-format", dest, copyOpt);
             switch (typ)
@@ -60,6 +61,7 @@ namespace apdebug::init
             remove_all(dest / "lib");
             remove_all(dest / "scripts");
             remove(dest / ".clang-format");
+            remove(dest / "config");
 #ifdef STATIC_LINK
 #ifdef Linux
             remove(dest / "libjudge.so");

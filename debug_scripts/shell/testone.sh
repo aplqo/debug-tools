@@ -1,3 +1,10 @@
 #!/bin/bash
 
-./bin/single-$type -program $1 -in $2.in -ans $2.ans -test $(which diff) -test-args [ '{output}' '{answer}' -a -w -u --color ] -autodiff [ -diff '{input}.diff' -files [ '{output}' '{answer}' ] ]
+conf='./config/default.yaml'
+
+if [ -n "$2" ]
+then
+    conf="$2"
+fi
+
+./bin/single-$type $conf "$1.in" "$1.ans" 
