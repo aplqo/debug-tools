@@ -1,5 +1,4 @@
 #include "include/color.h"
-#include "include/convert.h"
 #include "include/pathFormat.h"
 #include "include/testtools.h"
 #include "include/utility.h"
