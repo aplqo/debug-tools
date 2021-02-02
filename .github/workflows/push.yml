@@ -22,7 +22,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ env.version }}
-          body: 
+          body: ""
           draft: false
           prerelease: ${{contains(env.version,'-')}}
       - name: Store Release url
@@ -43,16 +43,8 @@ jobs:
       fail-fast: false
       matrix:
         static_link:
-          - {
-              enable: on,
-              name: static,
-              triplet: x64-windows-static
-            }
-          - {
-              enable: off,
-              name: shared,
-              triplet: x64-windows
-            }
+          - { enable: on, name: static, triplet: x64-windows-static }
+          - { enable: off, name: shared, triplet: x64-windows }
     steps:
       - uses: actions/checkout@v2
       - run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
@@ -63,7 +55,7 @@ jobs:
         if: ${{ !contains(github.ref,'tags/v') }}
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Install dep
-        run: vcpkg install fmt:${{ matrix.static_link.triplet }} boost-thread:${{ matrix.static_link.triplet }} boost-stacktrace:${{ matrix.static_link.triplet }}
+        run: vcpkg install fmt:${{ matrix.static_link.triplet }} boost-thread:${{ matrix.static_link.triplet }} boost-stacktrace:${{ matrix.static_link.triplet }} yaml-cpp:${{ matrix.static_link.triplet }}
       - name: build
         run: |
           mkdir build
@@ -98,7 +90,6 @@ jobs:
           asset_name: Windows-${{ env.version }}-${{ matrix.satic_link.name }}.zip
           asset_path: ./build/Windows-${{ env.version }}-${{ matrix.static_link.name }}.zip
           asset_content_type: application/zip
-        
 
   build-Linux:
     runs-on: ubuntu-latest
@@ -107,15 +98,9 @@ jobs:
       fail-fast: false
       matrix:
         static_link:
-          - {
-              enable: on,
-              name: static
-            }
-          - {
-              enable: off,
-              name: shared
-            }
-        cgroup: [1,2]
+          - { enable: on, name: static }
+          - { enable: off, name: shared }
+        cgroup: [1, 2]
     steps:
       - uses: actions/checkout@v2
       - run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
@@ -125,7 +110,7 @@ jobs:
         shell: bash
         if: ${{ !contains(github.ref,'tags/v') }}
       - name: setup dep
-        run: vcpkg install boost-thread:x64-linux fmt:x64-linux boost-stacktrace:x64-linux
+        run: vcpkg install boost-thread:x64-linux fmt:x64-linux boost-stacktrace:x64-linux yaml-cpp:x64-linux
       - name: build
         run: |
           mkdir build
