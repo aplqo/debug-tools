@@ -60,8 +60,8 @@ namespace apdebug::init
             remove_all(dest / "debug_tools");
             remove_all(dest / "lib");
             remove_all(dest / "scripts");
+            remove_all(dest / "config");
             remove(dest / ".clang-format");
-            remove(dest / "config");
 #ifdef STATIC_LINK
 #ifdef Linux
             remove(dest / "libjudge.so");
