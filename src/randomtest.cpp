@@ -133,7 +133,7 @@ void TestPointTemplate::parseArgument(const YAML::Node& node)
         else if (it.first.Scalar() == "data")
         {
             for (const auto& i : it.second)
-                switch (templatePar.at(i.second.Scalar()))
+                switch (templatePar.at(i.first.Scalar()))
                 {
                 case TemplateParam::Tmpdir:
                     tmpdir = i.second.Scalar().c_str();
@@ -469,7 +469,7 @@ void parseArgument(const int argc, const char* argv[])
             parallelism = it.second.as<unsigned int>();
             break;
         case GeneralParam::FailOnly:
-            fail = it.second.as<bool>();
+            showall = !it.second.as<bool>();
             break;
         case GeneralParam::RealTime:
             realTime = it.second.as<bool>();

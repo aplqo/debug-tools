@@ -44,11 +44,12 @@ group:
 
 random:
   stop_on_error: true
-  data:
-    standard:
-      argument:
-        - "{input}"
-        - "{answer}"
-  basic:
-    program: *program
-    test: *tester
+  testcase:
+    data:
+      standard:
+        argument:
+          - "{input}"
+          - "{answer}"
+    basic:
+      program: *program
+      test: *tester
