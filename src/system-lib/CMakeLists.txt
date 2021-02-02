@@ -14,8 +14,10 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     ) # min library for judge/init
 endif()
     
-target_link_libraries(system_full PRIVATE staticLibConfig yaml-cpp)
+target_link_libraries(system_full PRIVATE staticLibConfig)
+target_link_libraries(system_full PUBLIC yaml-cpp)
 target_link_libraries(system_judge PRIVATE staticLibConfig)
+target_link_libraries(system_judge PUBLIC yaml-cpp)
 
 set_property(TARGET system_judge PROPERTY INTERPROCEDURAL_OPTIMIZATION ${outputLTO})
 install(TARGETS system_judge DESTINATION lib/)

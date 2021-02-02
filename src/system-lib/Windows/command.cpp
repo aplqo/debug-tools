@@ -111,25 +111,30 @@ namespace apdebug::System
         }
         return *this;
     }
-    void Command::parseArgument(int& argc, const char* const argv[])
+    void Command::parseArgument(const YAML::Node& node)
     {
         std::string* tmpl = new std::string;
         templateCmdline = tmpl;
-        if (std::strcmp(argv[argc], "["))
-        {
-            tmpl->append(Output::writeToString(std::quoted<char>(argv[argc])));
-            return;
-        }
-        unsigned int dep = 1;
-        ++argc;
-        for (; dep; ++argc)
-        {
-            if (!std::strcmp(argv[argc], "]") && !--dep)
-                break;
-            else if (!std::strcmp(argv[argc], "["))
-                ++dep;
-            *tmpl += Output::writeToString(" ", std::quoted<char>(argv[argc]));
-        }
+        for (const auto& it : node)
+            if (it.first.Scalar() == "path")
+                path = it.second.Scalar().c_str();
+            else if (it.first.Scalar() == "argument")
+            {
+                for (const auto& com : it.second)
+                {
+                    tmpl->push_back(' ');
+                    if (com.IsScalar())
+                        tmpl->append(Output::writeToString(std::quoted<char>(com.Scalar().c_str())));
+                    else
+                    {
+                        const auto& v = com["val"];
+                        if (com["quote"].as<bool>())
+                            tmpl->append(Output::writeToString(std::quoted<char>(v.Scalar().c_str())));
+                        else
+                            tmpl->append(v.Scalar());
+                    }
+                }
+            }
     }
     std::ostream& operator<<(std::ostream& os, const Command& c)
     {

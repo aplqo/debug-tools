@@ -17,6 +17,8 @@
 
 #include <fmt/format.h>
 
+#include <yaml-cpp/yaml.h>
+
 namespace apdebug::System
 {
     const unsigned int shmNameLength = 10;
@@ -65,7 +67,7 @@ namespace apdebug::System
         Process execute();
         Command& setRedirect(RedirectType typ, const std::filesystem::path& file);
         Command& setRedirect(RedirectType typ, HANDLE had);
-        void parseArgument(int&, const char* const argv[]);
+        void parseArgument(const YAML::Node& node);
         void release();
         friend std::ostream& operator<<(std::ostream& os, const Command& cmd);
         ~Command();
