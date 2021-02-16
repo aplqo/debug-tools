@@ -1,0 +1,186 @@
+$schema: http://json-schema.org/draft/2019-09/schema#
+
+System:
+  Command:
+    type: object
+    properties:
+      path: { type: string }
+      argument:
+        type: array
+        items:
+          anyOf:
+            - type: string
+            - type: object
+              properties:
+                val: { type: string }
+                quote: { type: boolean }
+              additionalProperties: false
+    additionalProperties: false
+testtool:
+  AutoDiff:
+    type: object
+    properties:
+      verbose: { type: boolean }
+      limit: { type: integer }
+      differ: { type: string }
+      file:
+        type: array
+        items: { type: string }
+    required: [file]
+    additionalProperties: false
+  TemporaryFile:
+    type: object
+    patternProperties:
+      "[RT][PF][PF]":
+        type: array
+        description: Run or test, pass or fail, accept or not
+        items: { type: string }
+    additionalProperties: false
+testcase:
+  LimitInfo:
+    title: limits
+    type: object
+    properties:
+      memory: { type: integer }
+      hmemory: { type: integer }
+      time: { type: integer }
+      htime: { type: integer }
+    additionalProperties: false
+  BasicTemplate:
+    type: object
+    properties:
+      limit: { $ref: "#/testcase/LimitInfo" }
+      test: { $ref: "#/System/Command" }
+      program: { $ref: "#/System/Command" }
+      autodiff:
+        anyOf:
+          - $ref: "#/testtool/AutoDiff"
+          - type: "null"
+      tmpfile:
+        anyOf:
+          - $ref: "#/testtool/TemporaryFile"
+          - type: "null"
+      interact: { $ref: "#/System/Command" }
+    additionalProperties: false
+RegexSeq:
+  type: array
+  items:
+    type: object
+    properties:
+      regex: { type: string }
+      operate:
+        type: array
+        items:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: ["match", "replace", "extract"]
+          if: { properties: { type: { enum: ["match", "extract"] } } }
+          then:
+            properties:
+              exact: { type: boolean }
+            if: { properties: { type: { const: "extract" } } }
+            then:
+              properties:
+                position:
+                  type: array
+                  items: { type: integer }
+          else: # operate is replace
+            properties:
+              format: { type: string }
+              time:
+                type: integer
+                minimum: 1
+    additionalProperties: false
+grouptest:
+  data:
+    type: object
+    properties:
+      regex: { $ref: "#/RegexSeq" }
+      path: { type: string }
+      recursive: { type: boolean }
+    additionalProperties: false
+
+type: object
+properties:
+  general:
+    type: object
+    properties:
+      program: { $ref: "#/System/Command" }
+      tester: { $ref: "#/System/Command" }
+      autodiff: { $ref: "#/testtool/AutoDiff" }
+      tmpfile: { $ref: "#/testtool/TemporaryFile" }
+      basic: { $ref: "#/testcase/BasicTemplate" }
+  single:
+    type: object
+    properties:
+      version: { type: boolean }
+      data:
+        type: object
+        properties:
+          input: { type: string }
+          answer: { type: string }
+        additionalProperties: false
+      basic: { $ref: "#/testcase/BasicTemplate" }
+    required: [basic]
+    additionalProperties: false
+  group:
+    type: object
+    properties:
+      version: { type: boolean }
+      groups:
+        type: array
+        items:
+          type: object
+          properties:
+            use:
+              type: integer
+              minimum: 0
+            verbose: { type: boolean }
+            data:
+              type: object
+              properties:
+                regex: { $ref: "#/RegexSeq" }
+                input: { $ref: "#/grouptest/data" }
+                answer: { $ref: "#/grouptest/data" }
+              additionalProperties: false
+            basic: { $ref: "#/testcase/BasicTemplate" }
+          additionalProperties: false
+    required: [groups]
+    additionalProperties: false
+  random:
+    type: object
+    properties:
+      version: { type: boolean }
+      test_time: { type: integer }
+      stop_on_error: { type: boolean }
+      parallelism:
+        type: integer
+        minimum: 1
+      fail_only: { type: boolean }
+      real_time: { type: boolean }
+      testcase:
+        type: object
+        properties:
+          basic: { $ref: "#/testcase/BasicTemplate" }
+          data:
+            type: object
+            properties:
+              tmpdir: { type: string }
+              generator: { $ref: "#/System/Command" }
+              standard: { $ref: "#/System/Command" }
+              validator: { $ref: "#/System/Command" }
+            required: [tmpdir, generator]
+            additionalProperties: false
+        required: [basic, data]
+        additionalProperties: false
+    required: [test_time, testcase]
+    additionalProperties: false
+  autodiff:
+    type: object
+    properties:
+      version: { type: boolean }
+      test: { $ref: "#/System/Command" }
+      autodiff: { $ref: "#/testtool/AutoDiff" }
+    additionalProperties: false

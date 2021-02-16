@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=./config/schema.yaml
 general:
   tester: &tester
     path: C:\Windows\System32\fc.exe
