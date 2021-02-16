@@ -1,6 +1,6 @@
 ---
-Language:        Cpp
-BasedOnStyle:  Webkit
-NamespaceIndentation: All
-BreakBeforeBraces: Allman
+Language: Cpp
+BasedOnStyle: Google
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBraces: Stroustrup
 #TabWidth: 4

@@ -7,6 +7,8 @@
 #define NOGDI
 #define NOMINMAX
 #include <Windows.h>
+#include <fmt/format.h>
+#include <yaml-cpp/yaml.h>
 
 #include <filesystem>
 #include <ostream>
@@ -15,127 +17,116 @@
 #include <thread>
 #include <utility>
 
-#include <fmt/format.h>
+namespace apdebug::System {
+const unsigned int shmNameLength = 10;
 
-#include <yaml-cpp/yaml.h>
+struct Process {
+ public:
+  typedef DWORD Pid;
 
-namespace apdebug::System
-{
-    const unsigned int shmNameLength = 10;
+  Process() = default;
+  Process(Pid p);
+  Process(HANDLE hand, Pid p);
+  Process(const Process&) = delete;
+  Process(Process&&);
+  Process& operator=(Process&&);
+  ~Process();
 
-    struct Process
-    {
-    public:
-        typedef DWORD Pid;
+  int wait() const;
+  void terminate() const;
 
-        Process() = default;
-        Process(Pid p);
-        Process(HANDLE hand, Pid p);
-        Process(const Process&) = delete;
-        Process(Process&&);
-        Process& operator=(Process&&);
-        ~Process();
+  Pid pid;
+  HANDLE handle;
 
-        int wait() const;
-        void terminate() const;
+ private:
+  bool owns = false;
+};
+class SharedMemory {
+ public:
+  SharedMemory();
+  SharedMemory(const char* name);
+  SharedMemory(const SharedMemory&) = delete;
+  ~SharedMemory();
 
-        Pid pid;
-        HANDLE handle;
+  char name[shmNameLength + 1], *ptr;
 
-    private:
-        bool owns = false;
-    };
-    class SharedMemory
-    {
-    public:
-        SharedMemory();
-        SharedMemory(const char* name);
-        SharedMemory(const SharedMemory&) = delete;
-        ~SharedMemory();
+ private:
+  HANDLE fd;
+};
+class Command {
+ public:
+  Command& appendArgument(const std::string_view arg);
+  Command& instantiate(fmt::format_args args);
+  Command& instantiate();
+  Process execute();
+  Command& setRedirect(RedirectType typ, const std::filesystem::path& file);
+  Command& setRedirect(RedirectType typ, HANDLE had);
+  void parseArgument(const YAML::Node& node);
+  void release();
+  friend std::ostream& operator<<(std::ostream& os, const Command& cmd);
+  ~Command();
 
-        char name[shmNameLength + 1], *ptr;
+  std::string_view path;
 
-    private:
-        HANDLE fd;
-    };
-    class Command
-    {
-    public:
-        Command& appendArgument(const std::string_view arg);
-        Command& instantiate(fmt::format_args args);
-        Command& instantiate();
-        Process execute();
-        Command& setRedirect(RedirectType typ, const std::filesystem::path& file);
-        Command& setRedirect(RedirectType typ, HANDLE had);
-        void parseArgument(const YAML::Node& node);
-        void release();
-        friend std::ostream& operator<<(std::ostream& os, const Command& cmd);
-        ~Command();
+ private:
+  bool instantiated = false;
+  std::string cmdline;
+  const std::string* templateCmdline = nullptr;
+  HANDLE openFile[3] = {INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE,
+                        INVALID_HANDLE_VALUE},
+         stdioHandle[3];
+};
+class TimeLimit {
+ public:
+  inline void create() {}
+  inline void setExpire(const unsigned long long us) { time = us / 1000; }
+  std::pair<bool, int> waitFor(const Process& p);
+  inline bool isExceed() const { return exceed; }
 
-        std::string_view path;
+ private:
+  bool exceed;
+  unsigned long long time;  // ms!
+};
 
-    private:
-        bool instantiated = false;
-        std::string cmdline;
-        const std::string* templateCmdline = nullptr;
-        HANDLE openFile[3] = { INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE }, stdioHandle[3];
-    };
-    class TimeLimit
-    {
-    public:
-        inline void create() { }
-        inline void setExpire(const unsigned long long us) { time = us / 1000; }
-        std::pair<bool, int> waitFor(const Process& p);
-        inline bool isExceed() const { return exceed; }
+struct KillParam {
+  HANDLE job, iocp;
+  unsigned int exceed;
+};
+class MemoryLimit {
+ public:
+  MemoryLimit();
+  MemoryLimit(const MemoryLimit&) = delete;
+  MemoryLimit& operator=(const MemoryLimit&) = delete;
 
-    private:
-        bool exceed;
-        unsigned long long time; // ms!
-    };
+  void setLimit(const MemoryUsage kb);
+  void addProcess(const Process& p);
+  bool isExceed();
+  inline void clear() {}
+  ~MemoryLimit();
 
-    struct KillParam
-    {
-        HANDLE job, iocp;
-        unsigned int exceed;
-    };
-    class MemoryLimit
-    {
-    public:
-        MemoryLimit();
-        MemoryLimit(const MemoryLimit&) = delete;
-        MemoryLimit& operator=(const MemoryLimit&) = delete;
+ private:
+  unsigned int exceed;
+  HANDLE job, iocp;
+  KillParam cntrl;
+  std::thread watch;
+};
+class Pipe {
+ public:
+  Pipe();
+  ~Pipe();
 
-        void setLimit(const MemoryUsage kb);
-        void addProcess(const Process& p);
-        bool isExceed();
-        inline void clear() { }
-        ~MemoryLimit();
+  HANDLE read, write;
+};
+namespace Usage {
+unsigned long long getRealTime();
+std::pair<TimeUsage, MemoryUsage> getUsage();
+TimeUsage getTimeUsage();
+}  // namespace Usage
+void consoleInit();
 
-    private:
-        unsigned int exceed;
-        HANDLE job, iocp;
-        KillParam cntrl;
-        std::thread watch;
-    };
-    class Pipe
-    {
-    public:
-        Pipe();
-        ~Pipe();
+void protectPage(void* const address, const size_t size, const bool write);
 
-        HANDLE read, write;
-    };
-    namespace Usage
-    {
-        unsigned long long getRealTime();
-        std::pair<TimeUsage, MemoryUsage> getUsage();
-        TimeUsage getTimeUsage();
-    }
-    void consoleInit();
-
-    void protectPage(void* const address, const size_t size, const bool write);
-
-    constexpr static unsigned int interactArgsSize = sizeof(Process::Pid);
-}
+constexpr static unsigned int interactArgsSize = sizeof(Process::Pid);
+}  // namespace apdebug::System
 
 #endif

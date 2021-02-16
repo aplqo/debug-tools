@@ -8,66 +8,52 @@
 #include <mutex>
 #include <thread>
 
-namespace apdebug
-{
-    namespace limit
-    {
-        using limit = std::chrono::milliseconds;
-        class watchDog
-        {
-        public:
-            watchDog(limit l, void (*f)())
-                : lim(l)
-                , onTimeout(f) {};
-            watchDog(const watchDog&) = delete;
-            void start()
-            {
-                isStart = true;
-                wdt = std::thread(std::mem_fn(&watchDog::wdThrd), this);
-            }
-            void stop()
-            {
-                mtx.lock();
-                isStart = false;
-                mtx.unlock();
-                cnd.notify_all();
-                wdt.join();
-            }
+namespace apdebug {
+namespace limit {
+using limit = std::chrono::milliseconds;
+class watchDog {
+ public:
+  watchDog(limit l, void (*f)()) : lim(l), onTimeout(f){};
+  watchDog(const watchDog&) = delete;
+  void start()
+  {
+    isStart = true;
+    wdt = std::thread(std::mem_fn(&watchDog::wdThrd), this);
+  }
+  void stop()
+  {
+    mtx.lock();
+    isStart = false;
+    mtx.unlock();
+    cnd.notify_all();
+    wdt.join();
+  }
 
-        private:
-            void wdThrd()
-            {
-                std::unique_lock<std::mutex> lk(mtx);
-                if (cnd.wait_for(lk, lim, [&]() { return !isStart; }))
-                    return;
-                onTimeout();
-            }
+ private:
+  void wdThrd()
+  {
+    std::unique_lock<std::mutex> lk(mtx);
+    if (cnd.wait_for(lk, lim, [&]() { return !isStart; })) return;
+    onTimeout();
+  }
 
-            void (*onTimeout)();
+  void (*onTimeout)();
 
-            std::thread wdt;
-            std::condition_variable cnd;
-            std::mutex mtx;
-            limit lim;
-            bool isStart = false;
-        };
-        class LimitGuard
-        {
-        public:
-            LimitGuard(watchDog& l)
-                : l(l)
-            {
-                l.start();
-            };
-            ~LimitGuard()
-            {
-                l.stop();
-            }
+  std::thread wdt;
+  std::condition_variable cnd;
+  std::mutex mtx;
+  limit lim;
+  bool isStart = false;
+};
+class LimitGuard {
+ public:
+  LimitGuard(watchDog& l) : l(l) { l.start(); };
+  ~LimitGuard() { l.stop(); }
 
-        private:
-            watchDog& l;
-        };
-    }
-}
+ private:
+  watchDog& l;
+};
+}  // namespace limit
+}  // namespace apdebug
 
 #endif

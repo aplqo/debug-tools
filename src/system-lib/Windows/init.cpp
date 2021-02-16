@@ -1,10 +1,9 @@
 #include "system.h"
 
-namespace apdebug::System
+namespace apdebug::System {
+void consoleInit()
 {
-    void consoleInit()
-    {
-        SetConsoleOutputCP(CP_UTF8);
-        SetConsoleCP(CP_UTF8);
-    }
+  SetConsoleOutputCP(CP_UTF8);
+  SetConsoleCP(CP_UTF8);
 }
+}  // namespace apdebug::System
