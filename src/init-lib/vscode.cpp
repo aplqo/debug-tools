@@ -8,6 +8,15 @@ namespace fs = std::filesystem;
 
 namespace apdebug::init::vscode {
 
+static void copyDir(const fs::path& from, const fs::path& to)
+{
+  fs::directory_iterator it(from);
+  for (const auto& i : it)
+    fs::copy(
+        i, to,
+        fs::copy_options::recursive | fs::copy_options::overwrite_existing);
+}
+
 class vscode : public editor {
  public:
   vscode() : editor("vscode", "Visual Studio Code") { editors()->append(this); }
@@ -39,11 +48,9 @@ class DirectCopy : public compiler {
  private:
   void initImpl(const fs::path& src, const fs::path& dest) override
   {
-    fs::directory_iterator it(src / confPath);
-    for (auto& i : it)
-      fs::copy(
-          i, dest / ".vscode",
-          fs::copy_options::overwrite_existing | fs::copy_options::recursive);
+    const fs::path destPath = dest / ".vscode";
+    copyDir(src / confPath, destPath);
+    copyDir(src / "config" / "compiler-shared" / "vscode", destPath);
   }
   void deinitImpl(const fs::path&) override {}
 

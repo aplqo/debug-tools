@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/aplqo/debug-tools/master/debug_config/config/schema.yaml
 general:
   tester: &tester
     path: /usr/bin/diff
