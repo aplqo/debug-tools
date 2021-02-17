@@ -1,6 +1,8 @@
-#include <Psapi.h>
-
 #include "system.h"
+
+// clang-format: off
+#include <Psapi.h>
+// clang-format: on
 
 namespace apdebug::System {
 static inline unsigned long long getRealUnit()

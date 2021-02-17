@@ -1,7 +1,9 @@
-#include <processthreadsapi.h>
-
 #include "include/io.h"
 #include "system.h"
+
+// clang-format:off
+#include <processthreadsapi.h>
+// clang-format:on
 
 namespace apdebug::System {
 static HANDLE stdIO[3] = {GetStdHandle(STD_INPUT_HANDLE),
