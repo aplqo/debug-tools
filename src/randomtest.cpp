@@ -267,9 +267,11 @@ struct Status {
     const unsigned long long curTime = System::Usage::getRealTime();
     const double period = (curTime - lastTime) / 1e6 / System::unit.real,
                  total = (curTime - begin) / 1e6 / System::unit.real;
+    const double avgSpeed = curCount / total;
     std::cout << Escape::ClearLine << Escape::TextBlue << "Testing " << lst
-              << " data. Spent " << total << "s."
-              << " Average " << curCount / total << "/sec Current "
+              << " data. Spent " << total << "s. "
+              << "Remain " << (times - curCount) / avgSpeed << "s. "
+              << " Average " << avgSpeed << "/sec Current "
               << (curCount - lst) / period << "/sec";
     lastTime = curTime;
     lst = curCount;
