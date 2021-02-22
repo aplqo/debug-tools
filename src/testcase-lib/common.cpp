@@ -41,10 +41,6 @@ const Result TestAccept{.type = Result::Type::AC,
                         .name = "AC",
                         .color = Output::Escape::TextGreen,
                         .verbose = "[AC] Test program return code 0"};
-const Result InteractAccept{.type = Result::Type::AC,
-                            .name = "AC",
-                            .color = Output::Escape::TextGreen,
-                            .verbose = "[AC] Grader report test passed."};
 const Result InteractRunWA{
     .type = Result::Type::WAKilled,
     .name = "Killed",

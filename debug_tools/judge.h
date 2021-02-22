@@ -25,9 +25,16 @@ extern int judgeMain(int (*userMain)(int, const char* const[]), int argc,
 namespace Interactor {
 extern void beginReportFail(const uint32_t id);
 extern void endReportFail();
-extern void reportAccept();
+extern void reportAccept(const char* msg);
 extern int interactorMain(int (*userMain)(int, const char* const[]), int argc,
                           const char* const argv[]);
+
+inline void reportFail(const apdebug::Logfile::RStatus stat, const char* msg)
+{
+  beginReportFail(static_cast<uint32_t>(stat));
+  writeString(msg);
+  endReportFail();
+}
 }  // namespace Interactor
 }
 template <class T>

@@ -155,9 +155,16 @@ void BasicTest::parse()
   runTime.convert();
   unsigned int runPtr = 0;
   switch (stat) {
-    case RStatus::Accept:
-      testResult = &ResultConstant::InteractAccept;
+    case RStatus::Accept: {
+      std::string msg = "Message: " + Logfile::readString(ms);
+      *cur = Result{.type = Result::Type::AC,
+                    .name = "AC",
+                    .color = Escape::TextGreen,
+                    .verbose = "[AC] Grader report accepted. " + msg,
+                    .details = std::move(msg)};
+      testResult = cur++;
       [[fallthrough]];
+    }
     case RStatus::Return:
       if (runTime.real > timeLimit) {
         runResult[runPtr++] = &ResultConstant::TLE;
@@ -173,7 +180,8 @@ void BasicTest::parse()
           .color = Escape::TextGreen,
           .verbose = fmt::format(
               FMT_COMPILE(
-                  "[Pass] Program finished. \n\tTime(real/user/sys): {} / {} / "
+                  "[Pass] Program finished. \n\tTime(real/user/sys): {} / {} "
+                  "/ "
                   "{} ms ({} / {} / {} us) \n\tMemory: {} MiB ({} KiB)"),
               runTime.real / 1000.0, runTime.user / 1000.0,
               runTime.sys / 1000.0, runTime.real, runTime.user, runTime.sys,
@@ -186,23 +194,27 @@ void BasicTest::parse()
     case RStatus::Warn:
       runResult[0] = Logfile::parseWarn(ms, cur);
       goto err;
-    case RStatus::Protocol:
+    case RStatus::Protocol: {
+      std::string msg = "Message: " + Logfile::readString(ms);
       *cur = Result{.type = Result::Type::Protocol,
                     .name = "PV",
                     .color = Escape::TextRed,
-                    .verbose = "[PV] Protocol Violation. Mssage: " +
-                               Logfile::readString(ms)};
+                    .verbose = "[PV] Protocol Violation. " + msg,
+                    .details = std::move(msg)};
       runResult[0] = cur++;
+    }
       goto err;
-    case RStatus::WrongAnswer:
+    case RStatus::WrongAnswer: {
       runResult[0] = &ResultConstant::InteractRunWA;
-      *cur = Result{
-          .type = Result::Type::WA,
-          .name = "WA",
-          .color = Escape::TextRed,
-          .verbose = "[WA] Wrong answer. Message: " + Logfile::readString(ms)};
+      std::string msg = "Message: " + Logfile::readString(ms);
+      *cur = Result{.type = Result::Type::WA,
+                    .name = "WA",
+                    .color = Escape::TextRed,
+                    .verbose = "[WA] Wrong answer. " + msg,
+                    .details = std::move(msg)};
       testPass = false;
       testResult = cur++;
+    }
       goto err;
     default:
       *cur =

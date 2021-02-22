@@ -50,7 +50,6 @@ extern const Result TLE;
 extern const Result MLE;
 extern const Result Skip;
 extern const Result TestAccept;
-extern const Result InteractAccept;
 extern const Result InteractRunWA;
 }  // namespace ResultConstant
 
