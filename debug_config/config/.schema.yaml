@@ -108,6 +108,7 @@ properties:
     type: object
     properties:
       program: { $ref: "#/System/Command" }
+      interact: { $ref: "#/System/Command" }
       tester: { $ref: "#/System/Command" }
       autodiff: { $ref: "#/testtool/AutoDiff" }
       tmpfile: { $ref: "#/testtool/TemporaryFile" }
