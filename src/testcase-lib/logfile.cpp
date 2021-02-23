@@ -92,10 +92,9 @@ void Stacktrace::print(std::string& dest) const
                  frames.size(), totalDepth);
   const int idLen = ceil(log10(frames.size() + 1)), nameLen = maxName;
   for (unsigned int i = 0; i < frames.size(); ++i)
-    fmt::format_to(std::back_inserter(dest),
-                   "\n\t\t#{0:{5}} {1} in {2:{6}} {3}:{4}", i,
+    fmt::format_to(std::back_inserter(dest), "\n\t\t#{0} {1} in {2} {3}:{4}", i,
                    frames[i].address, frames[i].name, frames[i].file,
-                   frames[i].line, idLen, nameLen);
+                   frames[i].line);
 }
 
 const Result* parseWarn(MemoryStream& ms, Result*& cur)
