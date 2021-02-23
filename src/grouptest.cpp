@@ -117,7 +117,8 @@ void TestPoint::writeToTable(ResultTable& dest)
        {ResultColumn::userTime, fmt::format("{}", runTime.user / 1000.0)},
        {ResultColumn::sysTime, fmt::format("{}", runTime.sys / 1000.0)},
        {ResultColumn::mbMemory, fmt::format("{}", runMemory / 1024.0)},
-       {ResultColumn::detail, std::string(runResult[0]->details)}});
+       {ResultColumn::detail,
+        runResult[0]->details + " " + testResult->details}});
 }
 
 class TestGroup {

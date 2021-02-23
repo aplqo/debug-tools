@@ -239,7 +239,8 @@ void TestPoint::printTable(ResultTable& dest)
         fmt::format(FMT_COMPILE("{}"), runTime.sys / 1000.0)},
        {ResultColumn::mbMemory,
         fmt::format(FMT_COMPILE("{}"), runMemory / 1024.0)},
-       {ResultColumn::detail, std::string(runResult[0]->details)}});
+       {ResultColumn::detail,
+        runResult[0]->details + " " + testResult->details}});
 }
 std::mutex tableLock;
 std::atomic_flag empty;
