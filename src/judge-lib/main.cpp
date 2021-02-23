@@ -200,6 +200,9 @@ extern "C" void reportAccept(const char* msg)
 {
   judged.wait();
   ms.write(apdebug::Logfile::RStatus::Accept);
+  // skip time and memory info
+  ms.ptr +=
+      sizeof(apdebug::System::TimeUsage) + sizeof(apdebug::System::MemoryUsage);
   logs::writeString(msg);
   exit(0);
 }
