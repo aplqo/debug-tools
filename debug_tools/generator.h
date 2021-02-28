@@ -51,6 +51,13 @@ void createArray(const T mn, const T mx, const size_t len, OutIt buf,
   std::uniform_int_distribution<T> dis(mn, mx);
   std::generate_n(buf, len, std::bind(dis, std::ref(rd)));
 }
+template <class T, class OutIt, class Rnd = decltype(default_rnd)>
+void createArray(const T ch[], const size_t size, const size_t len, OutIt buf,
+                 Rnd& rd = default_rnd)
+{
+  std::uniform_int_distribution<size_t> disp(0, size - 1);
+  std::generate_n(buf, len, [&disp, ch, &rd]() { return ch[disp(rd)]; });
+}
 }  // namespace generator
 }  // namespace apdebug
 
