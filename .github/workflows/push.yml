@@ -63,7 +63,7 @@ jobs:
           cd build
           nmake package
       - name: Download URL
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4.1.7
         with:
           name: upload_url
           path: ./
@@ -130,7 +130,7 @@ jobs:
           CC: gcc-10
           CXX: g++-10
       - name: Download URL
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4.1.7
         with:
           name: upload_url
           path: ./
